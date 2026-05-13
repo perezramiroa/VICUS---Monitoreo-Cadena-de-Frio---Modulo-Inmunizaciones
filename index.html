@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Monitor Dataloggers - Inmunización</title>
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/png" href="./icons/icon-192x192.png">
+  <meta name="theme-color" content="#00384d">
+  <link rel="stylesheet" href="./css/pwa-styles.css">
+  <style>
+    /* Estilos específicos unificados con Farmacia */
+    .alerta-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.45); z-index: 3000; align-items: center; justify-content: center; }
+    .alerta-modal-overlay.visible { display: flex; }
+    .alerta-modal { background: white; border-radius: 14px; padding: 24px; max-width: 420px; width: 92%; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+    .alerta-modal .valor-actual { font-size: 2rem; font-weight: bold; text-align: center; margin: 8px 0 16px; padding: 10px; border-radius: 8px; }
+    .alerta-modal .valor-actual.alta { color: #dc2626; background: #fee2e2; }
+    .alerta-modal .valor-actual.baja { color: #1d4ed8; background: #dbeafe; }
+    .pasos { list-style: none; padding: 0; margin: 0 0 12px; }
+    .pasos li { padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; color: #1e293b; }
+    .pasos li .fundamento { display: block; font-size: 0.78rem; color: #64748b; font-style: italic; margin-top: 2px; }
+    
+    .device-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); border-left: 6px solid #10b981; transition: box-shadow 0.2s; position: relative; }
+    .device-card.alert { border-left-color: #ef4444; }
+    .device-card.power-outage { border: 2px solid #ef4444; animation: pulse 2s infinite; }
+    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+
+    .fields-selector { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0; padding: 10px; background: #f1f5f9; border-radius: 8px; font-size: 0.9rem; }
+    .btn-protocolo { background: #00384d; color: white; padding: 12px 20px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+    
+    .protocolo-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 3000; align-items: flex-start; justify-content: center; overflow-y: auto; padding: 20px 0; }
+    .protocolo-overlay.visible { display: flex; }
+    .protocolo-modal { background: white; border-radius: 14px; padding: 28px; max-width: 680px; width: 95%; margin: auto; }
+    .protocolo-seccion h3 { font-size: 1rem; margin-bottom: 10px; padding: 8px; border-radius: 6px; }
+    .protocolo-seccion h3.alta { background: #fee2e2; color: #dc2626; }
+    .protocolo-seccion h3.baja { background: #dbeafe; color: #1d4ed8; }
+    .protocolo-tabla { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-bottom: 15px; }
+    .protocolo-tabla th { background: #f8fafc; padding: 8px; text-align: left; border-bottom: 2px solid #e2e8f0; }
+    .protocolo-tabla td { padding: 8px; border-bottom: 1px solid #f1f5f9; }
+  </style>
+</head>
+
+<body onload="init()">
+  <div class="header">
+    <div class="logo-bar">
+      <div class="logo-item" style="width:100%;">
+        <img src="logos/logo_rih.jpg" alt="RIH" style="width:100%; height:100%; object-fit:contain;">
+      </div>
+    </div>
+
+    <div style="display:flex; gap:12px; flex-wrap:wrap; width:100%; margin-top:15px;">
+      <input type="text" id="urlIn" placeholder="Pega la URL del canal de ThingSpeak..." style="flex:1; padding:12px; border-radius:8px; border:1px solid #ddd;" />
+      <div class="fields-selector">
+        <strong>Sensores:</strong>
+        <label><input type="checkbox" id="field1" value="field1" checked> S1</label>
+        <label><input type="checkbox" id="field2" value="field2"> S2</label>
+        <label><input type="checkbox" id="field3" value="field3"> WiFi</label>
+      </div>
+    </div>
+    
+    <div style="display:flex; gap:10px; margin-top:10px;">
+      <button class="btn-add" onclick="add()" style="background:var(--primary); color:white; padding:12px 20px; border-radius:8px; border:none; font-weight:600; cursor:pointer;">Agregar</button>
+      <button onclick="wipe()" style="background:#94a3b8; color:white; padding:12px 20px; border-radius:8px; border:none; cursor:pointer;">Borrar</button>
+      <button onclick="toggleNormativa()" style="background:#64748b; color:white; padding:12px 20px; border-radius:8px; border:none; cursor:pointer;">Normativa</button>
+      <button onclick="window.open('stock_inmunizacion_zona1.html', '_blank')" style="background:#8b5cf6; color:white; padding:12px 20px; border-radius:8px; border:none; font-weight:600; cursor:pointer;">📦 Control de Stock</button>
+      <button class="btn-protocolo" onclick="toggleProtocolo()">📋 Protocolo</button>
+    </div>
+  </div>
+
+  <h1 class="page-title">Monitoreo de Cadena de Frío - Inmunización</h1>
+  <div id="app" class="device-list"></div>
+
+  <div style="margin-top: 20px; text-align: center;">
+    <div style="background-color: #00384d; padding: 10px; border-radius: 8px;">
+      <img src="logos/footer.jpg" alt="Footer" style="max-width: 100%; height: auto;">
+    </div>
+  </div>
+
+  <!-- Modal Protocolo -->
+  <div id="protocoloOverlay" class="protocolo-overlay">
+    <div class="protocolo-modal">
+      <h2>📋 Protocolo de Cadena de Frío — Inmunización</h2>
+      <p style="font-size:0.85rem; color:#64748b; margin-bottom:20px;">Rango exigido: 2°C a 8°C · Disposición ANMAT 10.872/2020</p>
+      
+      <div class="protocolo-seccion">
+        <h3 class="alta">🔥 Ante temperatura ALTA (>8°C)</h3>
+        <table class="protocolo-tabla">
+          <thead><tr><th>#</th><th>Acción</th><th>Fundamento</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Verificar sellado de puertas</td><td>Evita entrada de aire cálido.</td></tr>
+            <tr><td>2</td><td>Controlar termostato</td><td>Puede estar descalibrado.</td></tr>
+            <tr><td>3</td><td>Evaluar medicamentos</td><td>Exigido por ANMAT 10.872/2020.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="protocolo-seccion">
+        <h3 class="baja">❄️ Ante temperatura BAJA (<2°C)</h3>
+        <table class="protocolo-tabla">
+          <thead><tr><th>#</th><th>Acción</th><th>Fundamento</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Revisar termostato</td><td>Puede estar demasiado frío.</td></tr>
+            <tr><td>2</td><td>Alejar del evaporador</td><td>Evita congelación por contacto.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <button onclick="cerrarProtocolo()" style="width:100%; padding:12px; background:#00384d; color:white; border:none; border-radius:8px; font-weight:600; cursor:pointer;">Cerrar ✕</button>
+    </div>
+  </div>
+
+  <!-- Panel Normativa -->
+  <div id="normativaPanel" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:4000; overflow:auto; padding:20px;">
+      <div style="max-width:800px; margin:0 auto;">
+          <button onclick="toggleNormativa()" style="float:right; padding:10px; background:#ef4444; color:white; border:none; border-radius:6px;">Cerrar ✕</button>
+          <h1 style="color:#1d4ed8;">Marco Normativo - Inmunización</h1>
+          <div style="background:#f8fafc; border-left:4px solid #1d4ed8; padding:20px; margin-top:20px; border-radius:8px;">
+              <h3>ANMAT 10.872/2020</h3>
+              <p>Regula las Buenas Prácticas de Almacenamiento. Exige monitoreo continuo y registro de desvíos térmicos.</p>
+              <h3>Ley Nacional 17.565</h3>
+              <p>Responsabilidad de la Jefatura sobre la conservación de productos termolábiles.</p>
+          </div>
+      </div>
+  </div>
+
+  <!-- Modal Guía Alerta -->
+  <div id="alertaModalOverlay" class="alerta-modal-overlay">
+    <div class="alerta-modal">
+      <h3 id="alertaModalTitulo"></h3>
+      <div id="alertaModalValor" class="valor-actual"></div>
+      <ul class="pasos" id="alertaModalPasos"></ul>
+      <button style="width:100%; padding:12px; background:#1e293b; color:white; border:none; border-radius:8px;" onclick="cerrarGuiaAlerta()">Entendido ✓</button>
+    </div>
+  </div>
+
+  <script>
+    const MAX = 8.0, MIN = 2.0, WIFI_CUTOFF = 10;
+    let db = JSON.parse(localStorage.getItem('iot_db_inmunizacion') || '[]');
+
+    function init() { 
+        if (db.length === 0) {
+            db = [
+                { id: '2561917', k: 'M3R9T3F6Q0O5A1S1', n: 'Heladera 1', type: 'inm', fields: ['field1'] },
+                { id: '2561918', k: 'X6V7B2N9M1K0L4J8', n: 'Heladera 2', type: 'inm', fields: ['field1'] }
+            ];
+            save();
+        }
+        render(); refresh(); setInterval(refresh, 30000); 
+        if ('Notification' in window) Notification.requestPermission();
+    }
+
+    function save() { localStorage.setItem('iot_db_inmunizacion', JSON.stringify(db)); }
+
+    function render() {
+      const app = document.getElementById('app'); app.innerHTML = "";
+      db.forEach(c => {
+        const card = document.createElement('div'); card.className = 'device-card'; card.id = `p-${c.id}`;
+        card.innerHTML = `
+          <div class="device-header"><span>${c.n}</span><span onclick="del('${c.id}')" style="cursor:pointer; font-size:0.8rem; background:#fee2e2; color:#ef4444; padding:4px 8px; border-radius:6px;">Eliminar ❌</span></div>
+          <div class="device-body"><div class="sensor-grid" id="g-${c.id}"></div></div>
+        `;
+        app.appendChild(card);
+        const grid = document.getElementById(`g-${c.id}`);
+        c.fields.forEach(f => {
+          const sc = document.createElement('div'); sc.className = 'sensor-card'; sc.id = `f-${c.id}-${f}`;
+          sc.innerHTML = `
+            <div class="sensor-label" id="l-${c.id}-${f}">Sensor</div>
+            <div class="sensor-value" id="v-${c.id}-${f}">--</div>
+            <button class="btn-info" id="info-${c.id}-${f}" style="display:none; background:#fef2f2; color:#dc2626; border:1px solid #fecaca; border-radius:6px; padding:6px; font-size:0.8rem; cursor:pointer; margin-bottom:8px;">ⓘ ¿Qué hacer?</button>
+            <button class="btn-hist" onclick="openRep('${c.id}','${c.k}','${f}','${c.type}')" style="background:#3b82f6; color:white; border:none; padding:8px; border-radius:6px; width:100%; font-weight:600; cursor:pointer;">📊 Historial</button>
+          `;
+          grid.appendChild(sc);
+        });
+      });
+    }
+
+    async function refresh() {
+      for (let c of db) {
+        try {
+          const res = await fetch(`https://api.thingspeak.com/channels/${c.id}/feeds.json?api_key=${c.k}&results=20`);
+          const d = await res.json();
+          let hasAlert = false;
+          for (let f of c.fields) {
+            const val = parseFloat(d.feeds[0][f]);
+            const valEl = document.getElementById(`v-${c.id}-${f}`);
+            const cardEl = document.getElementById(`f-${c.id}-${f}`);
+            const infoBtn = document.getElementById(`info-${c.id}-${f}`);
+            
+            if (valEl) valEl.innerText = isNaN(val) ? '--' : val.toFixed(1) + '°C';
+            const isDanger = !isNaN(val) && (val > MAX || val < MIN);
+            if (isDanger) {
+                hasAlert = true;
+                if (cardEl) cardEl.classList.add('danger');
+                if (infoBtn) { infoBtn.style.display = 'block'; infoBtn.onclick = () => mostrarGuiaAlerta(val > MAX ? 'alta' : 'baja', val.toFixed(1)); }
+                notify(c.n, val);
+            } else {
+                if (cardEl) cardEl.classList.remove('danger');
+                if (infoBtn) infoBtn.style.display = 'none';
+            }
+          }
+          const pCard = document.getElementById(`p-${c.id}`);
+          if (pCard) {
+              pCard.classList.toggle('alert', hasAlert);
+              const isOutage = d.feeds.some((f, i) => i > 0 && (new Date(f.created_at) - new Date(d.feeds[i-1].created_at)) / 60000 > WIFI_CUTOFF);
+              pCard.classList.toggle('power-outage', isOutage);
+          }
+        } catch (e) {}
+      }
+    }
+
+    function add() {
+      const url = document.getElementById('urlIn').value;
+      const fields = [];
+      if (document.getElementById('field1').checked) fields.push('field1');
+      if (document.getElementById('field2').checked) fields.push('field2');
+      if (document.getElementById('field3').checked) fields.push('field3');
+      if (url && fields.length > 0) {
+          const u = new URL(url); const id = u.pathname.match(/channels\/(\d+)/)[1], k = u.searchParams.get('api_key');
+          db.push({ id, k, n: 'Nuevo Sensor', type: 'inm', fields });
+          save(); render(); refresh();
+      }
+    }
+
+    function wipe() { if(confirm("¿Borrar todo?")) { db = []; save(); render(); } }
+    function del(id) { db = db.filter(x => x.id !== id); save(); render(); }
+    function openRep(id, k, f) { window.open(`reporte_individual.html?id=${id}&key=${k}&field=${f}`, '_blank'); }
+    function toggleNormativa() { const p = document.getElementById('normativaPanel'); p.style.display = p.style.display === 'none' ? 'block' : 'none'; }
+    function toggleProtocolo() { document.getElementById('protocoloOverlay').classList.add('visible'); }
+    function cerrarProtocolo() { document.getElementById('protocoloOverlay').classList.remove('visible'); }
+    
+    function mostrarGuiaAlerta(tipo, valor) {
+        const modal = document.getElementById('alertaModalOverlay');
+        document.getElementById('alertaModalTitulo').innerText = tipo === 'alta' ? '🔥 Temperatura ALTA' : '❄️ Temperatura BAJA';
+        const vEl = document.getElementById('alertaModalValor');
+        vEl.innerText = valor + '°C'; vEl.className = 'valor-actual ' + tipo;
+        document.getElementById('alertaModalPasos').innerHTML = tipo === 'alta' ? '<li>Check puertas</li><li>Check termostato</li>' : '<li>Check termostato</li><li>Alejar de pared</li>';
+        modal.classList.add('visible');
+    }
+    function cerrarGuiaAlerta() { document.getElementById('alertaModalOverlay').classList.remove('visible'); }
+
+    function notify(name, val) {
+        if (Notification.permission === 'granted') new Notification('⚠️ ALERTA: ' + name, { body: `Valor: ${val}°C`, icon: './icons/icon-192x192.png' });
+    }
+  </script>
+</body>
+</html>
