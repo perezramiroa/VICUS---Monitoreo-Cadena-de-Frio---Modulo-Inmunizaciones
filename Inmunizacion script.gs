@@ -182,21 +182,164 @@ function generarSheetSemanal(feedsPorSensor, rangoTexto, fechaHoy, folderId) {
     }
     
     const nombreHoja = "Semana " + Utilities.formatDate(fechaHoy, "GMT-3", "dd-MM-yyyy");
-    let hoja = ss.getSheetByName(nombreHoja);
-    if (hoja) ss.deleteSheet(hoja);
-    hoja = ss.insertSheet(nombreHoja);
     
-    hoja.getRange("A1").setValue("INFORME SEMANAL CONSOLIDADO").setFontWeight("bold");
+    // Eliminar hoja si ya existe (re-ejecución)
+    const hojaExistente = ss.getSheetByName(nombreHoja);
+    if (hojaExistente) ss.deleteSheet(hojaExistente);
+    
+    const hoja = ss.insertSheet(nombreHoja);
+    
+    // ── ENCABEZADO PRINCIPAL ──────────────────────────────────
+    hoja.getRange("A1").setValue("REGISTRO SEMANAL DE TEMPERATURAS - INMUNIZACIÓN");
+    hoja.getRange("A1").setFontSize(13).setFontWeight("bold").setFontColor("#00384d");
     hoja.getRange("A2").setValue("Período: " + rangoTexto);
+    hoja.getRange("A2").setFontSize(10).setFontStyle("italic");
+    hoja.getRange("A3").setValue("Generado: " + Utilities.formatDate(fechaHoy, "GMT-3", "dd/MM/yyyy HH:mm"));
+    hoja.getRange("A3").setFontSize(9).setFontColor("#64748b");
     
-    let filaActual = 4;
-    feedsPorSensor.forEach(item => {
-      hoja.getRange(filaActual, 1).setValue("Sensor: " + item.sensor.n).setBold(true);
-      filaActual++;
-      const data = item.feeds.map(f => [f.created_at, f[item.sensor.field]]);
-      hoja.getRange(filaActual, 1, data.length, 2).setValues(data);
-      filaActual += data.length + 2;
+    // ── CONSTRUIR COLUMNAS DINÁMICAMENTE ─────────────────────
+    // Col 1: Fecha/Hora | Col 2..N: un sensor por columna
+    const encabezados = ["Fecha / Hora"];
+    feedsPorSensor.forEach(fs => {
+      encabezados.push(fs.sensor.n + "\n(" + fs.sensor.eq + ")");
     });
+    
+    const filaEncabezado = 5;
+    const rangoEnc = hoja.getRange(filaEncabezado, 1, 1, encabezados.length);
+    rangoEnc.setValues([encabezados]);
+    rangoEnc.setBackground("#00384d").setFontColor("#ffffff").setFontWeight("bold")
+            .setFontSize(10).setWrap(true).setVerticalAlignment("middle")
+            .setHorizontalAlignment("center");
+    hoja.setRowHeight(filaEncabezado, 45);
+    
+    // ── UNIFICAR TIMESTAMPS AGRUPANDO POR MINUTO ─────────────
+    // Se agrupa por minuto para tener una sola fila limpia de tiempo
+    const mapaTemp = {};
+    feedsPorSensor.forEach((fs, idx) => {
+      fs.feeds.forEach(feed => {
+        const val = parseFloat(feed[fs.sensor.field]);
+        if (isNaN(val) || val === -127) return;
+        const d = new Date(feed.created_at);
+        // Clave por minuto: "dd/MM/yyyy HH:mm"
+        const clave = Utilities.formatDate(d, "GMT-3", "dd/MM/yyyy HH:mm");
+        if (!mapaTemp[clave]) mapaTemp[clave] = { fecha: clave, valores: {} };
+        // Si ya hay un valor para ese sensor en ese minuto, promediamos
+        if (mapaTemp[clave].valores[idx] !== undefined) {
+          mapaTemp[clave].valores[idx] = (mapaTemp[clave].valores[idx] + val) / 2;
+        } else {
+          mapaTemp[clave].valores[idx] = val;
+        }
+      });
+    });
+    
+    // Ordenar por clave de fecha de manera cronológica
+    const claves = Object.keys(mapaTemp).sort((a, b) => {
+      const toDate = s => {
+        const [fecha, hora] = s.split(' ');
+        const [d, m, y] = fecha.split('/');
+        return new Date(`${y}-${m}-${d}T${hora}:00`);
+      };
+      return toDate(a) - toDate(b);
+    });
+    
+    // ── ESCRIBIR DATOS EN LOTES ──────────────────────────────
+    const filas = claves.map(clave => {
+      const entrada = mapaTemp[clave];
+      const fila = [entrada.fecha];
+      feedsPorSensor.forEach((_, idx) => {
+        const v = entrada.valores[idx];
+        fila.push(v !== undefined ? Math.round(v * 100) / 100 : "");
+      });
+      return fila;
+    });
+    
+    if (filas.length > 0) {
+      const filaInicio = filaEncabezado + 1;
+      hoja.getRange(filaInicio, 1, filas.length, encabezados.length).setValues(filas);
+      
+      // ── FORMATO CONDICIONAL: rojo si fuera de rango (2°C - 8°C) ──
+      feedsPorSensor.forEach((_, idx) => {
+        const col = idx + 2; // Col 1 = fecha, sensores desde col 2
+        const rangoCol = hoja.getRange(filaInicio, col, filas.length, 1);
+        
+        // Regla: valor > 8 → fondo rojo claro
+        const reglAlta = SpreadsheetApp.newConditionalFormatRule()
+          .whenNumberGreaterThan(8.0)
+          .setBackground("#fecaca")
+          .setFontColor("#dc2626")
+          .setRanges([rangoCol])
+          .build();
+          
+        // Regla: valor < 2 → fondo azul claro
+        const reglBaja = SpreadsheetApp.newConditionalFormatRule()
+          .whenNumberLessThan(2.0)
+          .setBackground("#bfdbfe")
+          .setFontColor("#1d4ed8")
+          .setRanges([rangoCol])
+          .build();
+          
+        const reglas = hoja.getConditionalFormatRules();
+        reglas.push(reglAlta);
+        reglas.push(reglBaja);
+        hoja.setConditionalFormatRules(reglas);
+      });
+      
+      // ── FORMATO DE COLUMNAS ───────────────────────────────────
+      hoja.setColumnWidth(1, 140); // Fecha/Hora
+      feedsPorSensor.forEach((_, idx) => hoja.setColumnWidth(idx + 2, 130));
+      
+      // Alternar colores de filas para legibilidad
+      for (let i = 0; i < filas.length; i++) {
+        const color = i % 2 === 0 ? "#f8fafc" : "#ffffff";
+        hoja.getRange(filaInicio + i, 1, 1, encabezados.length).setBackground(color);
+      }
+      
+      // Centrar columnas de temperatura
+      hoja.getRange(filaInicio, 2, filas.length, feedsPorSensor.length)
+          .setHorizontalAlignment("center").setNumberFormat("0.00");
+    }
+    
+    // ── FILA DE RESUMEN ESTADÍSTICO ───────────────────────────
+    const filaResumen = filaEncabezado + filas.length + 2;
+    hoja.getRange(filaResumen, 1).setValue("RESUMEN ESTADÍSTICO")
+        .setFontWeight("bold").setFontColor("#00384d").setFontSize(10);
+        
+    const etiquetas = ["Mínimo (°C)", "Máximo (°C)", "Promedio (°C)", "Lecturas totales"];
+    etiquetas.forEach((etiq, i) => {
+      hoja.getRange(filaResumen + 1 + i, 1).setValue(etiq).setFontWeight("bold");
+    });
+    
+    feedsPorSensor.forEach((fs, idx) => {
+      const col = idx + 2;
+      
+      // Calcular estadísticas directamente desde los datos unificados
+      const valores = filas
+        .map(f => f[col - 1])
+        .filter(v => v !== "" && !isNaN(v))
+        .map(Number);
+        
+      if (valores.length > 0) {
+        const minVal = Math.min(...valores);
+        const maxVal = Math.max(...valores);
+        const avg = Math.round((valores.reduce((a, b) => a + b, 0) / valores.length) * 100) / 100;
+        hoja.getRange(filaResumen + 1, col).setValue(minVal);
+        hoja.getRange(filaResumen + 2, col).setValue(maxVal);
+        hoja.getRange(filaResumen + 3, col).setValue(avg);
+        hoja.getRange(filaResumen + 4, col).setValue(valores.length);
+      } else {
+        hoja.getRange(filaResumen + 1, col).setValue("--");
+        hoja.getRange(filaResumen + 2, col).setValue("--");
+        hoja.getRange(filaResumen + 3, col).setValue("--");
+        hoja.getRange(filaResumen + 4, col).setValue(0);
+      }
+    });
+    
+    // Estilo del bloque de resumen
+    hoja.getRange(filaResumen + 1, 1, 4, encabezados.length)
+        .setBackground("#f1f5f9").setBorder(true, true, true, true, true, true);
+        
+    // Congelar fila de encabezado
+    hoja.setFrozenRows(filaEncabezado);
   } catch(e) { console.error("Error en Sheet: " + e.message); }
 }
 
