@@ -44,7 +44,7 @@ const CONFIG_INMUNO = {
             id: 3102139, key: "YPWRU12M4LY6DBIX", 
             folderId_Tecnico: "1pUwu374roF1-7QOHnt8saAvTD66_k4rv",
             folderId_Semanal: "14RSuSAXsOsYdFTlKMeHeP718h7n7glx9",
-            folderId_Calculo: "1o9LBBg9yyNe3Y48SAATvSHGZ8kHjltOI",
+            folderId_Calculo: "1Z_Q4qsi9UitSgpwPjkn4ATQhmyvsyqe9",
             folderId_Desvio: "1gQjztb4YUrFqzLUlp_lkutX17NGvMwlk"
         },
         "Villa_Obrera": { 
