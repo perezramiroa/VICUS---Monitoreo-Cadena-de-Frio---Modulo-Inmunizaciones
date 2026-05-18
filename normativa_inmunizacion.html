@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>Marco Normativo – Inmunización</title>
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/png" href="./icons/icon-192x192.png">
+  <meta name="theme-color" content="#00384d">
+  <link rel="stylesheet" href="./css/pwa-styles.css">
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --fg: #1e293b;
+      --primary: #1d4ed8;
+      --card: #ffffff;
+      --border: #e2e8f0;
+    }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background-color: var(--bg);
+      color: var(--fg);
+      margin: 0; padding: 0;
+    }
+    .header {
+      background: var(--card);
+      padding: 24px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    .container {
+      max-width: 900px;
+      margin: 24px auto;
+      padding: 0 20px;
+    }
+    .section {
+      background: var(--card);
+      padding: 25px;
+      margin-bottom: 24px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+      border-left: 5px solid var(--primary);
+    }
+    h1 { font-size: 24px; color: #00384d; margin: 16px 0 8px; }
+    h2 { font-size: 20px; color: var(--primary); margin-bottom: 16px; }
+    h3 { font-size: 18px; margin: 20px 0 10px; display: flex; justify-content: space-between; align-items: center; }
+    .verify-btn {
+      background: #dbeafe;
+      border: 1px solid #bfdbfe;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      color: #1d4ed8;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .verify-btn:hover { background: #bfdbfe; }
+    .warning-note {
+      background-color: #fffbeb;
+      border-left: 4px solid #fbbf24;
+      padding: 16px;
+      margin-bottom: 24px;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+  </style>
+  <script src="./js/pwa-utils.js"></script>
+</head>
+<body>
+
+  <div class="header">
+    <div style="display:flex; justify-content:center; margin-bottom:16px;">
+      <img src="logos/logo_rih.jpg" alt="RIH" style="max-height:100px; width:auto; object-fit:contain;">
+    </div>
+    <h1>Marco Normativo para la Cadena de Frío</h1>
+    <p style="color:#64748b;">Sistemas de monitoreo – Vicus | Vigencia: Enero 2026</p>
+    <button class="verify-btn" onclick="buscarTodasNormas()" style="margin-top:16px;">🔍 Verificar todas las normas</button>
+  </div>
+
+  <div class="container">
+    <div class="warning-note">
+      ℹ️ <strong>Nota importante:</strong> Si al verificar una norma no se encuentran resultados, esto <em>no significa que haya sido derogada</em>. Puede deberse a cambios en la indexación, formato de publicación o mantenimiento del sitio. En caso de duda, consulte con la autoridad sanitaria competente.
+    </div>
+
+    <div class="section">
+      <h2>1. Normativa Nacional</h2>
+      <h3>Ley Nacional N° 27.491 (2018) <button class="verify-btn" onclick="buscarNorma('Ley 27.491 boletinoficial.gob.ar')">🔍 Verificar</button></h3>
+      <p>Establece el Programa Nacional de Inmunizaciones (PNI) como política de Estado.</p>
+      <h3>Resolución MSAL N° 1030/2021 <button class="verify-btn" onclick="buscarNorma('Resolución 1030/2021 cadena de frío argentina.gob.ar')">🔍 Verificar</button></h3>
+      <p>Normas técnicas para la cadena de frío del PNI. Rango: +2 °C a +8 °C.</p>
+      <h3>ANMAT – Disp. N° 10.872/2020 <button class="verify-btn" onclick="buscarNorma('Disposición 10872/2020 ANMAT productos biológicos argentina.gob.ar')">🔍 Verificar</button></h3>
+      <p>Buenas Prácticas de Almacenamiento y Distribución.</p>
+    </div>
+
+    <div class="section">
+      <h2>2. Normativa Provincial – Neuquén</h2>
+      <h3>Res. Ministerial N° 1285/2022 <button class="verify-btn" onclick="buscarNorma('Resolución 1285/2022 cadena de frío inmunización salud.neuquen.gov.ar')">🔍 Verificar</button></h3>
+      <p>Protocolo Provincial de Gestión de la Cadena de Frío.</p>
+      <h3>Decreto Provincial N° 1874/2023 <button class="verify-btn" onclick="buscarNorma('Decreto 1874/2023 trazabilidad salud Neuquén neuquen.gob.ar')">🔍 Verificar</button></h3>
+      <p>Sistema Provincial de Trazabilidad.</p>
+    </div>
+
+    <div class="section">
+      <h2>3. Fuentes Oficiales</h2>
+      <ul style="padding-left:20px;">
+        <li><a href="https://www.argentina.gob.ar/salud/pni" target="_blank" style="color:#2563eb;">Programa Nacional de Inmunizaciones</a></li>
+        <li><a href="https://salud.neuquen.gov.ar/programas/inmunizaciones/" target="_blank" style="color:#2563eb;">Inmunizaciones – Ministerio de Salud de Neuquén</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <footer>
+    <div style="background-color: #00384d; padding: 24px; width: 100%; display: flex; align-items: center; justify-content: center; box-shadow: 0 -4px 20px rgba(0,0,0,0.1);">
+      <img src="logos/footer.jpg" alt="Institucional" style="max-width: 100%; height: auto; max-height: 80px; display: block;">
+    </div>
+  </footer>
+
+  <script>
+    function buscarNorma(q) { window.open(`https://www.google.com/search?q=${encodeURIComponent(q)}`, '_blank'); }
+    function buscarTodasNormas() {
+      const qs = ['Ley 27.491 boletinoficial.gob.ar', 'Resolución 1030/2021 cadena de frío argentina.gob.ar', 'Disposición 10872/2020 ANMAT', 'Resolución 1285/2022 Neuquén', 'Decreto 1874/2023 Neuquén'];
+      if (confirm('¿Desea verificar todas las normas?')) qs.forEach((q, i) => setTimeout(() => buscarNorma(q), i * 800));
+    }
+  </script>
+</body>
+</html>

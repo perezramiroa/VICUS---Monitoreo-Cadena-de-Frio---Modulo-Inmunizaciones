@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Monitor Dataloggers - Inmunización</title>
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/png" href="./icons/icon-192x192.png">
+  <meta name="theme-color" content="#00384d">
+  <link rel="stylesheet" href="./css/pwa-styles.css">
+  <style>
+    /* Estilos específicos unificados con Farmacia */
+    .alerta-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.45); z-index: 3000; align-items: center; justify-content: center; }
+    .alerta-modal-overlay.visible { display: flex; }
+    .alerta-modal { background: white; border-radius: 14px; padding: 24px; max-width: 420px; width: 92%; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+    .alerta-modal .valor-actual { font-size: 2rem; font-weight: bold; text-align: center; margin: 8px 0 16px; padding: 10px; border-radius: 8px; }
+    .alerta-modal .valor-actual.alta { color: #dc2626; background: #fee2e2; }
+    .alerta-modal .valor-actual.baja { color: #1d4ed8; background: #dbeafe; }
+    .pasos { list-style: none; padding: 0; margin: 0 0 12px; }
+    .pasos li { padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; color: #1e293b; }
+    .pasos li .fundamento { display: block; font-size: 0.78rem; color: #64748b; font-style: italic; margin-top: 2px; }
+    
+    .device-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); border-left: 6px solid #10b981; transition: box-shadow 0.2s; position: relative; }
+    .device-card.alert { border-left-color: #ef4444; }
+    .device-card.power-outage { border: 2px solid #ef4444; animation: pulse 2s infinite; }
+    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+
+    .fields-selector { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0; padding: 10px; background: #f1f5f9; border-radius: 8px; font-size: 0.9rem; }
+    .btn-protocolo { background: #00384d; color: white; padding: 12px 20px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+    
+    .protocolo-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 3000; align-items: flex-start; justify-content: center; overflow-y: auto; padding: 20px 0; }
+    .protocolo-overlay.visible { display: flex; }
+    .protocolo-modal { background: white; border-radius: 14px; padding: 28px; max-width: 680px; width: 95%; margin: auto; }
+    .protocolo-seccion h3 { font-size: 1rem; margin-bottom: 10px; padding: 8px; border-radius: 6px; }
+    .protocolo-seccion h3.alta { background: #fee2e2; color: #dc2626; }
+    .protocolo-seccion h3.baja { background: #dbeafe; color: #1d4ed8; }
+    .protocolo-tabla { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-bottom: 15px; }
+    .protocolo-tabla th { background: #f8fafc; padding: 8px; text-align: left; border-bottom: 2px solid #e2e8f0; }
+    .protocolo-tabla td { padding: 8px; border-bottom: 1px solid #f1f5f9; }
+  </style>
+</head>
+
+<body onload="init()">
+  <div class="header">
+    <div class="logo-bar">
+      <div class="logo-item" style="width:100%;">
+        <img src="logos/logo_rih.jpg" alt="RIH" style="width:100%; height:100%; object-fit:contain;">
+      </div>
+    </div>
+
+    <div style="display:flex; justify-content:center; width:100%;">
+      <button onclick="salir()" style="background:#ef4444; color:white; padding:8px 16px; border-radius:8px; border:none; font-weight:600; cursor:pointer; margin-bottom:10px;">🚪 Cerrar Sesión</button>
+    </div>
+    
+    <div style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap; justify-content:center;">
+      <button onclick="toggleNormativa()" style="background:#64748b; color:white; padding:12px 20px; border-radius:8px; border:none; cursor:pointer;">Normativa</button>
+      <button onclick="window.open('stock_inmunizacion_zona1.html', '_blank')" style="background:#8b5cf6; color:white; padding:12px 20px; border-radius:8px; border:none; font-weight:600; cursor:pointer;">📦 Control de Stock</button>
+      <button class="btn-protocolo" onclick="toggleProtocolo()">📋 Protocolo</button>
+    </div>
+  </div>
+
+  <h1 id="pageTitle" class="page-title">Monitoreo de Cadena de Frío - Inmunización</h1>
+  <div id="app" class="device-list"></div>
+
+  <div style="margin-top: 20px; text-align: center;">
+    <div style="background-color: #00384d; padding: 10px; border-radius: 8px;">
+      <img src="logos/footer.jpg" alt="Footer" style="max-width: 100%; height: auto;">
+    </div>
+  </div>
+
+  <!-- Modal Protocolo -->
+  <div id="protocoloOverlay" class="protocolo-overlay">
+    <div class="protocolo-modal">
+      <h2>📋 Protocolo de Cadena de Frío — Inmunización</h2>
+      <p style="font-size:0.85rem; color:#64748b; margin-bottom:20px;">Rango exigido: 2°C a 8°C · Disposición ANMAT 10.872/2020</p>
+      
+      <div class="protocolo-seccion">
+        <h3 class="alta">🔥 Ante temperatura ALTA (>8°C)</h3>
+        <table class="protocolo-tabla">
+          <thead><tr><th>#</th><th>Acción</th><th>Fundamento</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Verificar sellado de puertas</td><td>Evita entrada de aire cálido.</td></tr>
+            <tr><td>2</td><td>Controlar termostato</td><td>Puede estar descalibrado.</td></tr>
+            <tr><td>3</td><td>Evaluar medicamentos</td><td>Exigido por ANMAT 10.872/2020.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="protocolo-seccion">
+        <h3 class="baja">❄️ Ante temperatura BAJA (<2°C)</h3>
+        <table class="protocolo-tabla">
+          <thead><tr><th>#</th><th>Acción</th><th>Fundamento</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Revisar termostato</td><td>Puede estar demasiado frío.</td></tr>
+            <tr><td>2</td><td>Alejar del evaporador</td><td>Evita congelación por contacto.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <button onclick="cerrarProtocolo()" style="width:100%; padding:12px; background:#00384d; color:white; border:none; border-radius:8px; font-weight:600; cursor:pointer;">Cerrar ✕</button>
+    </div>
+  </div>
+
+  <!-- Panel Normativa -->
+  <div id="normativaPanel" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:4000; overflow:auto; padding:20px;">
+      <div style="max-width:800px; margin:0 auto;">
+          <button onclick="toggleNormativa()" style="float:right; padding:10px; background:#ef4444; color:white; border:none; border-radius:6px;">Cerrar ✕</button>
+          <h1 style="color:#1d4ed8;">Marco Normativo - Inmunización</h1>
+          <div style="background:#f8fafc; border-left:4px solid #1d4ed8; padding:20px; margin-top:20px; border-radius:8px;">
+              <h3>ANMAT 10.872/2020</h3>
+              <p>Regula las Buenas Prácticas de Almacenamiento. Exige monitoreo continuo y registro de desvíos térmicos.</p>
+              <h3>Ley Nacional 17.565</h3>
+              <p>Responsabilidad de la Jefatura sobre la conservación de productos termolábiles.</p>
+          </div>
+      </div>
+  </div>
+
+  <!-- Modal Guía Alerta -->
+  <div id="alertaModalOverlay" class="alerta-modal-overlay">
+    <div class="alerta-modal">
+      <h3 id="alertaModalTitulo"></h3>
+      <div id="alertaModalValor" class="valor-actual"></div>
+      <ul class="pasos" id="alertaModalPasos"></ul>
+      <button style="width:100%; padding:12px; background:#1e293b; color:white; border:none; border-radius:8px;" onclick="cerrarGuiaAlerta()">Entendido ✓</button>
+    </div>
+  </div>
+
+  <!-- Configuración de Sensores -->
+  <script src="./js/config-sensores.js"></script>
+  <script>
+    const MIN_GEN = 2.0, MAX_GEN = 8.0;
+    const MIN_FREEZER = -28.0, MAX_FREEZER = -18.0;
+    const WIFI_CUTOFF = 15;
+
+    let config_actual = JSON.parse(sessionStorage.getItem('vicus_inmuno_config') || '{"nombre":"Desconocido","canales":[]}');
+
+    function init() { 
+        if (!config_actual || config_actual.canales.length === 0) {
+            window.location.href = "index.html"; // Redirigir si no hay sesión
+            return;
+        }
+        document.getElementById('pageTitle').innerText = "Monitoreo - " + config_actual.nombre;
+        render(); 
+        refresh(); 
+        setInterval(refresh, 30000); 
+        if ('Notification' in window) Notification.requestPermission();
+    }
+
+    function render() {
+      const app = document.getElementById('app'); 
+      app.innerHTML = "";
+      
+      if (config_actual.canales.length === 0) {
+          app.innerHTML = "<p style='text-align:center;'>No hay sensores asignados a esta zona.</p>";
+          return;
+      }
+
+      config_actual.canales.forEach(key => {
+        const c = CONFIG_INMUNO.canales[key];
+        if (!c) return;
+        
+        const card = document.createElement('div'); 
+        card.className = 'device-card'; 
+        card.id = `p-${c.id}`;
+        card.innerHTML = `
+          <div class="device-header"><span id="name-${c.id}">Cargando...</span></div>
+          <div class="device-body"><div class="sensor-grid" id="g-${c.id}"></div></div>
+        `;
+        app.appendChild(card);
+      });
+    }
+
+    async function refresh() {
+      for (let key of config_actual.canales) {
+        const c = CONFIG_INMUNO.canales[key];
+        if(!c) continue;
+        
+        try {
+          const res = await fetch(`https://api.thingspeak.com/channels/${c.id}/feeds.json?api_key=${c.key}&results=20`);
+          const d = await res.json();
+          if(!d || !d.channel) continue;
+          
+          document.getElementById(`name-${c.id}`).innerText = d.channel.name;
+          
+          const grid = document.getElementById(`g-${c.id}`);
+          let hasAlert = false;
+          let isOutage = false;
+
+          // Check connectivity
+          if(d.feeds && d.feeds.length > 1) {
+              const lastFeedTime = new Date(d.feeds[d.feeds.length-1].created_at);
+              const prevFeedTime = new Date(d.feeds[d.feeds.length-2].created_at);
+              if((lastFeedTime - prevFeedTime) / 60000 > WIFI_CUTOFF) isOutage = true;
+          }
+          
+          // Render fields
+          let newGridHTML = "";
+          for(let i=1; i<=8; i++) {
+              const f = 'field' + i;
+              const label = d.channel[f];
+              if(!label) continue;
+              
+              // Skip wifi/signal labels
+              const labelLower = label.toLowerCase();
+              if (['ambiente', 'wifi', 'rssi', 'intensidad', 'señal', 'nivel'].some(x => labelLower.includes(x))) continue;
+              
+              // Use freezer range if specified
+              let MIN = MIN_GEN, MAX = MAX_GEN;
+              if (c.isFreezer && c.fieldFreezer === f) {
+                  MIN = MIN_FREEZER; MAX = MAX_FREEZER;
+              }
+
+              const val = d.feeds && d.feeds.length > 0 ? parseFloat(d.feeds[d.feeds.length-1][f]) : NaN;
+              const isDanger = !isNaN(val) && (val > MAX || val < MIN);
+              if (isDanger) hasAlert = true;
+              
+              newGridHTML += `
+                <div class="sensor-card ${isDanger ? 'danger' : ''}" id="f-${c.id}-${f}">
+                  <div class="sensor-label">${label}</div>
+                  <div class="sensor-value" style="${isDanger ? 'color:#dc2626; background:#fee2e2;' : ''}">${isNaN(val) ? '--' : val.toFixed(1)}°C</div>
+                  <button class="btn-info" onclick="mostrarGuiaAlerta('${val > MAX ? 'alta' : 'baja'}', '${isNaN(val)?'--':val.toFixed(1)}')" style="display:${isDanger ? 'block' : 'none'}; background:#fef2f2; color:#dc2626; border:1px solid #fecaca; border-radius:6px; padding:6px; font-size:0.8rem; cursor:pointer; margin-bottom:8px; width:100%;">ⓘ ¿Qué hacer?</button>
+                  <button class="btn-hist" onclick="openRep('${c.id}','${c.key}','${f}', ${MIN}, ${MAX}, '${c.folderId_Tecnico || ''}')" style="background:#3b82f6; color:white; border:none; padding:8px; border-radius:6px; width:100%; font-weight:600; cursor:pointer;">📊 Historial</button>
+                </div>
+              `;
+              
+              if(isDanger) notify(d.channel.name, val);
+          }
+          grid.innerHTML = newGridHTML;
+
+          const pCard = document.getElementById(`p-${c.id}`);
+          if (pCard) {
+              pCard.className = 'device-card' + (hasAlert ? ' alert' : '') + (isOutage ? ' power-outage' : '');
+          }
+        } catch (e) {
+            console.error("Error fetching", c.id, e);
+        }
+      }
+    }
+
+    function openRep(id, k, f, min, max, folderId) { 
+        window.open(`reporte_individual.html?id=${id}&key=${k}&field=${f}&min=${min}&max=${max}&folderId=${folderId}`, '_blank'); 
+    }
+    
+    function toggleNormativa() { const p = document.getElementById('normativaPanel'); p.style.display = p.style.display === 'none' ? 'block' : 'none'; }
+    function toggleProtocolo() { document.getElementById('protocoloOverlay').classList.add('visible'); }
+    function cerrarProtocolo() { document.getElementById('protocoloOverlay').classList.remove('visible'); }
+    
+    function mostrarGuiaAlerta(tipo, valor) {
+        const modal = document.getElementById('alertaModalOverlay');
+        document.getElementById('alertaModalTitulo').innerText = tipo === 'alta' ? '🔥 Temperatura ALTA' : '❄️ Temperatura BAJA';
+        const vEl = document.getElementById('alertaModalValor');
+        vEl.innerText = valor + '°C'; vEl.className = 'valor-actual ' + tipo;
+        document.getElementById('alertaModalPasos').innerHTML = tipo === 'alta' ? '<li>Check puertas</li><li>Check termostato</li>' : '<li>Check termostato</li><li>Alejar de pared</li>';
+        modal.classList.add('visible');
+    }
+    function cerrarGuiaAlerta() { document.getElementById('alertaModalOverlay').classList.remove('visible'); }
+
+    function notify(name, val) {
+        if (Notification.permission === 'granted') new Notification('⚠️ ALERTA: ' + name, { body: `Valor: ${val}°C`, icon: './icons/icon-192x192.png' });
+    }
+
+    function salir() {
+        sessionStorage.removeItem('vicus_inmuno_config');
+        window.location.href = "index.html";
+    }
+  </script>
+</body>
+</html>
