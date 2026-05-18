@@ -58,8 +58,8 @@ function ejecutarReporteSemanal() {
   const fechaEmision = Utilities.formatDate(hoy, "GMT-3", "dd/MM/yyyy");
   const rangoTexto = Utilities.formatDate(haceSieteDias, "GMT-3", "dd/MM/yyyy") + " - " + fechaEmision;
 
-  // Procesar un bloque de 3 centros en esta ejecución
-  const limite = Math.min(currentCentroIndex + 3, nombresCentros.length);
+  // Procesar un bloque de 2 centros en esta ejecución para máxima seguridad y rendimiento
+  const limite = Math.min(currentCentroIndex + 2, nombresCentros.length);
   console.log(`Iniciando procesamiento de bloque: Centros del ${currentCentroIndex + 1} al ${limite} de ${nombresCentros.length}`);
   
   for (let idx = currentCentroIndex; idx < limite; idx++) {
@@ -215,32 +215,40 @@ function analizarDatos(feeds, field) {
 }
 
 function generarSheetSemanal(feedsPorSensor, rangoTexto, fechaHoy, folderId) {
+  const centroNombre = feedsPorSensor[0].sensor.centro;
+  console.log(`[Sheet - ${centroNombre}] Iniciando generarSheetSemanal...`);
   try {
+    console.log(`[Sheet - ${centroNombre}] Conectando con Google Drive folder: ${folderId}`);
     const carpeta = DriveApp.getFolderById(folderId);
-    const nombreArchivo = "Consolidado Semanal - " + feedsPorSensor[0].sensor.centro;
+    const nombreArchivo = "Consolidado Semanal - " + centroNombre;
     
-    // Buscar si ya existe una planilla con este nombre en la carpeta
+    console.log(`[Sheet - ${centroNombre}] Buscando archivo: "${nombreArchivo}"`);
     const archivos = carpeta.getFilesByName(nombreArchivo);
     let ss;
     if (archivos.hasNext()) {
       const archivo = archivos.next();
+      console.log(`[Sheet - ${centroNombre}] Archivo existente encontrado. Abriendo Spreadsheet ID: ${archivo.getId()}`);
       ss = SpreadsheetApp.openById(archivo.getId());
     } else {
-      // Si no existe, crear una nueva planilla
+      console.log(`[Sheet - ${centroNombre}] Archivo no encontrado. Creando nueva planilla...`);
       ss = SpreadsheetApp.create(nombreArchivo);
-      // Mover la planilla recién creada a la carpeta correspondiente
       const archivoDrive = DriveApp.getFileById(ss.getId());
       carpeta.addFile(archivoDrive);
       DriveApp.getRootFolder().removeFile(archivoDrive);
+      console.log(`[Sheet - ${centroNombre}] Nueva planilla creada y movida a su carpeta.`);
     }
     
     const nombreHoja = "Semana " + Utilities.formatDate(fechaHoy, "GMT-3", "dd-MM-yyyy");
+    console.log(`[Sheet - ${centroNombre}] Creando/reemplazando hoja: "${nombreHoja}"`);
     
-    // Eliminar hoja si ya existe (re-ejecución)
     const hojaExistente = ss.getSheetByName(nombreHoja);
-    if (hojaExistente) ss.deleteSheet(hojaExistente);
+    if (hojaExistente) {
+      console.log(`[Sheet - ${centroNombre}] Hoja previa duplicada encontrada. Eliminándola...`);
+      ss.deleteSheet(hojaExistente);
+    }
     
     const hoja = ss.insertSheet(nombreHoja);
+    console.log(`[Sheet - ${centroNombre}] Hoja insertada con éxito.`);
     
     // ── ENCABEZADO PRINCIPAL ──────────────────────────────────
     hoja.getRange("A1").setValue("REGISTRO SEMANAL DE TEMPERATURAS - INMUNIZACIÓN");
@@ -251,7 +259,6 @@ function generarSheetSemanal(feedsPorSensor, rangoTexto, fechaHoy, folderId) {
     hoja.getRange("A3").setFontSize(9).setFontColor("#64748b");
     
     // ── CONSTRUIR COLUMNAS DINÁMICAMENTE ─────────────────────
-    // Col 1: Fecha/Hora | Col 2..N: un sensor por columna
     const encabezados = ["Fecha / Hora"];
     feedsPorSensor.forEach(fs => {
       encabezados.push(fs.sensor.n + "\n(" + fs.sensor.eq + ")");
@@ -266,17 +273,15 @@ function generarSheetSemanal(feedsPorSensor, rangoTexto, fechaHoy, folderId) {
     hoja.setRowHeight(filaEncabezado, 45);
     
     // ── UNIFICAR TIMESTAMPS AGRUPANDO POR MINUTO ─────────────
-    // Se agrupa por minuto para tener una sola fila limpia de tiempo
+    console.log(`[Sheet - ${centroNombre}] Agrupando y alineando lecturas por minuto en memoria...`);
     const mapaTemp = {};
     feedsPorSensor.forEach((fs, idx) => {
       fs.feeds.forEach(feed => {
         const val = parseFloat(feed[fs.sensor.field]);
         if (isNaN(val) || val === -127) return;
         const d = new Date(feed.created_at);
-        // Clave por minuto: "dd/MM/yyyy HH:mm"
         const clave = Utilities.formatDate(d, "GMT-3", "dd/MM/yyyy HH:mm");
         if (!mapaTemp[clave]) mapaTemp[clave] = { fecha: clave, valores: {} };
-        // Si ya hay un valor para ese sensor en ese minuto, promediamos
         if (mapaTemp[clave].valores[idx] !== undefined) {
           mapaTemp[clave].valores[idx] = (mapaTemp[clave].valores[idx] + val) / 2;
         } else {
@@ -285,7 +290,6 @@ function generarSheetSemanal(feedsPorSensor, rangoTexto, fechaHoy, folderId) {
       });
     });
     
-    // Ordenar por clave de fecha de manera cronológica
     const claves = Object.keys(mapaTemp).sort((a, b) => {
       const toDate = s => {
         const [fecha, hora] = s.split(' ');
@@ -295,7 +299,6 @@ function generarSheetSemanal(feedsPorSensor, rangoTexto, fechaHoy, folderId) {
       return toDate(a) - toDate(b);
     });
     
-    // ── ESCRIBIR DATOS EN LOTES ──────────────────────────────
     const filas = claves.map(clave => {
       const entrada = mapaTemp[clave];
       const fila = [entrada.fecha];
@@ -306,16 +309,17 @@ function generarSheetSemanal(feedsPorSensor, rangoTexto, fechaHoy, folderId) {
       return fila;
     });
     
+    console.log(`[Sheet - ${centroNombre}] Cantidad total de filas unificadas a escribir: ${filas.length}`);
     if (filas.length > 0) {
       const filaInicio = filaEncabezado + 1;
+      console.log(`[Sheet - ${centroNombre}] Escribiendo matriz de lecturas en lote...`);
       hoja.getRange(filaInicio, 1, filas.length, encabezados.length).setValues(filas);
       
-      // ── FORMATO CONDICIONAL: rojo si fuera de rango (2°C - 8°C) ──
+      console.log(`[Sheet - ${centroNombre}] Aplicando reglas de Formato Condicional (2°C - 8°C)...`);
       feedsPorSensor.forEach((_, idx) => {
-        const col = idx + 2; // Col 1 = fecha, sensores desde col 2
+        const col = idx + 2;
         const rangoCol = hoja.getRange(filaInicio, col, filas.length, 1);
         
-        // Regla: valor > 8 → fondo rojo claro
         const reglAlta = SpreadsheetApp.newConditionalFormatRule()
           .whenNumberGreaterThan(8.0)
           .setBackground("#fecaca")
@@ -323,7 +327,6 @@ function generarSheetSemanal(feedsPorSensor, rangoTexto, fechaHoy, folderId) {
           .setRanges([rangoCol])
           .build();
           
-        // Regla: valor < 2 → fondo azul claro
         const reglBaja = SpreadsheetApp.newConditionalFormatRule()
           .whenNumberLessThan(2.0)
           .setBackground("#bfdbfe")
@@ -337,11 +340,10 @@ function generarSheetSemanal(feedsPorSensor, rangoTexto, fechaHoy, folderId) {
         hoja.setConditionalFormatRules(reglas);
       });
       
-      // ── FORMATO DE COLUMNAS ───────────────────────────────────
-      hoja.setColumnWidth(1, 140); // Fecha/Hora
+      hoja.setColumnWidth(1, 140);
       feedsPorSensor.forEach((_, idx) => hoja.setColumnWidth(idx + 2, 130));
       
-      // Alternar colores de filas para legibilidad en un lote unificado (ultra-rápido)
+      console.log(`[Sheet - ${centroNombre}] Aplicando colores alternados en un único lote ultra-veloz...`);
       const colores2D = [];
       for (let i = 0; i < filas.length; i++) {
         const color = i % 2 === 0 ? "#f8fafc" : "#ffffff";
@@ -349,12 +351,11 @@ function generarSheetSemanal(feedsPorSensor, rangoTexto, fechaHoy, folderId) {
       }
       hoja.getRange(filaInicio, 1, filas.length, encabezados.length).setBackgrounds(colores2D);
       
-      // Centrar columnas de temperatura
       hoja.getRange(filaInicio, 2, filas.length, feedsPorSensor.length)
           .setHorizontalAlignment("center").setNumberFormat("0.00");
     }
     
-    // ── FILA DE RESUMEN ESTADÍSTICO ───────────────────────────
+    console.log(`[Sheet - ${centroNombre}] Generando bloque de Resumen Estadístico...`);
     const filaResumen = filaEncabezado + filas.length + 2;
     hoja.getRange(filaResumen, 1).setValue("RESUMEN ESTADÍSTICO")
         .setFontWeight("bold").setFontColor("#00384d").setFontSize(10);
@@ -366,8 +367,6 @@ function generarSheetSemanal(feedsPorSensor, rangoTexto, fechaHoy, folderId) {
     
     feedsPorSensor.forEach((fs, idx) => {
       const col = idx + 2;
-      
-      // Calcular estadísticas directamente desde los datos unificados
       const valores = filas
         .map(f => f[col - 1])
         .filter(v => v !== "" && !isNaN(v))
@@ -389,12 +388,11 @@ function generarSheetSemanal(feedsPorSensor, rangoTexto, fechaHoy, folderId) {
       }
     });
     
-    // Estilo del bloque de resumen
     hoja.getRange(filaResumen + 1, 1, 4, encabezados.length)
         .setBackground("#f1f5f9").setBorder(true, true, true, true, true, true);
         
-    // Congelar fila de encabezado
     hoja.setFrozenRows(filaEncabezado);
+    console.log(`[Sheet - ${centroNombre}] ¡generarSheetSemanal completado de forma ultra-rápida!`);
   } catch(e) { console.error("Error en Sheet: " + e.message); }
 }
 
