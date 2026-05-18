@@ -84,7 +84,7 @@
         const params = new URLSearchParams(window.location.search);
         const ID = params.get('id'), KEY = params.get('key'), FIELD = params.get('field') || 'field1', FOLDER_ID = params.get('folderId') || '';
         const TYPE = params.get('type') || 'inmunizacion'; // 'vacunas' o 'inmunizacion'
-        const APPS_SCRIPT_INMUNIZACION = 'https://script.google.com/macros/s/AKfycbyj0y92G5aQcpeE3S3wkldzk8sr0hjJXcwCAJl8yQq9oXogUIUHDOszWEEjlmxOWTE/exec';
+        const APPS_SCRIPT_INMUNIZACION = 'https://script.google.com/macros/s/AKfycbwX-5K7tiza0T1sxgCOccwNgK_MK0T3FSemLigxnKjFRvsabm8nxhGrVIaSBPPK8Rye/exec';
         
         const storageKey = TYPE === 'vacunas' ? 'vicus_obs_vacunas' : 'vicus_obs_inmunizacion';
         const reportPrefix = TYPE === 'vacunas' ? 'INF-VAC-v2.3' : 'INF-INM-v2.3';
