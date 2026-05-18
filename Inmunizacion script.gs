@@ -13,7 +13,7 @@ const CENTROS = {
   "Hospital Chañar": { tecnico: "1IdwQT3v1T-uHTa0Ni4MZHkWyVAgf8LzK", semanal: "1x2CiZxrfv-iVdVBwAWWQ3vDjqhH9BRff", sheet: "1tKC6qvZ7lMwtw3Uv7EoQRNwUaV0quA3N", desvio: "1q8s4Wllzj4uz_0gf6mbDwPXoDP7cloef" },
   "Nueva España": { tecnico: "1XI_QiSL7VXkI1PaZUM1P8F7iKrcCTNf0", semanal: "1hawLuNoFj3ZMyuSRXxNkye1eruSxO8YI", sheet: "12nVB4HtY56NBsXdipRMVB77H3fLJPmiq", desvio: "1XbjIZ_BA9KWe20TdpxX3WMpJ5NsswxoQ" },
   "Sarmiento 1": { tecnico: "1d9wiHgEoKs4OmgLi9dapvzHCZUUYj-l9", semanal: "1N163HyXD8WCQef5FzANrDwNJ5ZOBfD3q", sheet: "13fkDm_102G6IodfDK3PRTorrYQuqYgqA", desvio: "15im-ylfLRY9wd8_mTpwNUC4FPwxSWGyf" },
-  "Sarmiento 2": { tecnico: "1pUwu374roF1-7QOHnt8saAvTD66_k4rv", semanal: "14RSuSAXsOsYdFTlKMeHeP718h7n7glx9", sheet: "1o9LBBg9yyNe3Y48SAATvSHGZ8kHjltOI", desvio: "1gQjztb4YUrFqzLUlp_lkutX17NGvMwlk" },
+  "Sarmiento 2": { tecnico: "1pUwu374roF1-7QOHnt8saAvTD66_k4rv", semanal: "14RSuSAXsOsYdFTlKMeHeP718h7n7glx9", sheet: "1Z_Q4qsi9UitSgpwPjkn4ATQhmyvsyqe9", desvio: "1gQjztb4YUrFqzLUlp_lkutX17NGvMwlk" },
   "VAN": { tecnico: "1iA6WlL387h9lH7LRHyG3KqEKyo1DUIz_", semanal: "10dDvfWEYGC4A8tn-OXsHs6XPyQIvj4gy", sheet: "1VG9Kd-LgF-w4-lAU91SJVDfu0mo50sJV", desvio: "114Q_l-ul61MKeb58B65kN1vOdgDvo47t" },
   "VAS": { tecnico: "1i7TfhLQCl93RXm75K6RzLu67o0fU_Ki6", semanal: "14NejZ-PcK4NUhxUvpDsi9I08BbF94rJF", sheet: "1nduAcMyFPJ7h7PUrDGeUu83aFzJhUAPe", desvio: "1oDwYGACHJt_29IknBSDEGuAJOUJzLd_V" },
   "Villa Obrera": { tecnico: "1-DZsi7UkruU646KlIdfyz7bNt_KVs0V3", semanal: "1pmmAczecphzLSqJ-Tz5aL0oJo5mjeTBt", sheet: "1V9elGuGb09QQ7soIzR4CTMNMiBg9naRX", desvio: "1mm7a6lz3LBF_CnEN9vNiMEIx3_uOL5Ii" },
@@ -40,46 +40,99 @@ const SENSORES = [
 ];
 
 function ejecutarReporteSemanal() {
+  const properties = PropertiesService.getScriptProperties();
+  let currentCentroIndex = parseInt(properties.getProperty("CURRENT_CENTRO_INDEX") || "0");
+  
+  const nombresCentros = Object.keys(CENTROS);
+  
+  // Si ya procesamos todos, limpiar y terminar
+  if (currentCentroIndex >= nombresCentros.length) {
+    properties.deleteProperty("CURRENT_CENTRO_INDEX");
+    eliminarTriggersDeContinuacion();
+    console.log("¡Reporte Semanal consolidado completado exitosamente para TODOS los centros!");
+    return;
+  }
+  
   const hoy = new Date();
   const haceSieteDias = new Date(hoy.getTime() - 7 * 24 * 60 * 60 * 1000);
   const fechaEmision = Utilities.formatDate(hoy, "GMT-3", "dd/MM/yyyy");
   const rangoTexto = Utilities.formatDate(haceSieteDias, "GMT-3", "dd/MM/yyyy") + " - " + fechaEmision;
 
-  const feedsPorCentro = {};
-
-  SENSORES.forEach(s => {
-    try {
-      const configCentro = CENTROS[s.centro];
-      if (!configCentro) return;
-
-      const data = fetchThingSpeakDataCompleto(s.id, s.k, 7);
-      if (!data || !data.feeds || data.feeds.length === 0) return;
-
-      if (!feedsPorCentro[s.centro]) feedsPorCentro[s.centro] = [];
-      feedsPorCentro[s.centro].push({ sensor: s, feeds: data.feeds });
-
-      const trazabilidad = "AUTO-INM-" + Utilities.formatDate(hoy, "GMT-3", "yyyyMMdd") + "-" + s.id;
-      const analizada = analizarDatos(data.feeds, s.field);
-      const conectividad = analizarConectividad(data.feeds, s.field);
-      const grafico = generarGraficoCurva(data.feeds, s.field, s.n);
-
-      const pdfBlob = generarPDFOficial(s, fechaEmision, rangoTexto, trazabilidad, analizada, conectividad, grafico);
-      
-      const carpeta = DriveApp.getFolderById(configCentro.semanal);
-      const file = carpeta.createFile(pdfBlob);
-      file.setName("Informe_Semanal_" + s.n.replace(/ /g,"_") + "_" + trazabilidad + ".pdf");
-    } catch (e) {
-      console.error("Error en " + s.n + ": " + e.message);
-    }
-  });
-
-  for (let nombreCentro in feedsPorCentro) {
-    try {
-      generarSheetSemanal(feedsPorCentro[nombreCentro], rangoTexto, hoy, CENTROS[nombreCentro].sheet);
-    } catch (e) {
-      console.error("Error al generar Sheet para " + nombreCentro + ": " + e.message);
+  // Procesar un bloque de 3 centros en esta ejecución
+  const limite = Math.min(currentCentroIndex + 3, nombresCentros.length);
+  console.log(`Iniciando procesamiento de bloque: Centros del ${currentCentroIndex + 1} al ${limite} de ${nombresCentros.length}`);
+  
+  for (let idx = currentCentroIndex; idx < limite; idx++) {
+    const nombreCentro = nombresCentros[idx];
+    console.log(`Procesando centro: ${nombreCentro}`);
+    
+    const configCentro = CENTROS[nombreCentro];
+    const sensoresDelCentro = SENSORES.filter(s => s.centro === nombreCentro);
+    const feedsPorSensor = [];
+    
+    sensoresDelCentro.forEach(s => {
+      try {
+        const data = fetchThingSpeakDataCompleto(s.id, s.k, 7);
+        if (!data || !data.feeds || data.feeds.length === 0) return;
+        
+        feedsPorSensor.push({ sensor: s, feeds: data.feeds });
+        
+        const trazabilidad = "AUTO-INM-" + Utilities.formatDate(hoy, "GMT-3", "yyyyMMdd") + "-" + s.id;
+        const analizada = analizarDatos(data.feeds, s.field);
+        const conectividad = analizarConectividad(data.feeds, s.field);
+        const grafico = generarGraficoCurva(data.feeds, s.field, s.n);
+        
+        const pdfBlob = generarPDFOficial(s, fechaEmision, rangoTexto, trazabilidad, analizada, conectividad, grafico);
+        
+        const carpeta = DriveApp.getFolderById(configCentro.semanal);
+        const file = carpeta.createFile(pdfBlob);
+        file.setName("Informe_Semanal_" + s.n.replace(/ /g,"_") + "_" + trazabilidad + ".pdf");
+        console.log(`  -> PDF generado para: ${s.n}`);
+      } catch (e) {
+        console.error(`  Error en sensor ${s.n}: ` + e.message);
+      }
+    });
+    
+    if (feedsPorSensor.length > 0) {
+      try {
+        generarSheetSemanal(feedsPorSensor, rangoTexto, hoy, configCentro.sheet);
+        console.log(`  -> Planilla consolidada unificada creada para: ${nombreCentro}`);
+      } catch (e) {
+        console.error(`  Error generando planilla para ${nombreCentro}: ` + e.message);
+      }
     }
   }
+  
+  // Actualizar índice para el siguiente bloque
+  properties.setProperty("CURRENT_CENTRO_INDEX", limite.toString());
+  
+  if (limite >= nombresCentros.length) {
+    // Terminamos todo en esta corrida
+    properties.deleteProperty("CURRENT_CENTRO_INDEX");
+    eliminarTriggersDeContinuacion();
+    console.log("¡Reporte Semanal consolidado completado exitosamente para TODOS los centros!");
+  } else {
+    // Aún quedan centros, programar el siguiente bloque
+    crearTriggerDeContinuacion();
+    console.log(`Bloque completado. Programando la continuación del siguiente bloque en 1 minuto...`);
+  }
+}
+
+function crearTriggerDeContinuacion() {
+  eliminarTriggersDeContinuacion(); // evitar duplicados
+  ScriptApp.newTrigger("ejecutarReporteSemanal")
+    .timeBased()
+    .after(60000) // ejecutar en 1 minuto (60000 ms es el mínimo soportado por Google)
+    .create();
+}
+
+function eliminarTriggersDeContinuacion() {
+  const triggers = ScriptApp.getProjectTriggers();
+  triggers.forEach(t => {
+    if (t.getHandlerFunction() === "ejecutarReporteSemanal") {
+      ScriptApp.deleteTrigger(t);
+    }
+  });
 }
 
 function generarPDFOficial(sensor, fecha, rango, trazabilidad, analizada, conectividad, grafico) {
