@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Reporte del Sensor - Inmunización</title>
+    <link rel="manifest" href="./manifest.json">
+    <link rel="icon" type="image/png" href="./icons/icon-192x192.png">
+    <meta name="theme-color" content="#00384d">
+    <link rel="stylesheet" href="./css/pwa-styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        .container { background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08); padding: 24px; border-left: 5px solid var(--success); width: 100% !important; max-width: none !important; margin: 0 !important; }
+        h1 { font-size: 1.8rem; display: flex; gap: 12px; align-items: center; color: var(--fg); }
+        .controls { margin: 16px 0 24px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+        .btn-day { padding: 6px 14px; background: #e2e8f0; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        .btn-day.active { background: var(--primary); color: white; }
+        #downloadBtn { background: var(--success); color: white; padding: 6px 14px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        #backBtn { background: #64748b; color: white; padding: 6px 14px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        .range-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 8px 12px; background: #f1f5f9; border-radius: 8px; border: 1px solid #cbd5e1; }
+        #rangeBtn { padding: 6px 14px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        .chart-container { height: 450px; margin: 20px 0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 0.9rem; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid var(--border); }
+        th { background: #f1f5f9; font-weight: 600; }
+        .metadata-bar { background: #f8fafc; border-left: 4px solid #0ea5e9; padding: 12px; margin: 16px 0; font-size: 0.95rem; color: #1e293b; }
+        .analisis-section, .recomendaciones-section { margin-top: 15px; padding: 12px; border-radius: 8px; font-size: 0.85rem; line-height: 1.4; border: 1px solid #e2e8f0; background: #f8fafc; }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <div class="logo-bar">
+            <div class="logo-item" style="width:100%;">
+                <img id="webLogo2" src="logos/logo_rih.jpg" alt="RIH" style="width:100%; height:100%; object-fit:contain;">
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="metadata-bar">
+            <strong>Código del informe:</strong> <span id="reportId">INF-INM-v2.3</span>
+            <span style="margin-left:20px;"><strong>Vigencia:</strong> Válido por 30 días</span>
+            <span style="margin-left:20px;"><strong>Fecha de emisión:</strong> <span id="issueDate"></span></span>
+        </div>
+
+        <div id="loading" style="text-align:center; padding:40px;">Cargando historial de Inmunización...</div>
+        
+        <div id="content" style="display:none">
+            <h1><span id="sensorName">Sensor</span> <span class="tag" id="teamName" style="background:#e0f2fe; color:#0369a1; padding:2px 8px; border-radius:4px; font-size:0.9rem;">Equipo</span></h1>
+            
+            <div class="controls">
+                <button class="btn-day active" onclick="run(1, this)">1 día</button>
+                <button class="btn-day" onclick="run(7, this)">7 días</button>
+                <div style="display: flex; align-items: center; gap: 8px; margin: 0 10px;"><label style="font-weight:600;">Día:</label><input type="date" id="targetDay" onchange="applyDay()" /></div>
+                <div class="range-group"><label>Rango:</label><input type="date" id="dateStart" /><label>al</label><input type="date" id="dateEnd" /><button id="rangeBtn" onclick="applyRange()">Buscar</button></div>
+                <div style="margin-left: auto; display: flex; gap: 10px;"><button id="downloadBtn" onclick="downloadPDF()">📥 PDF</button><button id="backBtn" onclick="window.close()">← Volver</button></div>
+            </div>
+
+            <div class="chart-container"><canvas id="chart"></canvas></div>
+
+            <div class="section">
+                <h2>⚠️ Alertas y Recuperaciones</h2>
+                <table id="alertTable">
+                    <thead><tr><th>Fecha y Hora</th><th>Valor</th><th>Estado</th><th>Duración</th><th>Observaciones</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+                <div id="analisisAlertas" class="analisis-section" style="display:none;"><strong>ANÁLISIS TÉCNICO:</strong><div id="analisisAlertasContenido"></div></div>
+                <div id="recomendacionesAlertas" class="recomendaciones-section" style="display:none;"><strong>RECOMENDACIONES:</strong><div id="recomendacionesAlertasContenido"></div></div>
+            </div>
+        </div>
+    </div>
+
+    <div style="margin-top: 32px; text-align: center; padding: 0 20px;">
+        <div style="background-color: #00384d; padding: 12px; border-radius: 8px;">
+            <img id="webFooter" src="logos/footer.jpg" alt="Footer" style="width:100%; height:auto;">
+        </div>
+    </div>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const ID = params.get('id'), KEY = params.get('key'), FIELD = params.get('field') || 'field1', FOLDER_ID = params.get('folderId') || '';
+        const TYPE = params.get('type') || 'inmunizacion'; // 'vacunas' o 'inmunizacion'
+        const APPS_SCRIPT_INMUNIZACION = 'https://script.google.com/macros/s/AKfycbyj0y92G5aQcpeE3S3wkldzk8sr0hjJXcwCAJl8yQq9oXogUIUHDOszWEEjlmxOWTE/exec';
+        
+        const storageKey = TYPE === 'vacunas' ? 'vicus_obs_vacunas' : 'vicus_obs_inmunizacion';
+        const reportPrefix = TYPE === 'vacunas' ? 'INF-VAC-v2.3' : 'INF-INM-v2.3';
+        const trazabilidadPrefix = TYPE === 'vacunas' ? 'RPT-VAC-' : 'RPT-INM-';
+        
+        let chartInstance = null, observaciones = JSON.parse(localStorage.getItem(storageKey) || '{}');
+
+        function mostrarToast(msg, color = '#10b981') {
+            const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; t.style.background = color;
+            document.body.appendChild(t); setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 600); }, 4000);
+        }
+        function generarCodigoTrazabilidad() {
+            const now = new Date(); const pad = n => String(n).padStart(2, '0');
+            return `${trazabilidadPrefix}${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}-${Math.random().toString(36).toUpperCase().slice(2, 7)}`;
+        }
+        function cleanText(t) { return t ? t.replace(/[^\x20-\x7E\xA1-\xFF]/g, '').replace(/á/g, 'a').replace(/é/g, 'e').replace(/í/g, 'i').replace(/ó/g, 'o').replace(/ú/g, 'u').replace(/ñ/g, 'n').trim() : ""; }
+        function guardarObservacion(input, id) { observaciones[id] = input.value; localStorage.setItem(storageKey, JSON.stringify(observaciones)); }
+
+        async function run(daysOrUrl, btnEl = null) {
+            document.getElementById('loading').style.display = 'block'; document.getElementById('content').style.display = 'none';
+            if(btnEl) { document.querySelectorAll('.btn-day').forEach(b => b.classList.remove('active')); btnEl.classList.add('active'); }
+            try {
+                let url = typeof daysOrUrl === 'string' ? daysOrUrl : `https://api.thingspeak.com/channels/${ID}/feeds.json?api_key=${KEY}&minutes=${daysOrUrl * 1440}`;
+                const res = await fetch(url); const data = await res.json();
+                document.getElementById('sensorName').innerText = data.channel.name; document.getElementById('teamName').innerText = data.channel[FIELD] || 'Sensor';
+                renderChart(data.feeds, FIELD); fillAlerts(data.feeds, FIELD);
+                document.getElementById('loading').style.display = 'none'; document.getElementById('content').style.display = 'block';
+            } catch (e) { alert("Error de conexión"); }
+        }
+        function applyDay() { const d = document.getElementById('targetDay').value; if(d) run(`https://api.thingspeak.com/channels/${ID}/feeds.json?api_key=${KEY}&start=${d}T00:00:00-03:00&end=${d}T23:59:59-03:00`); }
+        function applyRange() { const s = document.getElementById('dateStart').value, e = document.getElementById('dateEnd').value; if(s && e) run(`https://api.thingspeak.com/channels/${ID}/feeds.json?api_key=${KEY}&start=${s}T00:00:00-03:00&end=${e}T23:59:59-03:00`); }
+        
+        function renderChart(feeds, field) {
+            const ctx = document.getElementById('chart').getContext('2d'); if (chartInstance) chartInstance.destroy();
+            const temps = feeds.map(f => parseFloat(f[field])).filter(v => !isNaN(v));
+            const labels = feeds.map(f => { const d = new Date(f.created_at); return d.toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit', hour12: false}); });
+            chartInstance = new Chart(ctx, { type: 'line', data: { labels, datasets: [{ label: 'Temp', data: temps, borderColor: '#3b82f6', borderWidth: 2, pointRadius: 0, tension: 0.3, fill: true, backgroundColor: 'rgba(59,130,246,0.1)' }] }, options: { responsive: true, maintainAspectRatio: false } });
+        }
+        function fillAlerts(feeds, field) {
+            const tbody = document.querySelector('#alertTable tbody'); let rows = '', lastState = 'normal', startTime = null, alertData = [];
+            feeds.forEach(f => {
+                const val = parseFloat(f[field]); if (isNaN(val)) return;
+                const state = (val > 8.0) ? 'high' : (val < 2.0) ? 'low' : 'normal';
+                if (state !== lastState) {
+                    if (state !== 'normal') { startTime = f.created_at; const oId = `a_${f.created_at}`; rows += `<tr class="row-alert"><td>${new Date(f.created_at).toLocaleString()}</td><td>${val.toFixed(1)}°C</td><td>${state === 'high' ? 'Alta' : 'Baja'}</td><td>--</td><td><input type="text" value="${observaciones[oId] || ''}" onchange="guardarObservacion(this, '${oId}')" style="width:100%; border:1px solid #ddd; border-radius:4px;"></td></tr>`; }
+                    else if (startTime) { const dur = (new Date(f.created_at) - new Date(startTime)) / 60000; const oId = `r_${f.created_at}`; rows += `<tr><td>${new Date(f.created_at).toLocaleString()}</td><td>${val.toFixed(1)}°C</td><td>Recuperación</td><td>${Math.round(dur)} min</td><td><input type="text" value="${observaciones[oId] || ''}" onchange="guardarObservacion(this, '${oId}')" style="width:100%; border:1px solid #ddd; border-radius:4px;"></td></tr>`; alertData.push(dur); }
+                    lastState = state;
+                }
+            });
+            tbody.innerHTML = rows || '<tr><td colspan="5" style="text-align:center;">Sin eventos fuera de rango.</td></tr>';
+            const an = document.getElementById('analisisAlertasContenido'), re = document.getElementById('recomendacionesAlertasContenido');
+            if (alertData.length > 0) { an.innerText = `Desvíos detectados: ${alertData.length}.`; re.innerText = "• Verificar sellado de puertas."; document.getElementById('analisisAlertas').style.display = 'block'; document.getElementById('recomendacionesAlertas').style.display = 'block'; }
+            else { an.innerText = "Equipo estable."; re.innerText = "• Continuar monitoreo."; document.getElementById('analisisAlertas').style.display = 'block'; document.getElementById('recomendacionesAlertas').style.display = 'block'; }
+        }
+
+        async function downloadPDF() {
+            try {
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const pageWidth = pdf.internal.pageSize.getWidth();
+                const margin = 15;
+                const trazabilidad = generarCodigoTrazabilidad();
+                let yPos = 45;
+
+                const generateChartImage = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 1600;
+                    canvas.height = 600;
+                    const tempChart = new Chart(canvas.getContext('2d'), {
+                        type: 'line',
+                        data: chartInstance.data,
+                        options: {
+                            ...chartInstance.options,
+                            responsive: false,
+                            animation: false,
+                            devicePixelRatio: 2,
+                            plugins: { legend: { display: false } },
+                            scales: { x: { display: true }, y: { display: true } }
+                        }
+                    });
+                    const imgData = canvas.toDataURL('image/png');
+                    tempChart.destroy();
+                    return imgData;
+                };
+
+                const addHeaderFooter = (p) => {
+                    const totalPages = p.internal.getNumberOfPages();
+                    const imgLogo = document.getElementById('webLogo2');
+                    const imgFooter = document.getElementById('webFooter');
+                    for (let i = 1; i <= totalPages; i++) {
+                        p.setPage(i);
+                        // Encabezado
+                        if (imgLogo && imgLogo.complete && imgLogo.naturalWidth > 0) {
+                            try { p.addImage(imgLogo, 'JPEG', 0, 10, pageWidth, 20); } catch(e) {}
+                        }
+                        p.setDrawColor(226, 232, 240); p.line(margin, 35, pageWidth - margin, 35);
+                        // Pie de página
+                        p.setFillColor(0, 56, 77); p.rect(0, 272, pageWidth, 25, 'F');
+                        if (imgFooter && imgFooter.complete && imgFooter.naturalWidth > 0) {
+                            try { p.addImage(imgFooter, 'JPEG', 0, 274, pageWidth, 20); } catch(e) {}
+                        }
+                        p.setFontSize(8); p.setTextColor(255); p.text(`Página ${i} de ${totalPages}`, pageWidth - margin, 292, { align: 'right' });
+                    }
+                };
+
+                pdf.setFontSize(14); pdf.setFont('helvetica', 'bold'); pdf.setTextColor(0, 56, 77);
+                pdf.text("INFORME TÉCNICO DE CADENA DE FRÍO", margin, yPos);
+                yPos += 10; pdf.setFontSize(10); pdf.setFont('helvetica', 'italic'); pdf.setTextColor(100);
+                pdf.text("Según Disposición ANMAT 10.872/2020", margin, yPos);
+                yPos += 12; pdf.setFontSize(12); pdf.setFont('helvetica', 'bold'); pdf.setTextColor(30, 41, 59);
+                pdf.text(`Dispositivo: ${cleanText(document.getElementById('sensorName').innerText)}`, margin, yPos);
+                yPos += 6; pdf.setFont('helvetica', 'normal');
+                pdf.text(`Equipo: ${cleanText(document.getElementById('teamName').innerText)}`, margin, yPos);
+                yPos += 10; pdf.setFontSize(9);
+                pdf.text(document.getElementById('reportId').innerText, margin, yPos);
+                pdf.text(`Emisión: ${document.getElementById('issueDate').innerText}`, pageWidth - margin, yPos, { align: 'right' });
+                yPos += 6; pdf.setFontSize(8); pdf.text(`Trazabilidad: ${trazabilidad}`, margin, yPos);
+                yPos += 10;
+
+                if (chartInstance) {
+                    const chartImg = generateChartImage();
+                    pdf.addImage(chartImg, 'PNG', margin, yPos, pageWidth - (margin * 2), 60);
+                    yPos += 75;
+                }
+
+                const alertRows = [];
+                document.querySelectorAll('#alertTable tbody tr').forEach(tr => {
+                    const cells = Array.from(tr.cells).map((td, i) => i === 4 ? cleanText(td.querySelector('input')?.value || '') : cleanText(td.innerText));
+                    if (!cells[0].includes('Sin eventos')) alertRows.push(cells);
+                });
+
+                if (alertRows.length > 0) {
+                    pdf.autoTable({ startY: yPos, head: [['Fecha y Hora', 'Valor', 'Estado', 'Duración', 'Observaciones']], body: alertRows, theme: 'grid', styles: { fontSize: 8 }, headStyles: { fillColor: [241, 245, 249], textColor: [30, 41, 59] } });
+                    yPos = pdf.lastAutoTable.finalY + 10;
+                } else {
+                    pdf.setFont('helvetica', 'normal'); pdf.setTextColor(16, 185, 129);
+                    pdf.text('Sin eventos fuera de rango.', margin, yPos); yPos += 10;
+                }
+
+                if (yPos > 240) { pdf.addPage(); yPos = 45; }
+                pdf.setFont('helvetica', 'bold'); pdf.setFontSize(11); pdf.setTextColor(0, 56, 77);
+                pdf.text("ANÁLISIS TÉCNICO Y RECOMENDACIONES:", margin, yPos);
+                yPos += 8; pdf.setFont('helvetica', 'normal'); pdf.setFontSize(9); pdf.setTextColor(30, 41, 59);
+                const txt = document.getElementById('analisisAlertasContenido').innerText + "\n\n" + document.getElementById('recomendacionesAlertasContenido').innerText;
+                pdf.text(pdf.splitTextToSize(txt, pageWidth - (margin * 2)), margin, yPos);
+
+                addHeaderFooter(pdf);
+                const filename = `Reporte_${TYPE === 'vacunas' ? 'VAC' : 'INM'}_${trazabilidad}.pdf`;
+                pdf.save(filename);
+
+                // Subir a Google Drive en segundo plano
+                if (FOLDER_ID && APPS_SCRIPT_INMUNIZACION) {
+                    mostrarToast("Guardando reporte en Google Drive... 📁", "#3b82f6");
+                    try {
+                        const pdfBase64 = pdf.output('datauristring').split(',')[1];
+                        fetch(APPS_SCRIPT_INMUNIZACION, {
+                            method: 'POST',
+                            mode: 'no-cors',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                action: 'guardarPDF',
+                                pdfData: pdfBase64,
+                                filename: filename,
+                                folderId: FOLDER_ID,
+                                trazabilidad: trazabilidad
+                            })
+                        })
+                        .then(() => {
+                            mostrarToast("¡Reporte guardado con éxito en Google Drive!", "#10b981");
+                        })
+                        .catch(err => {
+                            console.error("Error en fetch de Apps Script:", err);
+                            mostrarToast("Error de conexión con Google Drive.", "#ef4444");
+                        });
+                    } catch (err) {
+                        console.error("Error al codificar PDF:", err);
+                        mostrarToast("No se pudo codificar el reporte para Drive.", "#ef4444");
+                    }
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Error PDF: " + e.message);
+            }
+        }
+        window.onload = () => { 
+            document.title = TYPE === 'vacunas' ? 'Reporte del Sensor - Vacunas' : 'Reporte del Sensor - Inmunización';
+            const loadingEl = document.getElementById('loading');
+            if (loadingEl) {
+                loadingEl.innerText = TYPE === 'vacunas' ? 'Cargando historial de Vacunas...' : 'Cargando historial de Inmunización...';
+            }
+            const reportIdEl = document.getElementById('reportId');
+            if (reportIdEl) {
+                reportIdEl.innerText = reportPrefix;
+            }
+            document.getElementById('issueDate').innerText = new Date().toLocaleDateString('es-AR'); 
+            run(1); 
+        };
+    </script>
+</body>
+</html>

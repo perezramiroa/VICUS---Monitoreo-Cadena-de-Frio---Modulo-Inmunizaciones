@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Monitor Dataloggers - Vacunas</title>
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/png" href="./icons/icon-192x192.png">
+  <meta name="theme-color" content="#00384d">
+  <link rel="stylesheet" href="./css/pwa-styles.css">
+  <style>
+    /* Estilos específicos de Vicus_vacunas.html */
+    .alerta-modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.45);
+      z-index: 3000;
+      align-items: center;
+      justify-content: center;
+    }
+    .alerta-modal-overlay.visible { display: flex; }
+    .alerta-modal {
+      background: white;
+      border-radius: 14px;
+      padding: 24px;
+      max-width: 420px;
+      width: 92%;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    .alerta-modal .valor-actual { font-size: 2rem; font-weight: bold; text-align: center; margin: 10px 0; padding: 10px; border-radius: 8px; }
+    .alerta-modal .valor-actual.alta { color: #dc2626; background: #fee2e2; }
+    .alerta-modal .valor-actual.baja { color: #1d4ed8; background: #dbeafe; }
+    .alerta-modal .pasos { list-style: none; padding: 0; margin-bottom: 15px; }
+    .alerta-modal .pasos li { padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; }
+    .alerta-modal .pasos li .fundamento { display: block; font-size: 0.78rem; color: #64748b; font-style: italic; }
+
+    .device-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+      padding: 20px;
+    }
+
+    .device-card {
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      border-left: 6px solid #10b981;
+    }
+    .device-card.alert { border-left-color: var(--danger); }
+
+    .sensor-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding: 16px;
+    }
+
+    .sensor-card {
+      background: white;
+      padding: 14px 10px;
+      border-radius: 8px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      border: 1px solid #e2e8f0;
+    }
+    .sensor-card.danger { border-color: #ef4444; }
+
+    .btn-hist { padding: 8px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
+    .btn-info { margin-top: 6px; padding: 6px; width: 100%; border: none; background: #fef2f2; color: #dc2626; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 600; display: none; align-items: center; justify-content: center; gap: 4px; border: 1px solid #fecaca; }
+
+    .controls-header {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      margin: 0 20px 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .btn-day { padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; background: #64748b; color: white; }
+
+    /* Estilos Protocolo idénticos a Zona 1 */
+    .protocolo-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 3000; align-items: flex-start; justify-content: center; overflow-y: auto; padding: 20px 0; }
+    .protocolo-overlay.visible { display: flex; }
+    .protocolo-modal { background: white; border-radius: 14px; padding: 28px; max-width: 680px; width: 95%; box-shadow: 0 10px 30px rgba(0,0,0,0.2); margin: auto; }
+    .protocolo-modal h2 { color: #00384d; font-size: 1.2rem; margin-bottom: 4px; }
+    .protocolo-seccion { margin-bottom: 20px; }
+    .protocolo-seccion h3 { font-size: 1rem; margin-bottom: 10px; padding: 6px 10px; border-radius: 6px; }
+    .protocolo-seccion h3.alta { background: #fee2e2; color: #dc2626; }
+    .protocolo-seccion h3.baja { background: #dbeafe; color: #1d4ed8; }
+    .protocolo-tabla { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .protocolo-tabla th { background: #f8fafc; padding: 8px 10px; text-align: left; border-bottom: 2px solid #e2e8f0; }
+    .protocolo-tabla td { padding: 8px 10px; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+    .protocolo-tabla td.fundamento { color: #64748b; font-style: italic; font-size: 0.8rem; }
+  </style>
+  <script src="./js/pwa-utils.js"></script>
+</head>
+
+<body onload="init()">
+  <div class="header" style="justify-content: center;">
+    <div class="logo-bar">
+      <div class="logo-item" style="width:100%;">
+        <img src="logos/logo_rih.jpg" alt="RIH" style="width:100%; height:100%; object-fit:contain;">
+      </div>
+    </div>
+  </div>
+
+  <div class="controls-header">
+    <div style="display:flex; gap:12px; flex-wrap:wrap;">
+      <input type="text" id="urlIn" placeholder="Pega la URL de ThingSpeak..." style="flex:1; padding:10px; border-radius:8px; border:1px solid #e2e8f0;">
+      <button onclick="add()" style="background:#00384d; color:white; padding:10px 20px; border:none; border-radius:8px; font-weight:600; cursor:pointer;">➕ Agregar</button>
+    </div>
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <button class="btn-day" onclick="wipe()">🧹 Borrar Todo</button>
+      <button class="btn-day" onclick="toggleNormativa()" style="background:#64748b;">📋 Normativa</button>
+      <button class="btn-day" onclick="toggleProtocolo()" style="background:#00384d;">📜 Protocolo</button>
+    </div>
+  </div>
+
+  <h1 class="page-title" style="text-align:center;">Monitoreo de Vacunas - Inmunización</h1>
+
+  <div id="app" class="device-list"></div>
+
+  <footer style="margin-top: 40px;">
+    <div style="background-color: #00384d; padding: 24px; width: 100%; display: flex; align-items: center; justify-content: center; box-shadow: 0 -4px 20px rgba(0,0,0,0.1);">
+      <img src="logos/footer.jpg" alt="Institucional" style="max-width: 100%; height: auto; max-height: 80px; display: block;">
+    </div>
+  </footer>
+
+  <!-- Modal Guía Alerta -->
+  <div id="alertaModalOverlay" class="alerta-modal-overlay">
+    <div class="alerta-modal">
+      <h3 id="alertaModalTitulo"></h3>
+      <div id="alertaModalValor" class="valor-actual"></div>
+      <ul class="pasos" id="alertaModalPasos"></ul>
+      <button class="btn-day" onclick="cerrarGuiaAlerta()" style="width:100%;">Entendido ✓</button>
+    </div>
+  </div>
+
+  <!-- Panel Normativa -->
+  <div id="normativaPanel" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:4000; overflow:auto; padding:20px;">
+    <div style="max-width:900px; margin:0 auto;">
+      <div style="text-align:right;"><button onclick="toggleNormativa()" style="padding:8px 16px; background:#ef4444; color:white; border:none; border-radius:6px;">Cerrar ✕</button></div>
+      <div style="text-align:center; margin-bottom:20px;">
+        <img src="logos/logo_rih.jpg" alt="RIH" style="max-height:100px; width:auto; object-fit:contain;">
+        <h1 style="color:#1d4ed8; font-size:24px; font-weight:700;">Marco Normativo - Inmunización</h1>
+        <p>Sistemas de monitoreo – Vicus | Vigencia: Enero 2026</p>
+      </div>
+      <div style="background:#f8fafc; border-left:4px solid #1d4ed8; padding:15px; margin-top:20px; border-radius:8px;">
+        <h3>Leyes y Resoluciones</h3>
+        <p>• <strong>Ley 27.491</strong>: Ley Nacional de Vacunas.</p>
+        <p>• <strong>Resolución 1030/2021</strong>: Normas técnicas PNI.</p>
+        <p>• <strong>Res. 1285/2022 Neuquén</strong>: Protocolo Provincial.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Protocolo -->
+  <div id="protocoloOverlay" class="protocolo-overlay">
+    <div class="protocolo-modal">
+      <div style="text-align:right;"><button onclick="cerrarProtocolo()" style="border:none; background:none; font-size:1.5rem; cursor:pointer;">✕</button></div>
+      <h2>📋 Protocolo de Cadena de Frío — Inmunización</h2>
+      <div class="protocolo-seccion">
+        <h3 class="alta">🔥 Ante temperatura ALTA (>8°C)</h3>
+        <table class="protocolo-tabla">
+          <thead><tr><th>#</th><th>Acción</th><th>Fundamento</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Verificar sellado de heladeras</td><td>Evita entrada de calor ambiental.</td></tr>
+            <tr><td>2</td><td>Trasladar si persiste > 15m</td><td>Protege la potencia de la vacuna.</td></tr>
+            <tr><td>3</td><td>Notificar al Referente</td><td>Evaluación técnica obligatoria.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="protocolo-seccion">
+        <h3 class="baja">❄️ Ante temperatura BAJA (<2°C)</h3>
+        <table class="protocolo-tabla">
+          <thead><tr><th>#</th><th>Acción</th><th>Fundamento</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Alejar vacunas de geles</td><td>Evita congelación irreversible.</td></tr>
+            <tr><td>2</td><td>Test de agitación</td><td>Verifica daño en vacunas adsorbidas.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <button onclick="cerrarProtocolo()" style="width:100%; padding:10px; background:#00384d; color:white; border:none; border-radius:8px; cursor:pointer;">Cerrar ✕</button>
+    </div>
+  </div>
+
+  <script>
+    const MAX = 8.0, MIN = 2.0;
+    let db = JSON.parse(localStorage.getItem('iot_db_vacunas_new')) || [];
+    const GUIA_ALERTA = {
+      alta: { titulo: "🔥 Temp. ALTA", clase: "alta", pasos: [{texto:"Verificar burletes", fundamento:"Causa común de calor."}, {texto:"Trasladar vacunas", fundamento:"Evita daño térmico."}] },
+      baja: { titulo: "❄️ Temp. BAJA", clase: "baja", pasos: [{texto:"Alejar de geles", fundamento:"Evita congelación."}, {texto:"Reajustar termostato", fundamento:"Previene frío extremo."}] }
+    };
+
+    function init() { render(); refresh(); setInterval(refresh, 15000); }
+    function save() { localStorage.setItem('iot_db_vacunas_new', JSON.stringify(db)); }
+    function add() {
+      const url = document.getElementById('urlIn').value.trim();
+      if (!url) return;
+      try {
+        const u = new URL(url);
+        const k = u.searchParams.get('api_key');
+        const id = u.pathname.match(/channels\/(\d+)/)[1];
+        if (!db.some(x => x.id == id)) {
+          db.push({ id, k, fields:['field1', 'field2'], n: `ID: ${id}` });
+          save(); render(); refresh();
+        }
+        document.getElementById('urlIn').value = "";
+      } catch(e) { alert("URL inválida"); }
+    }
+    function render() {
+      const app = document.getElementById('app');
+      app.innerHTML = db.length ? "" : "<p style='text-align:center; color:#94a3b8;'>No hay dispositivos.</p>";
+      db.forEach(c => {
+        const card = document.createElement('div');
+        card.className = 'device-card';
+        card.id = `p-${c.id}`;
+        card.innerHTML = `<div class="device-header"><span id="n-${c.id}">${c.n}</span><button onclick="remove('${c.id}')" style="background:none; border:none; color:#ef4444; cursor:pointer;">🗑️</button></div><div class="sensor-grid" id="g-${c.id}"></div>`;
+        app.appendChild(card);
+      });
+    }
+    async function refresh() {
+      for (const c of db) {
+        try {
+          const res = await fetch(`https://api.thingspeak.com/channels/${c.id}/feeds.json?api_key=${c.k}&results=1`);
+          const data = await res.json();
+          document.getElementById(`n-${c.id}`).innerText = data.channel.name;
+          const gridEl = document.getElementById(`g-${c.id}`);
+          gridEl.innerHTML = "";
+          c.fields.forEach(f => {
+            const label = data.channel[f];
+            if (!label) return;
+            const labelLower = label.toLowerCase();
+            const excludeKeywords = ['ambiente', 'wifi', 'rssi', 'intensidad', 'señal', 'nivel'];
+            if (excludeKeywords.some(key => labelLower.includes(key))) return;
+
+            const val = parseFloat(data.feeds[0][f]);
+            const isDanger = !isNaN(val) && (val < MIN || val > MAX);
+            gridEl.innerHTML += `<div class="sensor-card ${isDanger?'danger':''}"><div class="sensor-label">${label}</div><div class="sensor-value ${isDanger?'danger':''}">${isNaN(val)?'--':val.toFixed(1)}°C</div><button class="btn-info" style="display:${isDanger?'flex':'none'}" onclick="mostrarGuiaAlerta('${val<MIN?'baja':'alta'}', ${val})">ⓘ ¿Qué hacer?</button><button class="btn-hist" onclick="openRep('${c.id}','${c.k}','${f}')">📊 Gráfico</button></div>`;
+          });
+        } catch(e) {}
+      }
+    }
+    function remove(id) { if(confirm("¿Eliminar?")) { db = db.filter(x => x.id != id); save(); render(); } }
+    function wipe() { if(confirm("¿Borrar todo?")) { db = []; save(); render(); } }
+    function openRep(id, k, f) { window.open(`reporte_individual.html?id=${id}&key=${k}&field=${f}&type=vacunas&days=7`, '_blank'); }
+    function toggleNormativa() { const p = document.getElementById('normativaPanel'); p.style.display = p.style.display === 'none' ? 'block' : 'none'; }
+    function toggleProtocolo() { document.getElementById('protocoloOverlay').classList.add('visible'); }
+    function cerrarProtocolo() { document.getElementById('protocoloOverlay').classList.remove('visible'); }
+    function mostrarGuiaAlerta(t, v) { 
+      const g = GUIA_ALERTA[t];
+      document.getElementById('alertaModalTitulo').textContent = g.titulo;
+      const vEl = document.getElementById('alertaModalValor');
+      vEl.textContent = v.toFixed(1)+'°C'; vEl.className = 'valor-actual '+g.clase;
+      document.getElementById('alertaModalPasos').innerHTML = g.pasos.map(p => `<li><strong>${p.texto}</strong><span class="fundamento">↳ ${p.fundamento}</span></li>`).join('');
+      document.getElementById('alertaModalOverlay').classList.add('visible');
+    }
+    function cerrarGuiaAlerta() { document.getElementById('alertaModalOverlay').classList.remove('visible'); }
+  </script>
+</body>
+
+</html>
