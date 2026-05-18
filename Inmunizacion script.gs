@@ -341,11 +341,13 @@ function generarSheetSemanal(feedsPorSensor, rangoTexto, fechaHoy, folderId) {
       hoja.setColumnWidth(1, 140); // Fecha/Hora
       feedsPorSensor.forEach((_, idx) => hoja.setColumnWidth(idx + 2, 130));
       
-      // Alternar colores de filas para legibilidad
+      // Alternar colores de filas para legibilidad en un lote unificado (ultra-rápido)
+      const colores2D = [];
       for (let i = 0; i < filas.length; i++) {
         const color = i % 2 === 0 ? "#f8fafc" : "#ffffff";
-        hoja.getRange(filaInicio + i, 1, 1, encabezados.length).setBackground(color);
+        colores2D.push(Array(encabezados.length).fill(color));
       }
+      hoja.getRange(filaInicio, 1, filas.length, encabezados.length).setBackgrounds(colores2D);
       
       // Centrar columnas de temperatura
       hoja.getRange(filaInicio, 2, filas.length, feedsPorSensor.length)
