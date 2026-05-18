@@ -161,9 +161,26 @@ function analizarDatos(feeds, field) {
   };
 }
 
-function generarSheetSemanal(feedsPorSensor, rangoTexto, fechaHoy, sheetId) {
+function generarSheetSemanal(feedsPorSensor, rangoTexto, fechaHoy, folderId) {
   try {
-    const ss = SpreadsheetApp.openById(sheetId);
+    const carpeta = DriveApp.getFolderById(folderId);
+    const nombreArchivo = "Consolidado Semanal - " + feedsPorSensor[0].sensor.centro;
+    
+    // Buscar si ya existe una planilla con este nombre en la carpeta
+    const archivos = carpeta.getFilesByName(nombreArchivo);
+    let ss;
+    if (archivos.hasNext()) {
+      const archivo = archivos.next();
+      ss = SpreadsheetApp.openById(archivo.getId());
+    } else {
+      // Si no existe, crear una nueva planilla
+      ss = SpreadsheetApp.create(nombreArchivo);
+      // Mover la planilla recién creada a la carpeta correspondiente
+      const archivoDrive = DriveApp.getFileById(ss.getId());
+      carpeta.addFile(archivoDrive);
+      DriveApp.getRootFolder().removeFile(archivoDrive);
+    }
+    
     const nombreHoja = "Semana " + Utilities.formatDate(fechaHoy, "GMT-3", "dd-MM-yyyy");
     let hoja = ss.getSheetByName(nombreHoja);
     if (hoja) ss.deleteSheet(hoja);
