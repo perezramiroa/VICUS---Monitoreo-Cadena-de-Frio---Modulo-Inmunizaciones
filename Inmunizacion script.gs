@@ -109,7 +109,7 @@ function ejecutarReporteSemanal() {
         
         const trazabilidad = "AUTO-INM-" + Utilities.formatDate(hoy, "GMT-3", "yyyyMMdd") + "-" + s.id;
         const analizada = analizarDatos(data.feeds, s.field, s);
-        const conectividad = analizarConectividad(data.feeds, s.field);
+        const conectividad = analizarConectividad(data.feeds, s.field, s);
         const grafico = generarGraficoCurva(data.feeds, s.field, s.n);
         
         const pdfBlob = generarPDFOficial(s, fechaEmision, rangoTexto, trazabilidad, analizada, conectividad, grafico);
@@ -168,38 +168,104 @@ function eliminarTriggersDeContinuacion() {
 function generarPDFOficial(sensor, fecha, rango, trazabilidad, analizada, conectividad, grafico) {
   const doc = DocumentApp.create('Temp_Reporte_' + sensor.n);
   const body = doc.getBody();
-  body.setMarginLeft(25).setMarginRight(25).setMarginTop(25).setMarginBottom(25);
-  const anchoMax = 545;
 
+  // Márgenes mínimos para maximizar espacio
+  body.setMarginLeft(20).setMarginRight(20).setMarginTop(20).setMarginBottom(20);
+  const anchoMax = 555; // 595 - 40
+
+  // --- CABECERA (aparece en TODAS las páginas) ---
+  const logo = buscarLogoEnDrive("logo_rih.jpg");
   const header = doc.addHeader();
-  header.appendParagraph("PROGRAMA DE INMUNIZACIONES - " + sensor.centro.toUpperCase()).setAlignment(DocumentApp.HorizontalAlignment.CENTER).setBold(true);
+  if (logo) {
+    const hp = header.appendParagraph("");
+    hp.setAlignment(DocumentApp.HorizontalAlignment.CENTER);
+    hp.appendInlineImage(logo).setWidth(anchoMax).setHeight(60);
+  } else {
+    header.appendParagraph("PROGRAMA DE INMUNIZACIONES - " + sensor.centro.toUpperCase()).setAlignment(DocumentApp.HorizontalAlignment.CENTER).setBold(true);
+  }
   header.appendHorizontalRule();
 
-  const t1 = body.appendParagraph("INFORME TÉCNICO DE CADENA DE FRÍO");
+  // --- TÍTULO ---
+  const t1 = body.appendParagraph("INFORME TÉCNICO DE CADENA DE FRÍO\nMONITOREO DE VACUNAS");
   t1.setFontSize(14).setBold(true).setForegroundColor("#00384d").setSpacingAfter(4);
-  body.appendParagraph("Según Disposición ANMAT 10.872/2020").setFontSize(9).setItalic(true).setSpacingAfter(10);
 
-  body.appendParagraph("Dispositivo: " + sensor.n).setBold(true).setFontSize(11);
-  body.appendParagraph("Período: " + rango).setBold(true).setFontSize(10);
-  body.appendParagraph("Emisión: " + fecha + " | Trazabilidad: " + trazabilidad).setFontSize(8).setSpacingAfter(10);
+  // --- NORMATIVA ---
+  body.appendParagraph("Según Disposición ANMAT 10.872/2020")
+    .setFontSize(9).setItalic(true).setSpacingAfter(10);
 
-  body.appendParagraph("CURVA TÉRMICA SEMANAL").setBold(true).setFontSize(10);
-  body.appendParagraph("").setAlignment(DocumentApp.HorizontalAlignment.CENTER).appendInlineImage(grafico).setWidth(anchoMax).setHeight(250);
+  // --- DATOS DEL DISPOSITIVO ---
+  body.appendParagraph("Dispositivo: " + sensor.n)
+    .setBold(true).setFontSize(11).setSpacingBefore(0).setSpacingAfter(2);
+  body.appendParagraph("Establecimiento: " + sensor.centro + " | Equipo: " + sensor.eq)
+    .setItalic(true).setFontSize(10).setSpacingAfter(2);
+  body.appendParagraph("Período: " + rango)
+    .setBold(true).setFontSize(10).setSpacingAfter(2);
+  body.appendParagraph("Emisión: " + fecha + " | Trazabilidad: " + trazabilidad)
+    .setFontSize(8).setSpacingAfter(10);
 
+  // --- GRÁFICO ---
+  body.appendParagraph("CURVA TÉRMICA SEMANAL")
+    .setBold(true).setFontSize(10).setSpacingBefore(4).setSpacingAfter(4);
+  const pChart = body.appendParagraph("");
+  pChart.setAlignment(DocumentApp.HorizontalAlignment.CENTER);
+  pChart.appendInlineImage(grafico).setWidth(anchoMax).setHeight(300);
+
+  // --- TABLA DE ALERTAS ---
+  const minRange = sensor.isFreezer ? "-28°C" : "2°C";
+  const maxRange = sensor.isFreezer ? "-18°C" : "8°C";
+  body.appendParagraph(`\n⚠️ ALERTAS Y RECUPERACIONES (${minRange} - ${maxRange})`)
+    .setBold(true).setFontSize(10).setSpacingAfter(4);
   const tablaAlertas = [["Fecha y Hora", "Valor", "Estado", "Duración"]];
-  if (analizada.alertasFilas.length > 0) analizada.alertasFilas.forEach(f => tablaAlertas.push([f.h, f.v, f.e, f.d]));
-  else tablaAlertas.push(["-", "-", "✅ Sin eventos fuera de rango", "-"]);
+  if (analizada.alertasFilas.length > 0) {
+    analizada.alertasFilas.forEach(f => tablaAlertas.push([f.h, f.v, f.e, f.d]));
+  } else {
+    tablaAlertas.push(["-", "-", "✅ Sin eventos fuera de rango", "-"]);
+  }
   estilizarTabla(body.appendTable(tablaAlertas));
 
-  body.appendParagraph("\nCONECTIVIDAD:").setBold(true).setFontSize(10);
-  body.appendParagraph(conectividad.texto).setFontSize(9);
+  // --- EVENTOS DE CONECTIVIDAD ---
+  body.appendParagraph("\n📡 EVENTOS DETECTADOS (>10 min sin datos)")
+    .setBold(true).setFontSize(10).setSpacingAfter(4);
+  const tablaWifi = [["Inicio", "Fin", "Tipo de Corte", "T. Antes", "T. Desp.", "Duración"]];
+  if (conectividad.filas.length > 0) {
+    conectividad.filas.forEach(f => tablaWifi.push([f.inicio, f.fin, f.tipo, f.antes, f.despues, f.duracion]));
+  } else {
+    tablaWifi.push(["-", "-", "✅ Sin interrupciones significativas", "-", "-", "-"]);
+  }
+  estilizarTabla(body.appendTable(tablaWifi));
 
+  // --- ANÁLISIS Y RECOMENDACIONES ---
   body.appendParagraph("\nANÁLISIS TÉCNICO:").setBold(true).setFontSize(10);
-  body.appendParagraph(analizada.textoAnalisis).setFontSize(9).setItalic(true);
+  if (analizada.textoAnalisis) {
+    body.appendParagraph(analizada.textoAnalisis).setFontSize(9).setItalic(true);
+  }
+  if (conectividad.analisis) {
+    body.appendParagraph("\nConectividad:").setBold(true).setFontSize(9);
+    body.appendParagraph(conectividad.analisis).setFontSize(9).setItalic(true);
+  }
 
+  body.appendParagraph("\nRECOMENDACIONES:").setBold(true).setFontSize(10).setForegroundColor("#00384d");
+  body.appendParagraph(analizada.textoRecom + "\n• " + conectividad.recom).setFontSize(9);
+
+  // Nota técnica final
+  body.appendParagraph("\n⚙️ NOTA TÉCNICA:").setBold(true).setFontSize(9).setForegroundColor("#475569");
+  body.appendParagraph(analizada.notaTecnica).setFontSize(8).setItalic(true).setForegroundColor("#475569");
+
+  // Nota de responsabilidad
+  body.appendParagraph("\n⚠️ RESPONSABILIDAD:").setBold(true).setFontSize(9).setForegroundColor("#475569");
+  body.appendParagraph(analizada.notaResponsabilidad).setFontSize(8).setItalic(true).setForegroundColor("#475569");
+
+  // --- PIE DE PÁGINA con línea separadora arriba ---
   const footer = doc.addFooter();
   footer.appendHorizontalRule();
-  footer.appendParagraph("Hospital Natalio Burd - Vicus Monitoreo").setAlignment(DocumentApp.HorizontalAlignment.CENTER).setFontSize(8);
+  const logoF = buscarLogoEnDrive("footer.jpg");
+  if (logoF) {
+    const fp = footer.appendParagraph("");
+    fp.setAlignment(DocumentApp.HorizontalAlignment.CENTER);
+    fp.appendInlineImage(logoF).setWidth(anchoMax).setHeight(50);
+  } else {
+    footer.appendParagraph("Hospital Natalio Burd - Vicus Monitoreo").setAlignment(DocumentApp.HorizontalAlignment.CENTER).setFontSize(8);
+  }
 
   doc.saveAndClose();
   const pdf = doc.getAs('application/pdf');
@@ -207,44 +273,112 @@ function generarPDFOficial(sensor, fecha, rango, trazabilidad, analizada, conect
   return pdf;
 }
 
-function analizarConectividad(feeds, field) {
-  let cortes = 0;
+function analizarConectividad(feeds, field, sensor) {
+  let filas = [];
+  let totalMinutos = 0;
+  const minVal = sensor && sensor.isFreezer ? -28.0 : 2.0;
+  const maxVal = sensor && sensor.isFreezer ? -18.0 : 8.0;
+  
   for (let i = 1; i < feeds.length; i++) {
-    const diff = (new Date(feeds[i].created_at) - new Date(feeds[i-1].created_at)) / 60000;
-    if (diff > 15) cortes++;
+    const d1 = new Date(feeds[i-1].created_at);
+    const d2 = new Date(feeds[i].created_at);
+    const diff = (d2 - d1) / 60000;
+    if (diff > 10) {
+      const v1 = parseFloat(feeds[i-1][field]);
+      const v2 = parseFloat(feeds[i][field]);
+      const tipo = (v2 > maxVal || v2 < minVal) && v2 !== -127 ? 'Corte Energía' : 'Corte WiFi';
+      filas.push({
+        inicio: Utilities.formatDate(d1, "GMT-3", "dd/MM HH:mm"),
+        fin: Utilities.formatDate(d2, "GMT-3", "dd/MM HH:mm"),
+        tipo: tipo,
+        antes: (isNaN(v1) || v1 === -127) ? "--" : v1.toFixed(2) + "°C",
+        despues: (isNaN(v2) || v2 === -127) ? "--" : v2.toFixed(2) + "°C",
+        duracion: formatDur(diff)
+      });
+      totalMinutos += diff;
+    }
   }
-  return { texto: cortes > 0 ? `Se detectaron ${cortes} interrupciones de señal mayores a 15 min.` : "Conectividad estable durante el período." };
+  return {
+    filas: filas,
+    analisis: filas.length > 0 
+      ? `Se detectaron ${filas.length} ${filas.length === 1 ? 'interrupción' : 'interrupciones'} de datos.\n• Tiempo total sin datos: ${formatDur(totalMinutos)}\n• Durante los cortes no se puede garantizar el control de la cadena de frío.` 
+      : "Sin problemas de conectividad. Monitoreo continuo confirmado.",
+    recom: filas.length > 0
+      ? "Verificar el estado del router y la conexión a internet.\n• Revisar la distancia entre el sensor y el punto de acceso WiFi.\n• Considerar registro manual de temperatura durante los períodos sin datos.\n• Evaluar instalación de UPS para el equipo de red."
+      : "Mantener el equipo de red en condiciones óptimas para asegurar monitoreo continuo."
+  };
 }
 
 function analizarDatos(feeds, field, sensor) {
   let alertasFilas = [];
   let lastState = 'normal';
   let startTime = null;
+  let stats = [];
   const minVal = sensor && sensor.isFreezer ? -28.0 : 2.0;
   const maxVal = sensor && sensor.isFreezer ? -18.0 : 8.0;
-  
+
   feeds.forEach(f => {
     const val = parseFloat(f[field]);
-    if (isNaN(val)) return;
+    if (isNaN(val) || val === -127) return;
     const state = (val > maxVal) ? 'Alta' : (val < minVal) ? 'Baja' : 'normal';
     if (state !== lastState) {
       const hora = Utilities.formatDate(new Date(f.created_at), "GMT-3", "dd/MM HH:mm");
       if (state !== 'normal') {
         startTime = new Date(f.created_at);
-        alertasFilas.push({ h: hora, v: val.toFixed(1) + "°C", e: state === 'Alta' ? "⚠️ Alerta Alta" : "⚠️ Alerta Baja", d: "--" });
+        alertasFilas.push({ h: hora, v: val.toFixed(1) + "°C", e: state === 'Alta' ? `⚠️ Alerta Alta (>${maxVal}°C)` : `⚠️ Alerta Baja (<${minVal}°C)`, d: "--" });
       } else if (startTime) {
         const dur = (new Date(f.created_at) - startTime) / 60000;
         alertasFilas.push({ h: hora, v: val.toFixed(1) + "°C", e: "✅ Recuperación", d: formatDur(dur) });
+        stats.push({ s: lastState, d: dur });
       }
       lastState = state;
     }
   });
-  return { 
-    alertasFilas, 
-    textoAnalisis: "Estabilidad térmica analizada según normativa.", 
-    textoRecom: "• Continuar monitoreo.",
-    notaTecnica: "NOTA TÉCNICA: ANMAT 10.872/2020."
-  };
+
+  const tieneAltas = stats.some(s => s.s === 'Alta');
+  const tieneBajas = stats.some(s => s.s === 'Baja');
+  const durTotal = stats.reduce((a, b) => a + b.d, 0);
+
+  let textoAnalisis = "Estabilidad térmica confirmada. Sin desvíos en el período.";
+  let textoRecom = "• Continuar monitoreo habitual.\n• Realizar mantenimiento preventivo según calendario.\n• Verificar calibración del sensor periódicamente.";
+
+  if (stats.length > 0) {
+    textoAnalisis = `Se detectaron ${stats.length} ${stats.length === 1 ? 'desvío térmico' : 'desvíos térmicos'} (duración acumulada fuera de rango: ${formatDur(durTotal)}).\n`;
+    if (tieneAltas) textoAnalisis += `• Temperatura ALTA (>${maxVal}°C): riesgo de pérdida de potencia y degradación acelerada de vacunas y termolábiles.\n`;
+    if (tieneBajas) textoAnalisis += `• Temperatura BAJA (<${minVal}°C): riesgo crítico de congelación (pérdida irreversible de inmunogenicidad en vacunas adyuvadas como Hepatitis B, DPT, etc.).\n`;
+    if (durTotal < 30) {
+      textoAnalisis += "Los desvíos fueron breves. Se recomienda extremar vigilancia las próximas horas.";
+    } else if (durTotal < 120) {
+      textoAnalisis += "Desvíos de moderada duración. Evaluar stock afectado según protocolo de cadena de frío.";
+    } else {
+      textoAnalisis += "Desvíos prolongados. Requiere intervención técnica urgente y auditoría de viabilidad de dosis según Disposición ANMAT 10.872/2020.";
+    }
+
+    textoRecom = "";
+    if (tieneAltas) {
+      textoRecom += `• Temperatura ALTA detectada: comprobar burletes, sellado de puertas y frecuencia de aperturas.\n`;
+      textoRecom += "  → Las vacunas expuestas a calor pueden degradarse y perder su efectividad inmunológica de manera acumulativa.\n";
+      textoRecom += "• Controlar termostato, limpieza del condensador y estado del compresor.\n";
+      textoRecom += "  → Un termostato mal calibrado o fallas en el circuito de refrigeración son las causas principales de alzas térmicas.\n";
+      textoRecom += "• Apartar lote afectado de forma preventiva hasta dictamen de viabilidad.\n";
+      textoRecom += "  → El Programa Nacional de Inmunizaciones exige resguardo preventivo de dosis ante rupturas de cadena de frío.\n";
+    }
+    if (tieneBajas) {
+      textoRecom += `• Temperatura BAJA detectada: verificar calibración del termostato (subir nivel de temperatura).\n`;
+      textoRecom += "  → La congelación destruye instantáneamente la estructura coloidal de las vacunas adyuvadas por aluminio.\n";
+      textoRecom += "• Reubicar dosis lejos de las placas de evaporación directa.\n";
+      textoRecom += "  → Las cajas de vacunas en contacto con la pared del evaporador pueden congelarse aun con promedio de aire normal.\n";
+      textoRecom += "• Ejecutar el Test de Vacunación / Test de Agitación si se sospecha congelamiento.\n";
+    }
+    textoRecom += "• Asentar el incidente completo en la planilla física de desvíos del sector.\n";
+    textoRecom += "  → Todo desvío térmico debe contar con trazabilidad documentada para auditorías sanitarias del Ministerio de Salud.\n";
+  }
+
+  const notaTecnica = "NOTA TÉCNICA: Ante cualquier desvío térmico o falla del equipo, la intervención correctiva debe ser realizada por personal técnico de refrigeración calificado o servicio técnico autorizado. Toda intervención de mantenimiento debe quedar asentada con fecha, firma del técnico actuante y descripción detallada, conforme a la Disposición ANMAT 10.872/2020 y las directrices del Programa Provincial de Inmunizaciones.";
+
+  const notaResponsabilidad = "RESPONSABILIDAD: La responsabilidad del estricto cumplimiento de las condiciones de conservación, cadena de frío y viabilidad de las vacunas en el sector de Inmunizaciones recae sobre la Jefatura de Inmunizaciones y la Dirección del Hospital, conforme a la Ley Nacional de Vacunas N° 27.491. Ante todo desvío térmico confirmado, se debe notificar inmediatamente a las autoridades competentes y al referente del Programa de Inmunizaciones antes de descartar o utilizar cualquier lote.";
+
+  return { alertasFilas, textoAnalisis, textoRecom, notaTecnica, notaResponsabilidad };
 }
 
 function generarSheetSemanal(feedsPorSensor, rangoTexto, fechaHoy, folderId) {
@@ -447,22 +581,106 @@ function generarSheetSemanal(feedsPorSensor, rangoTexto, fechaHoy, folderId) {
 }
 
 function fetchThingSpeakDataCompleto(id, key, dias) {
-  const url = `https://api.thingspeak.com/channels/${id}/feeds.json?api_key=${key}&minutes=${dias*1440}&results=8000`;
-  const res = UrlFetchApp.fetch(url, {muteHttpExceptions: true});
-  return JSON.parse(res.getContentText());
+  const ahora = new Date();
+  const inicio = new Date(ahora.getTime() - dias * 24 * 60 * 60 * 1000);
+  
+  let todosLosFeeds = [];
+  let fechaDesde = new Date(inicio);
+  let intentos = 0;
+  const MAX_INTENTOS = 5; // máximo 5 páginas = 40.000 registros
+
+  while (intentos < MAX_INTENTOS) {
+    const startStr = Utilities.formatDate(fechaDesde, "GMT-3", "yyyy-MM-dd'T'HH:mm:ss");
+    const endStr   = Utilities.formatDate(ahora,      "GMT-3", "yyyy-MM-dd'T'HH:mm:ss");
+    
+    const url = `https://api.thingspeak.com/channels/${id}/feeds.json?api_key=${key}&start=${startStr}-03:00&end=${endStr}-03:00&results=8000`;
+    const res = UrlFetchApp.fetch(url, {muteHttpExceptions: true});
+    const data = JSON.parse(res.getContentText());
+    
+    if (!data.feeds || data.feeds.length === 0) break;
+    
+    // Agregar feeds nuevos (evitar duplicados por timestamp)
+    const ultimoTs = todosLosFeeds.length > 0 
+      ? new Date(todosLosFeeds[todosLosFeeds.length - 1].created_at).getTime() 
+      : 0;
+    
+    const nuevos = data.feeds.filter(f => new Date(f.created_at).getTime() > ultimoTs);
+    todosLosFeeds = todosLosFeeds.concat(nuevos);
+    
+    // Si devolvió menos de 8000, ya tenemos todo
+    if (data.feeds.length < 8000) break;
+    
+    // Avanzar desde el último registro recibido
+    fechaDesde = new Date(data.feeds[data.feeds.length - 1].created_at);
+    fechaDesde = new Date(fechaDesde.getTime() + 60000); // +1 minuto
+    intentos++;
+    
+    Utilities.sleep(500); // respetar rate limit de ThingSpeak
+  }
+  
+  return { feeds: todosLosFeeds };
 }
 
 function generarGraficoCurva(feeds, field, nombre) {
-  const dataTable = Charts.newDataTable().addColumn(Charts.ColumnType.STRING, "T").addColumn(Charts.ColumnType.NUMBER, "°C");
-  const step = Math.max(1, Math.floor(feeds.length / 300));
+  const dataTable = Charts.newDataTable()
+    .addColumn(Charts.ColumnType.STRING, "Tiempo")
+    .addColumn(Charts.ColumnType.NUMBER, "°C");
+
+  let vals = feeds.map(f => parseFloat(f[field])).filter(v => !isNaN(v));
+  if (vals.length === 0) vals = [5];
+  let minVal = Math.min(...vals);
+  let maxVal = Math.max(...vals);
+
+  let yMin = minVal - 0.5;
+  let yMax = maxVal + 0.5;
+
+  const numPuntos = 800; // Mucho más detalle para igualar al reporte manual
+  const step = Math.max(1, Math.floor(feeds.length / numPuntos));
+  
   for (let i = 0; i < feeds.length; i += step) {
-    let val = parseFloat(feeds[i][field]);
-    if (!isNaN(val)) dataTable.addRow([Utilities.formatDate(new Date(feeds[i].created_at), "GMT-3", "dd/MM HH:mm"), val]);
+    let f = feeds[i];
+    let val = parseFloat(f[field]);
+    let date = new Date(f.created_at);
+    
+    if (!isNaN(val) && !isNaN(date.getTime())) {
+      let label = Utilities.formatDate(date, "GMT-3", "dd/MM HH:mm");
+      dataTable.addRow([label, val]);
+    }
   }
-  return Charts.newLineChart().setDataTable(dataTable).setDimensions(800, 300).build().getAs('image/png');
+
+  return Charts.newLineChart()
+    .setDataTable(dataTable)
+    .setDimensions(2200, 520)
+    .setColors(["#3b82f6"]) 
+    .setOption("areaOpacity", 0.1) 
+    .setOption("lineWidth", 1.5) 
+    .setOption("vAxis", { 
+      gridlines: { count: 8, color: '#cbd5e1' }, 
+      viewWindow: { min: yMin, max: yMax },
+      format: '#.0°C',
+      textStyle: { fontSize: 14, color: '#000000', bold: true },
+      textPosition: 'out'
+    })
+    .setOption("hAxis", { 
+      slantedText: true, 
+      slantedTextAngle: 45,
+      textStyle: { fontSize: 12, color: '#000000', bold: true }, 
+      gridlines: { color: 'none' },
+      showTextEvery: 60 
+    })
+    .setOption("chartArea", { width: '94%', height: '70%', left: '4%', right: '1%', top: '4%' })
+    .setOption("legend", { position: 'none' })
+    .setOption("backgroundColor", "white")
+    .build().getAs('image/png');
 }
 
-function estilizarTabla(t) { t.getRow(0).setBackgroundColor("#f1f5f9").setBold(true); }
+function estilizarTabla(t) {
+  const r0 = t.getRow(0);
+  for(let i=0; i<r0.getNumCells(); i++) r0.getCell(i).setBackgroundColor("#f1f5f9").setBold(true).setFontSize(9);
+  for(let i=1; i<t.getNumRows(); i++) {
+    for(let j=0; j<t.getRow(i).getNumCells(); j++) t.getRow(i).getCell(j).setFontSize(8);
+  }
+}
 function formatDur(m) { return m < 60 ? Math.round(m) + "m" : Math.floor(m/60) + "h " + Math.round(m%60) + "m"; }
 
 function doPost(e) {
@@ -479,3 +697,8 @@ function doPost(e) {
 }
 
 function doGet(e) { return ContentService.createTextOutput("Vicus Multi-Centro Online."); }
+
+function buscarLogoEnDrive(n) {
+  const f = DriveApp.getFilesByName(n);
+  return f.hasNext() ? f.next().getBlob() : null;
+}
