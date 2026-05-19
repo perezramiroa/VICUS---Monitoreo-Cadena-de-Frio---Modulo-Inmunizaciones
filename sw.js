@@ -1,9 +1,10 @@
-const CACHE_NAME = 'vicus-inmunizacion-v1.0.9';
+const CACHE_NAME = 'vicus-inmunizacion-v1.1.0';
 const urlsToCache = [
   './',
   './index.html',
   './dashboard_inmunizacion.html',
   './reporte_individual.html',
+  './Vicus_vacunas.html',
   './css/pwa-styles.css',
   './js/pwa-utils.js',
   './js/config-sensores.js',
@@ -17,7 +18,7 @@ const urlsToCache = [
 
 // Instalación del Service Worker
 self.addEventListener('install', event => {
-  console.log('[SW] Instalando Vicus Inmunización...');
+  console.log('[SW] Instalando Vicus Inmunización v1.1.0...');
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
@@ -46,23 +47,41 @@ self.addEventListener('activate', event => {
   return self.clients.claim();
 });
 
-// Estrategia de Cache: Cache First, falling back to Network
+// Estrategia de Cache: Network First para HTML/JS, Cache First para estáticos (Imágenes/CSS)
 self.addEventListener('fetch', event => {
-  // Solo interceptar peticiones GET
   if (event.request.method !== 'GET') return;
 
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        // Devolver desde caché si existe
-        if (response) {
-          return response;
-        }
-        
-        // Si no está, buscar en la red
-        return fetch(event.request)
-          .then(networkResponse => {
-            // Guardar una copia en caché para la próxima vez si es una respuesta válida
+  const url = new URL(event.request.url);
+
+  // Network First para HTML, archivos JS de lógica y JSON para asegurar actualizaciones inmediatas al subir a GitHub
+  if (
+    event.request.url.includes('.html') || 
+    event.request.url.includes('.js') || 
+    event.request.url.includes('.json') || 
+    url.pathname === '/'
+  ) {
+    event.respondWith(
+      fetch(event.request)
+        .then(networkResponse => {
+          if (networkResponse.status === 200) {
+            const responseClone = networkResponse.clone();
+            caches.open(CACHE_NAME).then(cache => {
+              cache.put(event.request, responseClone);
+            });
+          }
+          return networkResponse;
+        })
+        .catch(() => caches.match(event.request))
+    );
+  } else {
+    // Cache First para recursos estáticos (imágenes, CSS, iconos)
+    event.respondWith(
+      caches.match(event.request)
+        .then(response => {
+          if (response) {
+            return response;
+          }
+          return fetch(event.request).then(networkResponse => {
             if (networkResponse.status === 200) {
               const responseClone = networkResponse.clone();
               caches.open(CACHE_NAME).then(cache => {
@@ -70,13 +89,8 @@ self.addEventListener('fetch', event => {
               });
             }
             return networkResponse;
-          })
-          .catch(() => {
-            // Si falla la red y es una página HTML, mostrar index como offline
-            if (event.request.url.includes('.html')) {
-              return caches.match('./index.html');
-            }
           });
-      })
-  );
+        })
+    );
+  }
 });
