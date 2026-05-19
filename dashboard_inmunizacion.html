@@ -555,9 +555,9 @@
     async function refresh() {
       for (const c of config_actual.canales) {
         try {
-          const res = await fetch(`https://api.thingspeak.com/channels/${c.id}/feeds.json?api_key=${c.key}&results=1`);
+          const res = await fetch(`https://api.thingspeak.com/channels/${c.id}/feeds.json?api_key=${c.key}&results=5`);
           const data = await res.json();
-          if (!data.channel || !data.feeds[0]) continue;
+          if (!data.channel || !data.feeds || data.feeds.length === 0) continue;
 
           document.getElementById(`n-${c.id}`).innerText = data.channel.name || c.id;
           const grid = document.getElementById(`g-${c.id}`);
@@ -570,22 +570,40 @@
             const excludeKeywords = ['ambiente', 'wifi', 'rssi', 'intensidad', 'señal', 'nivel'];
             if (excludeKeywords.some(key => labelLower.includes(key))) return;
 
-            const val = parseFloat(data.feeds[0][f]);
-            
+            // Buscar la última lectura válida omitiendo errores de hardware (-127) de atrás hacia adelante (más reciente)
+            let lastVal = NaN;
+            let lastTime = null;
+            for (let i = data.feeds.length - 1; i >= 0; i--) {
+              const valTemp = parseFloat(data.feeds[i][f]);
+              if (!isNaN(valTemp) && valTemp !== -127) {
+                lastVal = valTemp;
+                lastTime = data.feeds[i].created_at;
+                break;
+              }
+            }
+
             let min = MIN_GEN, max = MAX_GEN;
             if (c.isFreezer && f === c.fieldFreezer) {
                 min = MIN_FREEZER; max = MAX_FREEZER;
             }
 
-            const isDanger = !isNaN(val) && (val < min || val > max);
+            const isDanger = !isNaN(lastVal) && (lastVal < min || lastVal > max);
+
+            let lastTimeStr = '--/-- --:--';
+            if (lastTime) {
+              const d = new Date(lastTime);
+              const pad = n => String(n).padStart(2, '0');
+              lastTimeStr = `${pad(d.getDate())}/${pad(d.getMonth() + 1)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+            }
 
             const sCard = document.createElement('div');
             sCard.className = `sensor-card ${isDanger ? 'danger' : ''}`;
             sCard.innerHTML = `
               <div class="sensor-label">${label}</div>
-              <div class="sensor-value ${isDanger ? 'danger' : ''}">${isNaN(val) ? '--' : val.toFixed(1)}°C</div>
-              <button class="btn-info" id="info-${c.id}-${f}" onclick="mostrarGuiaAlerta('${val < min ? 'baja' : 'alta'}', ${val}, ${min}, ${max})">ⓘ ¿Qué hacer?</button>
+              <div class="sensor-value ${isDanger ? 'danger' : ''}">${isNaN(lastVal) ? '--' : lastVal.toFixed(1)}°C</div>
+              <button class="btn-info" id="info-${c.id}-${f}" onclick="mostrarGuiaAlerta('${lastVal < min ? 'baja' : 'alta'}', ${lastVal}, ${min}, ${max})" style="display:none;">ⓘ ¿Qué hacer?</button>
               <button class="btn-hist" onclick="openRep('${c.id}','${c.key}','${f}', ${min}, ${max}, '${c.folderId_Tecnico || ''}')">📊 Historial</button>
+              <div style="font-size: 0.72rem; color: #64748b; margin-top: 6px; font-weight: 600; text-align: center;">🕒 ${lastTimeStr}</div>
             `;
             grid.appendChild(sCard);
             if (isDanger) sCard.querySelector('.btn-info').style.display = 'flex';
