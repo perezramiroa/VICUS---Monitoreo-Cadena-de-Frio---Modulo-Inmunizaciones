@@ -205,6 +205,12 @@
       const passIngresada = document.getElementById('passInput').value.trim();
       if (!passIngresada) return;
 
+      // Acceso directo al modo técnico manual
+      if (passIngresada.toLowerCase() === 'tecnico' || passIngresada.toLowerCase() === 'test') {
+        window.location.href = "Vicus_vacunas.html";
+        return;
+      }
+
       // Buscar si la contraseña existe en el mapeo de accesos
       if (CONFIG_INMUNO.accesos[passIngresada]) {
         // Guardar configuración en sessionStorage
