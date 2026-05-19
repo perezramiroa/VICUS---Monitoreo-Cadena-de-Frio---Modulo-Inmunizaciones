@@ -602,7 +602,7 @@
               <div class="sensor-label">${label}</div>
               <div class="sensor-value ${isDanger ? 'danger' : ''}">${isNaN(lastVal) ? '--' : lastVal.toFixed(1)}°C</div>
               <button class="btn-info" id="info-${c.id}-${f}" onclick="mostrarGuiaAlerta('${lastVal < min ? 'baja' : 'alta'}', ${lastVal}, ${min}, ${max})" style="display:none;">ⓘ ¿Qué hacer?</button>
-              <button class="btn-hist" onclick="openRep('${c.id}','${c.key}','${f}', ${min}, ${max}, '${c.folderId_Tecnico || ''}')">📊 Historial</button>
+              <button class="btn-hist" onclick="openRep('${c.id}','${c.key}','${f}', ${min}, ${max}, '${c.folderId_Tecnico || ''}', '${c.folderId_Desvio || ''}')">📊 Historial</button>
               <div style="font-size: 0.72rem; color: #64748b; margin-top: 6px; font-weight: 600; text-align: center;">🕒 ${lastTimeStr}</div>
             `;
             grid.appendChild(sCard);
@@ -614,8 +614,8 @@
       }
     }
 
-    function openRep(id, k, f, min, max, folderId) {
-      window.open(`reporte_individual.html?id=${id}&key=${k}&field=${f}&min=${min}&max=${max}&folderId=${folderId}`, '_blank');
+    function openRep(id, k, f, min, max, folderId, folderIdDesvio) {
+      window.open(`reporte_individual.html?id=${id}&key=${k}&field=${f}&min=${min}&max=${max}&folderId=${folderId}&folderIdDesvio=${folderIdDesvio || ''}`, '_blank');
     }
 
     function mostrarGuiaAlerta(tipo, valorActual, min, max) {
