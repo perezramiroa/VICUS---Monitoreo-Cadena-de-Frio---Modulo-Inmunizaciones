@@ -213,24 +213,24 @@ function generarPDFOficial(sensor, fecha, rango, trazabilidad, analizada, conect
   // --- TABLA DE ALERTAS ---
   const minRange = sensor.isFreezer ? "-28°C" : "2°C";
   const maxRange = sensor.isFreezer ? "-18°C" : "8°C";
-  body.appendParagraph(`\n⚠️ ALERTAS Y RECUPERACIONES (${minRange} - ${maxRange})`)
+  body.appendParagraph(`\nALERTAS Y RECUPERACIONES (${minRange} - ${maxRange})`)
     .setBold(true).setFontSize(10).setSpacingAfter(4);
   const tablaAlertas = [["Fecha y Hora", "Valor", "Estado", "Duración"]];
   if (analizada.alertasFilas.length > 0) {
     analizada.alertasFilas.forEach(f => tablaAlertas.push([f.h, f.v, f.e, f.d]));
   } else {
-    tablaAlertas.push(["-", "-", "✅ Sin eventos fuera de rango", "-"]);
+    tablaAlertas.push(["-", "-", "Sin eventos fuera de rango", "-"]);
   }
   estilizarTabla(body.appendTable(tablaAlertas));
 
   // --- EVENTOS DE CONECTIVIDAD ---
-  body.appendParagraph("\n📡 EVENTOS DETECTADOS (>10 min sin datos)")
+  body.appendParagraph("\nEVENTOS DETECTADOS (>10 min sin datos)")
     .setBold(true).setFontSize(10).setSpacingAfter(4);
   const tablaWifi = [["Inicio", "Fin", "Tipo de Corte", "T. Antes", "T. Desp.", "Duración"]];
   if (conectividad.filas.length > 0) {
     conectividad.filas.forEach(f => tablaWifi.push([f.inicio, f.fin, f.tipo, f.antes, f.despues, f.duracion]));
   } else {
-    tablaWifi.push(["-", "-", "✅ Sin interrupciones significativas", "-", "-", "-"]);
+    tablaWifi.push(["-", "-", "Sin interrupciones significativas", "-", "-", "-"]);
   }
   estilizarTabla(body.appendTable(tablaWifi));
 
@@ -248,11 +248,11 @@ function generarPDFOficial(sensor, fecha, rango, trazabilidad, analizada, conect
   body.appendParagraph(analizada.textoRecom + "\n• " + conectividad.recom).setFontSize(9);
 
   // Nota técnica final
-  body.appendParagraph("\n⚙️ NOTA TÉCNICA:").setBold(true).setFontSize(9).setForegroundColor("#475569");
+  body.appendParagraph("\nNOTA TÉCNICA:").setBold(true).setFontSize(9).setForegroundColor("#475569");
   body.appendParagraph(analizada.notaTecnica).setFontSize(8).setItalic(true).setForegroundColor("#475569");
 
   // Nota de responsabilidad
-  body.appendParagraph("\n⚠️ RESPONSABILIDAD:").setBold(true).setFontSize(9).setForegroundColor("#475569");
+  body.appendParagraph("\nRESPONSABILIDAD:").setBold(true).setFontSize(9).setForegroundColor("#475569");
   body.appendParagraph(analizada.notaResponsabilidad).setFontSize(8).setItalic(true).setForegroundColor("#475569");
 
   // --- PIE DE PÁGINA con línea separadora arriba ---
@@ -325,10 +325,10 @@ function analizarDatos(feeds, field, sensor) {
       const hora = Utilities.formatDate(new Date(f.created_at), "GMT-3", "dd/MM HH:mm");
       if (state !== 'normal') {
         startTime = new Date(f.created_at);
-        alertasFilas.push({ h: hora, v: val.toFixed(1) + "°C", e: state === 'Alta' ? `⚠️ Alerta Alta (>${maxVal}°C)` : `⚠️ Alerta Baja (<${minVal}°C)`, d: "--" });
+        alertasFilas.push({ h: hora, v: val.toFixed(1) + "°C", e: state === 'Alta' ? `Alerta Alta (>${maxVal}°C)` : `Alerta Baja (<${minVal}°C)`, d: "--" });
       } else if (startTime) {
         const dur = (new Date(f.created_at) - startTime) / 60000;
-        alertasFilas.push({ h: hora, v: val.toFixed(1) + "°C", e: "✅ Recuperación", d: formatDur(dur) });
+        alertasFilas.push({ h: hora, v: val.toFixed(1) + "°C", e: "Recuperación", d: formatDur(dur) });
         stats.push({ s: lastState, d: dur });
       }
       lastState = state;
