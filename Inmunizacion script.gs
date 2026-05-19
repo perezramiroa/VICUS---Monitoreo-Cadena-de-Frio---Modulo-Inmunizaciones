@@ -21,22 +21,52 @@ const CENTROS = {
 };
 
 const SENSORES = [
-  { id: '2986932', k: '9ODQC0Q4Y05C1O1T', n: 'Hosp Vacunatorio 1', eq: 'Equipo Inm', field: 'field1', centro: 'Hospital Centenario' },
-  { id: '2986935', k: 'Q1CXSNKL68D24MJH', n: 'Hosp Vacunatorio 2', eq: 'Equipo Inm', field: 'field1', centro: 'Hospital Centenario' },
-  { id: '2993812', k: 'PNS5MD5VS74CKIIM', n: 'Depo Vacunatorio 1', eq: 'Equipo Inm', field: 'field1', centro: 'Hospital Centenario' },
-  { id: '2993815', k: 'XZ0DG337HFATUG1O', n: 'Depo Vacunatorio 2', eq: 'Freezer Inm', field: 'field2', centro: 'Hospital Centenario' },
-  { id: '3003527', k: '9ALDC8QUP8JV6ZDJ', n: 'Sarmiento 1', eq: 'Equipo Inm', field: 'field1', centro: 'Sarmiento 1' },
-  { id: '3102139', k: 'YPWRU12M4LY6DBIX', n: 'Sarmiento 2', eq: 'Equipo Inm', field: 'field1', centro: 'Sarmiento 2' },
-  { id: '3015641', k: '4IV9V3L1RC08AAQ5', n: 'Villa Obrera', eq: 'Equipo Inm', field: 'field1', centro: 'Villa Obrera' },
-  { id: '3018408', k: 'ZY1L55G8AUXGCV9B', n: 'Nueva España', eq: 'Equipo Inm', field: 'field1', centro: 'Nueva España' },
-  { id: '3019919', k: 'BGIYFCS3AS3BBQC0', n: '11 de Octubre', eq: 'Equipo Inm', field: 'field1', centro: '11 de Octubre' },
-  { id: '3060520', k: 'YBS2XVLA80RQ63J6', n: 'VAN', eq: 'Equipo Inm', field: 'field1', centro: 'VAN' },
-  { id: '3079464', k: '18OTBS7ODP225VBW', n: 'VAS', eq: 'Equipo Inm', field: 'field1', centro: 'VAS' },
-  { id: '3090672', k: '7K994UH4606YRUE1', n: 'Costa Reyes', eq: 'Equipo Inm', field: 'field1', centro: 'Costa de Reyes' },
-  { id: '3082646', k: 'TSE6UAW72LLR8R39', n: 'Hosp Chañar 1', eq: 'Equipo Inm', field: 'field1', centro: 'Hospital Chañar' },
-  { id: '3125888', k: 'SCAORB4D3OCPE9DK', n: 'Hosp Chañar 2', eq: 'Equipo Inm', field: 'field1', centro: 'Hospital Chañar' },
-  { id: '3016635', k: '8QKPERAJWIATGC5F', n: 'Zona 1 - 1', eq: 'Equipo Inm', field: 'field1', centro: 'Zona 1' },
-  { id: '3016636', k: 'SAP43F3FB83V79KP', n: 'Zona 1 - 2', eq: 'Equipo Inm', field: 'field1', centro: 'Zona 1' }
+  // --- Hospital Centenario (7 sensores) ---
+  { id: '2986932', k: '9ODQC0Q4Y05C1O1T', n: 'Nº1 Sigma NHC9587', eq: 'Vacunatorio 1', field: 'field1', centro: 'Hospital Centenario' },
+  { id: '2986932', k: '9ODQC0Q4Y05C1O1T', n: 'Nº2 Briket', eq: 'Vacunatorio 1', field: 'field2', centro: 'Hospital Centenario' },
+  { id: '2986935', k: 'Q1CXSNKL68D24MJH', n: 'Nº3 Briket NHC13273', eq: 'Vacunatorio 2', field: 'field1', centro: 'Hospital Centenario' },
+  { id: '2986935', k: 'Q1CXSNKL68D24MJH', n: 'Nº4 Angelantoni NHC4621', eq: 'Vacunatorio 2', field: 'field2', centro: 'Hospital Centenario' },
+  { id: '2993812', k: 'PNS5MD5VS74CKIIM', n: 'Presvac 1', eq: 'Depo Vacunatorio 1', field: 'field1', centro: 'Hospital Centenario' },
+  { id: '2993812', k: 'PNS5MD5VS74CKIIM', n: 'Briket', eq: 'Depo Vacunatorio 1', field: 'field2', centro: 'Hospital Centenario' },
+  { id: '2993815', k: 'XZ0DG337HFATUG1O', n: 'Presvac 2', eq: 'Depo Vacunatorio 2', field: 'field1', centro: 'Hospital Centenario' },
+  { id: '2993815', k: 'XZ0DG337HFATUG1O', n: 'Freezer Inelro', eq: 'Depo Vacunatorio 2', field: 'field2', centro: 'Hospital Centenario', isFreezer: true },
+
+  // --- Sarmiento 1 (2 sensores) ---
+  { id: '3003527', k: '9ALDC8QUP8JV6ZDJ', n: 'Briket NHC11941', eq: 'Sarmiento 1', field: 'field1', centro: 'Sarmiento 1' },
+  { id: '3003527', k: '9ALDC8QUP8JV6ZDJ', n: 'Eslabon de Lujo ERA34', eq: 'Sarmiento 1', field: 'field2', centro: 'Sarmiento 1' },
+
+  // --- Sarmiento 2 (2 sensores) ---
+  { id: '3102139', k: 'YPWRU12M4LY6DBIX', n: 'Heladera Bambi 1200/1', eq: 'Sarmiento 2', field: 'field1', centro: 'Sarmiento 2' },
+  { id: '3102139', k: 'YPWRU12M4LY6DBIX', n: 'heladera Sigma', eq: 'Sarmiento 2', field: 'field2', centro: 'Sarmiento 2' },
+
+  // --- Villa Obrera (1 sensor) ---
+  { id: '3015641', k: '4IV9V3L1RC08AAQ5', n: 'Briket BK1F 1211 R1', eq: 'Villa Obrera', field: 'field1', centro: 'Villa Obrera' },
+
+  // --- Nueva España (1 sensor) ---
+  { id: '3018408', k: 'ZY1L55G8AUXGCV9B', n: 'Briket NHC13827', eq: 'Nueva España', field: 'field1', centro: 'Nueva España' },
+
+  // --- 11 de Octubre (1 sensor) ---
+  { id: '3019919', k: 'BGIYFCS3AS3BBQC0', n: 'Heladera Briket BK2F1310', eq: '11 de Octubre', field: 'field1', centro: '11 de Octubre' },
+
+  // --- VAN (1 sensor) ---
+  { id: '3060520', k: 'YBS2XVLA80RQ63J6', n: 'Heladera', eq: 'VAN', field: 'field1', centro: 'VAN' },
+
+  // --- VAS (1 sensor) ---
+  { id: '3079464', k: '18OTBS7ODP225VBW', n: 'Heladera Patrick 280', eq: 'VAS', field: 'field1', centro: 'VAS' },
+
+  // --- Costa de Reyes (1 sensor) ---
+  { id: '3090672', k: '7K994UH4606YRUE1', n: 'Heladera Briket', eq: 'Costa de Reyes', field: 'field1', centro: 'Costa de Reyes' },
+
+  // --- Hospital Chañar (3 sensores) ---
+  { id: '3082646', k: 'TSE6UAW72LLR8R39', n: 'Heladera Briket 1', eq: 'Hospital Chañar 1', field: 'field1', centro: 'Hospital Chañar' },
+  { id: '3082646', k: 'TSE6UAW72LLR8R39', n: 'Briket 2', eq: 'Hospital Chañar 1', field: 'field2', centro: 'Hospital Chañar' },
+  { id: '3125888', k: 'SCAORB4D3OCPE9DK', n: 'Heladera 3 Eslabon de Lujo', eq: 'Hospital Chañar 2', field: 'field1', centro: 'Hospital Chañar' },
+
+  // --- Zona 1 (4 sensores) ---
+  { id: '3016635', k: '8QKPERAJWIATGC5F', n: 'Briket 1', eq: 'Inmuno 1', field: 'field1', centro: 'Zona 1' },
+  { id: '3016635', k: '8QKPERAJWIATGC5F', n: 'Briket 2', eq: 'Inmuno 1', field: 'field2', centro: 'Zona 1' },
+  { id: '3016636', k: 'SAP43F3FB83V79KP', n: 'Diplomatic 3', eq: 'Inmuno 2', field: 'field1', centro: 'Zona 1' },
+  { id: '3016636', k: 'SAP43F3FB83V79KP', n: 'Saiar 4', eq: 'Inmuno 2', field: 'field2', centro: 'Zona 1' }
 ];
 
 function ejecutarReporteSemanal() {
@@ -58,9 +88,9 @@ function ejecutarReporteSemanal() {
   const fechaEmision = Utilities.formatDate(hoy, "GMT-3", "dd/MM/yyyy");
   const rangoTexto = Utilities.formatDate(haceSieteDias, "GMT-3", "dd/MM/yyyy") + " - " + fechaEmision;
 
-  // Procesar un bloque de 2 centros en esta ejecución para máxima seguridad y rendimiento
-  const limite = Math.min(currentCentroIndex + 2, nombresCentros.length);
-  console.log(`Iniciando procesamiento de bloque: Centros del ${currentCentroIndex + 1} al ${limite} de ${nombresCentros.length}`);
+  // Procesar exactamente 1 centro por ejecución para máxima seguridad y evitar límites de 6 min
+  const limite = Math.min(currentCentroIndex + 1, nombresCentros.length);
+  console.log(`Iniciando procesamiento: Centro ${currentCentroIndex + 1} de ${nombresCentros.length}`);
   
   for (let idx = currentCentroIndex; idx < limite; idx++) {
     const nombreCentro = nombresCentros[idx];
@@ -78,7 +108,7 @@ function ejecutarReporteSemanal() {
         feedsPorSensor.push({ sensor: s, feeds: data.feeds });
         
         const trazabilidad = "AUTO-INM-" + Utilities.formatDate(hoy, "GMT-3", "yyyyMMdd") + "-" + s.id;
-        const analizada = analizarDatos(data.feeds, s.field);
+        const analizada = analizarDatos(data.feeds, s.field, s);
         const conectividad = analizarConectividad(data.feeds, s.field);
         const grafico = generarGraficoCurva(data.feeds, s.field, s.n);
         
@@ -186,14 +216,17 @@ function analizarConectividad(feeds, field) {
   return { texto: cortes > 0 ? `Se detectaron ${cortes} interrupciones de señal mayores a 15 min.` : "Conectividad estable durante el período." };
 }
 
-function analizarDatos(feeds, field) {
+function analizarDatos(feeds, field, sensor) {
   let alertasFilas = [];
   let lastState = 'normal';
   let startTime = null;
+  const minVal = sensor && sensor.isFreezer ? -28.0 : 2.0;
+  const maxVal = sensor && sensor.isFreezer ? -18.0 : 8.0;
+  
   feeds.forEach(f => {
     const val = parseFloat(f[field]);
     if (isNaN(val)) return;
-    const state = (val > 8.0) ? 'Alta' : (val < 2.0) ? 'Baja' : 'normal';
+    const state = (val > maxVal) ? 'Alta' : (val < minVal) ? 'Baja' : 'normal';
     if (state !== lastState) {
       const hora = Utilities.formatDate(new Date(f.created_at), "GMT-3", "dd/MM HH:mm");
       if (state !== 'normal') {
@@ -279,29 +312,41 @@ function generarSheetSemanal(feedsPorSensor, rangoTexto, fechaHoy, folderId) {
       fs.feeds.forEach(feed => {
         const val = parseFloat(feed[fs.sensor.field]);
         if (isNaN(val) || val === -127) return;
+        
+        // Parsear fecha y truncar segundos y milisegundos para alinear al minuto
         const d = new Date(feed.created_at);
-        const clave = Utilities.formatDate(d, "GMT-3", "dd/MM/yyyy HH:mm");
-        if (!mapaTemp[clave]) mapaTemp[clave] = { fecha: clave, valores: {} };
-        if (mapaTemp[clave].valores[idx] !== undefined) {
-          mapaTemp[clave].valores[idx] = (mapaTemp[clave].valores[idx] + val) / 2;
+        d.setSeconds(0, 0);
+        d.setMilliseconds(0);
+        const ts = d.getTime();
+        
+        if (!mapaTemp[ts]) mapaTemp[ts] = { ts: ts, valores: {} };
+        if (mapaTemp[ts].valores[idx] !== undefined) {
+          mapaTemp[ts].valores[idx] = (mapaTemp[ts].valores[idx] + val) / 2;
         } else {
-          mapaTemp[clave].valores[idx] = val;
+          mapaTemp[ts].valores[idx] = val;
         }
       });
     });
     
-    const claves = Object.keys(mapaTemp).sort((a, b) => {
-      const toDate = s => {
-        const [fecha, hora] = s.split(' ');
-        const [d, m, y] = fecha.split('/');
-        return new Date(`${y}-${m}-${d}T${hora}:00`);
-      };
-      return toDate(a) - toDate(b);
-    });
+    // Ordenar los timestamps numéricos de manera ascendente
+    const timestamps = Object.keys(mapaTemp).map(Number).sort((a, b) => a - b);
     
-    const filas = claves.map(clave => {
-      const entrada = mapaTemp[clave];
-      const fila = [entrada.fecha];
+    // Función auxiliar ultra-rápida para formatear fecha a GMT-3 en JS puro
+    const formatFechaGMT3 = ts => {
+      const shifted = new Date(ts - 3 * 60 * 60 * 1000);
+      const pad = n => String(n).padStart(2, '0');
+      const dia = pad(shifted.getUTCDate());
+      const mes = pad(shifted.getUTCMonth() + 1);
+      const anio = shifted.getUTCFullYear();
+      const hora = pad(shifted.getUTCHours());
+      const min = pad(shifted.getUTCMinutes());
+      return `${dia}/${mes}/${anio} ${hora}:${min}`;
+    };
+    
+    const filas = timestamps.map(ts => {
+      const entrada = mapaTemp[ts];
+      const fechaStr = formatFechaGMT3(ts);
+      const fila = [fechaStr];
       feedsPorSensor.forEach((_, idx) => {
         const v = entrada.valores[idx];
         fila.push(v !== undefined ? Math.round(v * 100) / 100 : "");
@@ -315,20 +360,23 @@ function generarSheetSemanal(feedsPorSensor, rangoTexto, fechaHoy, folderId) {
       console.log(`[Sheet - ${centroNombre}] Escribiendo matriz de lecturas en lote...`);
       hoja.getRange(filaInicio, 1, filas.length, encabezados.length).setValues(filas);
       
-      console.log(`[Sheet - ${centroNombre}] Aplicando reglas de Formato Condicional (2°C - 8°C)...`);
-      feedsPorSensor.forEach((_, idx) => {
+      console.log(`[Sheet - ${centroNombre}] Aplicando reglas de Formato Condicional Dinámico...`);
+      feedsPorSensor.forEach((fs, idx) => {
         const col = idx + 2;
         const rangoCol = hoja.getRange(filaInicio, col, filas.length, 1);
         
+        const minVal = fs.sensor.isFreezer ? -28.0 : 2.0;
+        const maxVal = fs.sensor.isFreezer ? -18.0 : 8.0;
+        
         const reglAlta = SpreadsheetApp.newConditionalFormatRule()
-          .whenNumberGreaterThan(8.0)
+          .whenNumberGreaterThan(maxVal)
           .setBackground("#fecaca")
           .setFontColor("#dc2626")
           .setRanges([rangoCol])
           .build();
           
         const reglBaja = SpreadsheetApp.newConditionalFormatRule()
-          .whenNumberLessThan(2.0)
+          .whenNumberLessThan(minVal)
           .setBackground("#bfdbfe")
           .setFontColor("#1d4ed8")
           .setRanges([rangoCol])
@@ -339,6 +387,8 @@ function generarSheetSemanal(feedsPorSensor, rangoTexto, fechaHoy, folderId) {
         reglas.push(reglBaja);
         hoja.setConditionalFormatRules(reglas);
       });
+      
+
       
       hoja.setColumnWidth(1, 140);
       feedsPorSensor.forEach((_, idx) => hoja.setColumnWidth(idx + 2, 130));
