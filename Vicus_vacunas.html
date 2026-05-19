@@ -414,17 +414,26 @@
           c.fields.forEach(f => {
             const label = data.channel[f] || f;
             
-            // Buscar la última lectura válida omitiendo errores de hardware (-127)
+            // Buscar la última lectura válida omitiendo errores de hardware (-127) de atrás hacia adelante (más reciente)
             let lastVal = NaN;
-            for (let i = 0; i < data.feeds.length; i++) {
+            let lastTime = null;
+            for (let i = data.feeds.length - 1; i >= 0; i--) {
               const valTemp = parseFloat(data.feeds[i][f]);
               if (!isNaN(valTemp) && valTemp !== -127) {
                 lastVal = valTemp;
+                lastTime = data.feeds[i].created_at;
                 break; // Encontrado el último valor real enviado
               }
             }
 
             const isDanger = !isNaN(lastVal) && (lastVal < MIN || lastVal > MAX);
+
+            let lastTimeStr = '--/-- --:--';
+            if (lastTime) {
+              const d = new Date(lastTime);
+              const pad = n => String(n).padStart(2, '0');
+              lastTimeStr = `${pad(d.getDate())}/${pad(d.getMonth() + 1)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+            }
             
             const sensorCard = document.createElement('div');
             sensorCard.className = `sensor-card ${isDanger ? 'danger' : ''}`;
@@ -433,6 +442,7 @@
               <div class="sensor-value ${isDanger ? 'danger' : ''}">${isNaN(lastVal) ? '--' : lastVal.toFixed(1)}°C</div>
               <button class="btn-info" id="info-${c.id}-${f}" style="display:${isDanger ? 'flex' : 'none'}" onclick="mostrarGuiaAlerta('${lastVal < MIN ? 'baja' : 'alta'}', ${lastVal})">ⓘ ¿Qué hacer?</button>
               <button class="btn-hist" onclick="openRep('${c.id}','${c.k}','${f}')">📊 Gráfico</button>
+              <div style="font-size: 0.72rem; color: #64748b; margin-top: 6px; font-weight: 600; text-align: center;">🕒 ${lastTimeStr}</div>
             `;
             gridEl.appendChild(sensorCard);
           });
