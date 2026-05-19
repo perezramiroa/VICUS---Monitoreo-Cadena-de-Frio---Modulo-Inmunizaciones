@@ -932,7 +932,9 @@
         let archivoRegistro = null;
 
         const params = new URLSearchParams(window.location.search);
-        const ID = params.get('id'), KEY = params.get('key'), FIELD = params.get('field') || 'field1', FOLDER_ID = params.get('folderId') || '';
+        const ID = params.get('id'), KEY = params.get('key'), FIELD = params.get('field') || 'field1';
+        const FOLDER_ID = params.get('folderId') || '';
+        const FOLDER_ID_DESVIO = params.get('folderIdDesvio') || '';
         const TYPE = params.get('type') || 'inmunizacion'; // 'vacunas' o 'inmunizacion'
         const APPS_SCRIPT_INMUNIZACION = 'https://script.google.com/macros/s/AKfycbyj0y92G5aQcpeE3S3wkldzk8sr0hjJXcwCAJl8yQq9oXogUIUHDOszWEEjlmxOWTE/exec';
 
@@ -2400,7 +2402,8 @@
                         pdfData: pdfBase64,
                         filename: nombreArchivo,
                         type: 'desvio',
-                        centro: obtenerCentroPorCanalId(ID)
+                        centro: obtenerCentroPorCanalId(ID),
+                        folderId: FOLDER_ID_DESVIO
                     })
                 })
                 .then(() => {
