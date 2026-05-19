@@ -1574,13 +1574,15 @@
     }
 
     function generarHashSimple(texto) {
-    function generarHashSimple(texto) {
         let hash = 0;
         for (let i = 0; i < texto.length; i++) {
             const char = texto.charCodeAt(i);
             hash = ((hash << 5) - hash) + char;
             hash = hash & hash;
         }
+        return Math.abs(hash).toString(16);
+    }
+
     function iniciarReporteDesvio() {
         document.getElementById('modalFechaDesvio').style.display = 'block';
         document.body.style.overflow = 'hidden';
@@ -2380,9 +2382,39 @@
 
         const nombreArchivo = `Desvio_${codigoUnico}.pdf`;
         doc.save(nombreArchivo);
-        doc.save(nombreArchivo);
         cerrarModalDesvio();
         
+        // Guardar en Google Drive de forma asíncrona
+        if (APPS_SCRIPT_INMUNIZACION) {
+            mostrarToast("Subiendo formulario de desvío a Google Drive... 📁", "#3b82f6");
+            try {
+                const pdfBase64 = doc.output('datauristring').split(',')[1];
+                fetch(APPS_SCRIPT_INMUNIZACION, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        action: 'guardarPDF',
+                        pdfData: pdfBase64,
+                        filename: nombreArchivo,
+                        type: 'desvio',
+                        centro: obtenerCentroPorCanalId(ID)
+                    })
+                })
+                .then(() => {
+                    mostrarToast("¡Formulario de desvío guardado en Google Drive! ✅", "#10b981");
+                })
+                .catch(err => {
+                    console.error("Error en Apps Script desvío:", err);
+                    mostrarToast("Error de conexión al guardar desvío en Drive.", "#ef4444");
+                });
+            } catch (err) {
+                console.error("Error al codificar PDF de desvío para Drive:", err);
+            }
+        }
+
         if (window.tempChart) window.tempChart.destroy();
     }
         window.onload = () => {
