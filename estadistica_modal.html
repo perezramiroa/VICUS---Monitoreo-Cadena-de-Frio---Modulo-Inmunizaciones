@@ -2,44 +2,202 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Estadística – Cadena de Frío</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Torre de Control – Zona Uno</title>
     <!-- Inter font -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./css/estadistica.css">
+    <!-- Chart.js para gráficos -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <!-- html2canvas para PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- jsPDF para PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
     <div id="estadisticaOverlay" class="overlay hidden">
         <div class="modal">
+            <!-- Header -->
             <header class="modal-header">
-                <h2>Estadística de Cadena de Frío</h2>
+                <div>
+                    <h2>🎯 Torre de Control – Zona Uno</h2>
+                    <p class="subtitle">Supervisión Regional de Cadena de Frío</p>
+                </div>
                 <button class="close-btn" aria-label="Cerrar">✕</button>
             </header>
+
+            <!-- Tabs Navigation -->
             <nav class="tabs">
-                <button data-tab="resumen" class="tab active">Resumen</button>
-                <button data-tab="temp" class="tab">Temperatura</button>
-                <button data-tab="desvios" class="tab">Desvíos</button>
-                <button data-tab="wifi" class="tab">Conectividad</button>
-                <button data-tab="exportar" class="tab">Exportar</button>
+                <button data-tab="resumen" class="tab active">📊 Resumen Regional</button>
+                <button data-tab="temperatura" class="tab">🌡️ Análisis Térmico</button>
+                <button data-tab="desvios" class="tab">⚠️ Gestión de Desvíos</button>
+                <button data-tab="conectividad" class="tab">📡 Conectividad</button>
+                <button data-tab="reportes" class="tab">📄 Reportes</button>
             </nav>
+
+            <!-- TAB 1: RESUMEN REGIONAL -->
             <section id="tab-resumen" class="tab-content active">
-                <!-- KPI cards will be injected here -->
-                <div class="kpi-grid"></div>
+                <div class="resumen-container">
+                    <!-- Ranking de Criticidad -->
+                    <div class="section-box">
+                        <h3>🚨 Ranking de Criticidad (Acción Inmediata)</h3>
+                        <div class="criticidad-list" id="criticidadList">
+                            <p class="placeholder">Cargando datos...</p>
+                        </div>
+                    </div>
+
+                    <!-- Disponibilidad de Red -->
+                    <div class="section-box">
+                        <h3>🌐 Estado de Conectividad Regional</h3>
+                        <div class="connectivity-summary">
+                            <div class="connectivity-stat">
+                                <span class="label">Efectores Online</span>
+                                <span class="value" id="efectoresOnline">--</span>
+                            </div>
+                            <div class="connectivity-stat">
+                                <span class="label">Efectores Offline</span>
+                                <span class="value alert" id="efectoresOffline">--</span>
+                            </div>
+                            <div class="connectivity-stat">
+                                <span class="label">Disponibilidad %</span>
+                                <span class="value" id="disponibilidad">--</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Desvíos Pendientes -->
+                    <div class="section-box">
+                        <h3>📋 Desvíos Pendientes de Documentación</h3>
+                        <div class="pending-summary">
+                            <div class="pending-card">
+                                <span class="count" id="desviosPendientes">0</span>
+                                <span class="label">Eventos sin Formulario</span>
+                            </div>
+                            <button class="btn-action" id="btnVerDesvios">Ver Detalles →</button>
+                        </div>
+                    </div>
+
+                    <!-- KPIs Consolidados -->
+                    <div class="section-box">
+                        <h3>📈 Métricas Consolidadas de Zona</h3>
+                        <div class="kpi-grid">
+                            <div class="kpi-card">
+                                <div class="icon">🌡️</div>
+                                <div class="value" id="kpiTempPromedio">--</div>
+                                <div class="label">Temp. Promedio (°C)</div>
+                            </div>
+                            <div class="kpi-card">
+                                <div class="icon">✅</div>
+                                <div class="value" id="kpiTiempoRango">--</div>
+                                <div class="label">% Tiempo en Rango</div>
+                            </div>
+                            <div class="kpi-card">
+                                <div class="icon">🔴</div>
+                                <div class="value" id="kpiAlertasAltas">--</div>
+                                <div class="label">Alertas Altas</div>
+                            </div>
+                            <div class="kpi-card">
+                                <div class="icon">🔵</div>
+                                <div class="value" id="kpiAlertasBasas">--</div>
+                                <div class="label">Alertas Bajas</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </section>
-            <section id="tab-temp" class="tab-content">
-                <canvas id="tempChart" height="200"></canvas>
+
+            <!-- TAB 2: ANÁLISIS TÉRMICO -->
+            <section id="tab-temperatura" class="tab-content">
+                <div class="temp-container">
+                    <h3>Comparativa de Temperatura por Efector (Últimas 24h)</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="tempChart" height="100"></canvas>
+                    </div>
+                    <p class="chart-note">Línea azul: Promedio de Zona | Líneas de color: Efectores individuales</p>
+                </div>
             </section>
+
+            <!-- TAB 3: GESTIÓN DE DESVÍOS -->
             <section id="tab-desvios" class="tab-content">
-                <table class="data-table" id="desviosTable"></table>
+                <div class="desvios-container">
+                    <h3>📋 Tabla de Desvíos y Formularios</h3>
+                    <div class="table-wrapper">
+                        <table class="data-table" id="desviosTable">
+                            <thead>
+                                <tr>
+                                    <th>Efector</th>
+                                    <th>Fecha/Hora</th>
+                                    <th>Tipo</th>
+                                    <th>Valor (°C)</th>
+                                    <th>Formulario</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td colspan="6" class="placeholder">Cargando desvíos...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="table-actions">
+                        <button class="btn-action" id="btnFiltrarDesvios">Filtrar por Rango</button>
+                        <button class="btn-action" id="btnExportarDesvios">Exportar Desvíos (CSV)</button>
+                    </div>
+                </div>
             </section>
-            <section id="tab-wifi" class="tab-content">
-                <canvas id="wifiChart" height="200"></canvas>
+
+            <!-- TAB 4: CONECTIVIDAD -->
+            <section id="tab-conectividad" class="tab-content">
+                <div class="conectividad-container">
+                    <h3>📡 Timeline de Cortes de Conectividad (>10 min)</h3>
+                    <div class="timeline" id="timelineConectividad">
+                        <p class="placeholder">Cargando datos de conectividad...</p>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="wifiChart" height="80"></canvas>
+                    </div>
+                </div>
             </section>
-            <section id="tab-exportar" class="tab-content">
-                <button class="btn-export" id="exportCsv">Exportar CSV</button>
-                <button class="btn-export" id="exportPdf">Exportar PDF</button>
+
+            <!-- TAB 5: REPORTES Y EXPORTACIÓN -->
+            <section id="tab-reportes" class="tab-content">
+                <div class="reportes-container">
+                    <h3>📄 Generación de Reportes</h3>
+                    
+                    <!-- Reporte Consolidado -->
+                    <div class="section-box">
+                        <h4>Reporte Consolidado de Zona</h4>
+                        <p class="description">Resumen semanal/mensual de desempeño de todos los efectores.</p>
+                        <div class="report-options">
+                            <select id="selectPeriodo" class="input-select">
+                                <option value="7">Últimos 7 días</option>
+                                <option value="30">Últimos 30 días</option>
+                                <option value="90">Últimos 90 días</option>
+                            </select>
+                            <button class="btn-export" id="btnGenerarPdfConsolidado">📥 Generar PDF Consolidado</button>
+                        </div>
+                    </div>
+
+                    <!-- Exportación de Datos -->
+                    <div class="section-box">
+                        <h4>Exportación de Datos</h4>
+                        <p class="description">Descarga datos brutos para análisis externo.</p>
+                        <div class="export-buttons">
+                            <button class="btn-export" id="btnExportarCsv">📊 Exportar CSV (Temperatura)</button>
+                            <button class="btn-export" id="btnExportarDesviosCsv">⚠️ Exportar CSV (Desvíos)</button>
+                        </div>
+                    </div>
+
+                    <!-- Envío a Drive -->
+                    <div class="section-box">
+                        <h4>Envío a Google Drive</h4>
+                        <p class="description">Guardar reporte directamente en la carpeta compartida de Zona Uno.</p>
+                        <button class="btn-export" id="btnEnviarDrive">☁️ Enviar a Drive</button>
+                    </div>
+                </div>
             </section>
         </div>
     </div>
+
     <script src="./js/estadistica.js" defer></script>
 </body>
 </html>
