@@ -304,11 +304,11 @@
 
 <body onload="initApp()">
   <div class="header" style="justify-content: center;">
-    <div class="logo-bar">
-      <div class="logo-item" style="width:100%;">
-        <img src="logos/logo_rih.jpg" alt="RIH" style="width:100%; height:100%; object-fit:contain;">
+      <div class="logo-bar">
+        <div class="logo-item" style="width:100%;">
+          <img src="logos/logo_rih.jpg?v=" alt="RIH" style="width:100%; height:100%; object-fit:contain;" onload="this.src=this.src.split('?')[0]+'?v='+new Date().getTime();">
+        </div>
       </div>
-    </div>
   </div>
 
   <h1 class="page-title">Inmunización Zona 1 - Monitoreo de Cadena de Frío</h1>
@@ -326,7 +326,7 @@
 
   <footer style="margin-top: 40px; width: 100%;">
     <div style="background-color: #00384d; padding: 0; width: 100%;">
-      <img src="logos/footer.jpg" alt="Institucional" style="width: 100%; height: auto; display: block;">
+      <img src="logos/footer.jpg?v=" alt="Institucional" style="width: 100%; height: auto; display: block;" onload="this.src=this.src.split('?')[0]+'?v='+new Date().getTime();">
     </div>
   </footer>
 

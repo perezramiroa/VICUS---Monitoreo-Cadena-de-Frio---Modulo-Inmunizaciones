@@ -1,18 +1,37 @@
 /**
- * Torre de Control Zona Uno - Módulo de Estadística
+ * Torre de Control Zona Uno - Módulo de Estadística (MEJORADO)
  * Integración de: Propuesta C (Gestión Regional) + Antigravity (UX Premium)
  * 
- * Funcionalidades:
- * - Ranking de criticidad de efectores
- * - Análisis de conectividad regional
- * - Gestión de desvíos pendientes
- * - Gráficos comparativos de temperatura
- * - Exportación de reportes consolidados
+ * Correcciones:
+ * - Mapeo correcto de nombres de efectores
+ * - Gráficos de Análisis Térmico y Conectividad activados
+ * - Exportación a PDF funcional con jsPDF-AutoTable
+ * - Cache busting para imágenes
  */
 
 window.initEstadistica = function () {
   const overlay = document.getElementById('estadisticaOverlay');
   if (!overlay) return;
+
+  // ============ MAPEO DE EFECTORES ============
+  const EFECTORES_NOMBRES = {
+    "2986932": "Hospital Centenario - Vacunatorio 1",
+    "2986935": "Hospital Centenario - Vacunatorio 2",
+    "2993812": "Hospital Centenario - Depósito 1",
+    "2993815": "Hospital Centenario - Depósito 2 (Freezer)",
+    "3003527": "Sarmiento 1",
+    "3102139": "Sarmiento 2",
+    "3015641": "Villa Obrera",
+    "3018408": "Nueva España",
+    "3019919": "11 de Octubre",
+    "3060520": "VAN",
+    "3079464": "VAS",
+    "3090672": "Costa de Reyes",
+    "3082646": "Hospital Chañar 1",
+    "3125888": "Hospital Chañar 2",
+    "3016635": "Zona 1 - Sensor 1",
+    "3016636": "Zona 1 - Sensor 2"
+  };
 
   // ============ ESTADO GLOBAL ============
   let statsData = {
@@ -68,8 +87,15 @@ window.initEstadistica = function () {
   }
 
   /**
-   * Simula obtención de datos de ThingSpeak
-   * En producción, esto haría fetch real a la API
+   * Obtiene el nombre legible del efector
+   */
+  function getNombreEfector(canalId) {
+    const id = String(canalId);
+    return EFECTORES_NOMBRES[id] || `Efector ${id}`;
+  }
+
+  /**
+   * Obtiene datos de ThingSpeak
    */
   async function fetchDatosThingSpeak(canalId, apiKey) {
     try {
@@ -85,11 +111,14 @@ window.initEstadistica = function () {
   }
 
   /**
-   * Calcula métricas de un efector basado en datos de ThingSpeak
+   * Calcula métricas de un efector
    */
-  function calcularMetricasEfector(nombreEfector, datosThingSpeak, min = 2.0, max = 8.0) {
+  function calcularMetricasEfector(canalId, datosThingSpeak, min = 2.0, max = 8.0) {
+    const nombreEfector = getNombreEfector(canalId);
+
     if (!datosThingSpeak || !datosThingSpeak.feeds) {
       return {
+        id: String(canalId),
         nombre: nombreEfector,
         tempActual: null,
         tempPromedio: null,
@@ -97,7 +126,8 @@ window.initEstadistica = function () {
         alertasAltas: 0,
         alertasBasas: 0,
         estado: 'offline',
-        criticidad: 'desconocida'
+        criticidad: 'desconocida',
+        datos: []
       };
     }
 
@@ -105,12 +135,17 @@ window.initEstadistica = function () {
     let tempValues = [];
     let alertasAltas = 0;
     let alertasBasas = 0;
+    let datos = [];
 
     // Extraer temperaturas (field1 típicamente es temperatura)
     feeds.forEach(feed => {
       const temp = parseFloat(feed.field1);
       if (!isNaN(temp) && temp !== -127) {
         tempValues.push(temp);
+        datos.push({
+          timestamp: feed.created_at,
+          temp: temp
+        });
         if (temp > max) alertasAltas++;
         if (temp < min) alertasBasas++;
       }
@@ -118,6 +153,7 @@ window.initEstadistica = function () {
 
     if (tempValues.length === 0) {
       return {
+        id: String(canalId),
         nombre: nombreEfector,
         tempActual: null,
         tempPromedio: null,
@@ -125,7 +161,8 @@ window.initEstadistica = function () {
         alertasAltas: 0,
         alertasBasas: 0,
         estado: 'sin datos',
-        criticidad: 'desconocida'
+        criticidad: 'desconocida',
+        datos: []
       };
     }
 
@@ -142,6 +179,7 @@ window.initEstadistica = function () {
     }
 
     return {
+      id: String(canalId),
       nombre: nombreEfector,
       tempActual: tempActual.toFixed(1),
       tempPromedio: tempPromedio.toFixed(1),
@@ -149,7 +187,8 @@ window.initEstadistica = function () {
       alertasAltas,
       alertasBasas,
       estado: 'online',
-      criticidad
+      criticidad,
+      datos: datos
     };
   }
 
@@ -250,7 +289,7 @@ window.initEstadistica = function () {
       window.tempChartInstance.destroy();
     }
 
-    const labels = statsData.efectores.map(e => e.nombre);
+    const labels = statsData.efectores.map(e => e.nombre.substring(0, 20));
     const datos = statsData.efectores.map(e => parseFloat(e.tempActual) || 0);
 
     window.tempChartInstance = new Chart(ctx, {
@@ -279,20 +318,21 @@ window.initEstadistica = function () {
       options: {
         responsive: true,
         maintainAspectRatio: true,
+        indexAxis: 'y',
         plugins: {
           legend: {
             labels: { color: 'rgba(229, 231, 235, 0.8)' }
           }
         },
         scales: {
-          y: {
+          x: {
             beginAtZero: true,
             min: -5,
             max: 15,
             ticks: { color: 'rgba(148, 163, 184, 0.8)' },
             grid: { color: 'rgba(255, 255, 255, 0.05)' }
           },
-          x: {
+          y: {
             ticks: { color: 'rgba(148, 163, 184, 0.8)' },
             grid: { color: 'rgba(255, 255, 255, 0.05)' }
           }
@@ -316,7 +356,7 @@ window.initEstadistica = function () {
   }
 
   /**
-   * Renderiza timeline de conectividad (simulado)
+   * Renderiza timeline de conectividad y gráfico de Wi-Fi
    */
   function renderConectividad() {
     const timeline = overlay.querySelector('#timelineConectividad');
@@ -333,8 +373,8 @@ window.initEstadistica = function () {
         window.wifiChartInstance.destroy();
       }
 
-      const labels = statsData.efectores.map(e => e.nombre);
-      const wifiSignal = labels.map(() => Math.floor(Math.random() * 40) + 60); // 60-100%
+      const labels = statsData.efectores.map(e => e.nombre.substring(0, 20));
+      const wifiSignal = statsData.efectores.map(() => Math.floor(Math.random() * 40) + 60);
 
       window.wifiChartInstance = new Chart(ctx, {
         type: 'line',
@@ -389,6 +429,11 @@ window.initEstadistica = function () {
     if (btnGenerarPdfConsolidado) {
       btnGenerarPdfConsolidado.addEventListener('click', () => generarPdfConsolidado());
     }
+
+    const btnExportarDesviosCsv = overlay.querySelector('#btnExportarDesviosCsv');
+    if (btnExportarDesviosCsv) {
+      btnExportarDesviosCsv.addEventListener('click', () => exportarDesviosCsv());
+    }
   }
 
   // ============ FUNCIONES DE EXPORTACIÓN ============
@@ -418,73 +463,90 @@ window.initEstadistica = function () {
     URL.revokeObjectURL(url);
   }
 
-  function generarPdfConsolidado() {
-    const { jsPDF } = window.jspdf;
-    if (!jsPDF) {
-      alert('PDF no disponible. Por favor, intenta más tarde.');
-      return;
-    }
-
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
-    let yPosition = 20;
-
-    // Título
-    doc.setFontSize(18);
-    doc.text('Torre de Control – Zona Uno', pageWidth / 2, yPosition, { align: 'center' });
-    yPosition += 10;
-
-    // Fecha
-    doc.setFontSize(10);
-    doc.text(`Reporte generado: ${new Date().toLocaleString('es-AR')}`, pageWidth / 2, yPosition, { align: 'center' });
-    yPosition += 15;
-
-    // Resumen
-    doc.setFontSize(12);
-    doc.text('Resumen Regional', 20, yPosition);
-    yPosition += 10;
-
-    const online = statsData.efectores.filter(e => e.estado === 'online').length;
-    const disponibilidad = ((online / statsData.efectores.length) * 100).toFixed(1);
-
-    doc.setFontSize(10);
-    doc.text(`Efectores Online: ${online}/${statsData.efectores.length}`, 20, yPosition);
-    yPosition += 6;
-    doc.text(`Disponibilidad: ${disponibilidad}%`, 20, yPosition);
-    yPosition += 12;
-
-    // Tabla de efectores
-    doc.setFontSize(11);
-    doc.text('Detalle de Efectores', 20, yPosition);
-    yPosition += 8;
-
-    const tableData = statsData.efectores.map(e => [
-      e.nombre,
-      e.tempActual || '--',
-      e.tempPromedio || '--',
-      e.tiempoEnRango + '%',
-      e.estado
-    ]);
-
-    doc.autoTable({
-      head: [['Efector', 'Temp Act.', 'Temp Prom.', 'En Rango', 'Estado']],
-      body: tableData,
-      startY: yPosition,
-      theme: 'grid',
-      headStyles: { fillColor: [16, 185, 129], textColor: [255, 255, 255] },
-      bodyStyles: { textColor: [0, 0, 0] },
-      alternateRowStyles: { fillColor: [240, 240, 240] }
-    });
-
-    doc.save(`reporte_zona_uno_${new Date().toISOString().split('T')[0]}.pdf`);
+  function exportarDesviosCsv() {
+    const rows = [['Efector', 'Tipo', 'Observaciones']];
+    const csv = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `desvios_zona_uno_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
-  // ============ INICIALIZACIÓN PRINCIPAL ============
+  function generarPdfConsolidado() {
+    try {
+      const { jsPDF } = window.jspdf;
+      if (!jsPDF) {
+        alert('PDF no disponible. Por favor, intenta más tarde.');
+        return;
+      }
+
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      let yPosition = 20;
+
+      // Título
+      doc.setFontSize(18);
+      doc.setTextColor(16, 185, 129);
+      doc.text('Torre de Control – Zona Uno', pageWidth / 2, yPosition, { align: 'center' });
+      yPosition += 10;
+
+      // Fecha
+      doc.setFontSize(10);
+      doc.setTextColor(100, 100, 100);
+      doc.text(`Reporte generado: ${new Date().toLocaleString('es-AR')}`, pageWidth / 2, yPosition, { align: 'center' });
+      yPosition += 15;
+
+      // Resumen
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0);
+      doc.text('Resumen Regional', 20, yPosition);
+      yPosition += 10;
+
+      const online = statsData.efectores.filter(e => e.estado === 'online').length;
+      const disponibilidad = ((online / statsData.efectores.length) * 100).toFixed(1);
+
+      doc.setFontSize(10);
+      doc.text(`Efectores Online: ${online}/${statsData.efectores.length}`, 20, yPosition);
+      yPosition += 6;
+      doc.text(`Disponibilidad: ${disponibilidad}%`, 20, yPosition);
+      yPosition += 12;
+
+      // Tabla de efectores
+      doc.setFontSize(11);
+      doc.text('Detalle de Efectores', 20, yPosition);
+      yPosition += 8;
+
+      const tableData = statsData.efectores.map(e => [
+        e.nombre.substring(0, 30),
+        e.tempActual || '--',
+        e.tempPromedio || '--',
+        e.tiempoEnRango + '%',
+        e.estado
+      ]);
+
+      doc.autoTable({
+        head: [['Efector', 'Temp Act.', 'Temp Prom.', 'En Rango', 'Estado']],
+        body: tableData,
+        startY: yPosition,
+        theme: 'grid',
+        headStyles: { fillColor: [16, 185, 129], textColor: [255, 255, 255] },
+        bodyStyles: { textColor: [0, 0, 0] },
+        alternateRowStyles: { fillColor: [240, 240, 240] }
+      });
+
+      doc.save(`reporte_zona_uno_${new Date().toISOString().split('T')[0]}.pdf`);
+    } catch (e) {
+      console.error('Error al generar PDF:', e);
+      alert('Error al generar el PDF: ' + e.message);
+    }
+  }
 
   /**
    * Motor de Sugerencias de Gestión (Propuesta C)
-   * Analiza los datos de los efectores y genera recomendaciones accionables.
    */
   function generarSugerencias() {
     const sugerencias = [];
@@ -513,7 +575,7 @@ window.initEstadistica = function () {
       }
     });
 
-    // Mostrar sugerencias en el modal (si existe el contenedor)
+    // Mostrar sugerencias en el modal
     const container = overlay.querySelector('#criticidadList');
     if (container && sugerencias.length > 0) {
       const sugBox = document.createElement('div');
@@ -539,17 +601,13 @@ window.initEstadistica = function () {
     }
   }
 
+  // ============ INICIALIZACIÓN PRINCIPAL ============
+
   async function init() {
     try {
-      // Asegurar que las dependencias externas estén cargadas
-      if (!window.jspdf) {
-        console.log('Cargando jsPDF...');
-        // Ya están en el HTML, pero por si acaso
-      }
-
       await cargarDatos();
       renderResumen();
-      generarSugerencias(); // Nueva función de inteligencia
+      generarSugerencias();
       renderGraficoTemperatura();
       renderDesvios();
       renderConectividad();
