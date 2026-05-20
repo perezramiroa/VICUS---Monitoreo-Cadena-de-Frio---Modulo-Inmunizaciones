@@ -482,10 +482,74 @@ window.initEstadistica = function () {
 
   // ============ INICIALIZACIÓN PRINCIPAL ============
 
+  /**
+   * Motor de Sugerencias de Gestión (Propuesta C)
+   * Analiza los datos de los efectores y genera recomendaciones accionables.
+   */
+  function generarSugerencias() {
+    const sugerencias = [];
+    
+    statsData.efectores.forEach(e => {
+      if (e.criticidad === 'critical') {
+        sugerencias.push({
+          tipo: 'error',
+          texto: `🚨 **${e.nombre}** requiere acción inmediata. Temperatura actual: ${e.tempActual}°C.`,
+          accion: 'Contactar al responsable del centro.'
+        });
+      } else if (e.criticidad === 'warning') {
+        sugerencias.push({
+          tipo: 'warning',
+          texto: `⚠️ **${e.nombre}** presenta inestabilidad térmica (${e.tiempoEnRango}% en rango).`,
+          accion: 'Revisar burletes y frecuencia de apertura de puertas.'
+        });
+      }
+      
+      if (e.estado === 'offline') {
+        sugerencias.push({
+          tipo: 'info',
+          texto: `📡 **${e.nombre}** está fuera de línea.`,
+          accion: 'Verificar router y suministro eléctrico local.'
+        });
+      }
+    });
+
+    // Mostrar sugerencias en el modal (si existe el contenedor)
+    const container = overlay.querySelector('#criticidadList');
+    if (container && sugerencias.length > 0) {
+      const sugBox = document.createElement('div');
+      sugBox.className = 'section-box';
+      sugBox.style.background = 'rgba(59, 130, 246, 0.1)';
+      sugBox.style.borderColor = 'rgba(59, 130, 246, 0.3)';
+      sugBox.innerHTML = '<h3>💡 Sugerencias de Gestión</h3>';
+      
+      const list = document.createElement('ul');
+      list.style.paddingLeft = '20px';
+      list.style.fontSize = '0.9rem';
+      list.style.color = 'var(--text-primary)';
+      
+      sugerencias.slice(0, 3).forEach(s => {
+        const li = document.createElement('li');
+        li.style.marginBottom = '8px';
+        li.innerHTML = `${s.texto} <br><span style="color:var(--accent-teal); font-size:0.8rem;">↳ Sugerencia: ${s.accion}</span>`;
+        list.appendChild(li);
+      });
+      
+      sugBox.appendChild(list);
+      container.prepend(sugBox);
+    }
+  }
+
   async function init() {
     try {
+      // Asegurar que las dependencias externas estén cargadas
+      if (!window.jspdf) {
+        console.log('Cargando jsPDF...');
+        // Ya están en el HTML, pero por si acaso
+      }
+
       await cargarDatos();
       renderResumen();
+      generarSugerencias(); // Nueva función de inteligencia
       renderGraficoTemperatura();
       renderDesvios();
       renderConectividad();
