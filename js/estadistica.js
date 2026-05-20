@@ -418,7 +418,6 @@ window.initEstadistica = function () {
           }
         }
       }
-    }
     });
   }
 
