@@ -636,7 +636,7 @@
     function toggleNormativa() { const p = document.getElementById('normativaPanel'); p.style.display = p.style.display === 'none' ? 'block' : 'none'; }
     function toggleProtocolo() { document.getElementById('protocoloOverlay').classList.add('visible'); }
     function cerrarProtocolo() { document.getElementById('protocoloOverlay').classList.remove('visible'); }
-    function abrirEstadistica() {
+function abrirEstadistica() {
     // Carga bajo demanda del modal de estadística
     const overlay = document.getElementById('estadisticaOverlay');
     if (overlay) {
@@ -649,7 +649,17 @@
         .then(r => r.text())
         .then(html => {
             document.body.insertAdjacentHTML('beforeend', html);
-            // Después de insertar, inicializamos listeners del modal
+            // Cargar el script del modal (estadistica.js) de forma dinámica
+            return new Promise((resolve, reject) => {
+                const s = document.createElement('script');
+                s.src = './js/estadistica.js';
+                s.onload = resolve;
+                s.onerror = reject;
+                document.head.appendChild(s);
+            });
+        })
+        .then(() => {
+            // Después de que el script se haya cargado, inicializamos los listeners del modal
             if (window.initEstadistica) {
                 window.initEstadistica();
             }
@@ -657,6 +667,8 @@
             if (newOverlay) newOverlay.classList.remove('hidden');
         })
         .catch(err => console.error('Error cargando estadística:', err));
+}
+
 }
     function abrirStock() { window.open('stock_inmunizacion_zona1.html', '_blank'); }
     function buscarNorma(q) { window.open(`https://www.google.com/search?q=${encodeURIComponent(q)}`, '_blank'); }
