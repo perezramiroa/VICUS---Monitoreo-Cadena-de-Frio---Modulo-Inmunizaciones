@@ -282,7 +282,10 @@ window.initEstadistica = function () {
    */
   function renderGraficoTemperatura() {
     const ctx = overlay.querySelector('#tempChart');
-    if (!ctx) return;
+    if (!ctx || !window.Chart) {
+      console.warn('Chart.js no está disponible o el canvas no existe');
+      return;
+    }
 
     // Destruir gráfico anterior si existe
     if (window.tempChartInstance) {
@@ -368,51 +371,55 @@ window.initEstadistica = function () {
 
     // Gráfico de Wi-Fi
     const ctx = overlay.querySelector('#wifiChart');
-    if (ctx && window.Chart) {
-      if (window.wifiChartInstance) {
-        window.wifiChartInstance.destroy();
-      }
+    if (!ctx || !window.Chart) {
+      console.warn('Chart.js no está disponible o el canvas no existe');
+      return;
+    }
 
-      const labels = statsData.efectores.map(e => e.nombre.substring(0, 20));
-      const wifiSignal = statsData.efectores.map(() => Math.floor(Math.random() * 40) + 60);
+    if (window.wifiChartInstance) {
+      window.wifiChartInstance.destroy();
+    }
 
-      window.wifiChartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: labels,
-          datasets: [{
-            label: 'Señal Wi-Fi (%)',
-            data: wifiSignal,
-            borderColor: 'rgba(59, 130, 246, 1)',
-            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-            borderWidth: 2,
-            tension: 0.4,
-            fill: true,
-            pointRadius: 4,
-            pointBackgroundColor: 'rgba(59, 130, 246, 1)'
-          }]
+    const labels = statsData.efectores.map(e => e.nombre.substring(0, 20));
+    const wifiSignal = statsData.efectores.map(() => Math.floor(Math.random() * 40) + 60);
+
+    window.wifiChartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Señal Wi-Fi (%)',
+          data: wifiSignal,
+          borderColor: 'rgba(59, 130, 246, 1)',
+          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          borderWidth: 2,
+          tension: 0.4,
+          fill: true,
+          pointRadius: 4,
+          pointBackgroundColor: 'rgba(59, 130, 246, 1)'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+          legend: { labels: { color: 'rgba(229, 231, 235, 0.8)' } }
         },
-        options: {
-          responsive: true,
-          maintainAspectRatio: true,
-          plugins: {
-            legend: { labels: { color: 'rgba(229, 231, 235, 0.8)' } }
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 100,
+            ticks: { color: 'rgba(148, 163, 184, 0.8)' },
+            grid: { color: 'rgba(255, 255, 255, 0.05)' }
           },
-          scales: {
-            y: {
-              beginAtZero: true,
-              max: 100,
-              ticks: { color: 'rgba(148, 163, 184, 0.8)' },
-              grid: { color: 'rgba(255, 255, 255, 0.05)' }
-            },
-            x: {
-              ticks: { color: 'rgba(148, 163, 184, 0.8)' },
-              grid: { color: 'rgba(255, 255, 255, 0.05)' }
-            }
+          x: {
+            ticks: { color: 'rgba(148, 163, 184, 0.8)' },
+            grid: { color: 'rgba(255, 255, 255, 0.05)' }
           }
         }
-      });
+      }
     }
+    });
   }
 
   /**
