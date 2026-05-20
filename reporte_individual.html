@@ -1277,6 +1277,19 @@
                 const trazabilidad = generarCodigoTrazabilidad();
                 const { jsPDF } = window.jspdf;
                 const pdf = new jsPDF('p', 'mm', 'a4');
+
+                // Interceptar pdf.text() para limpiar emojis y acentos automáticamente
+                // (igual que Farmacia: los emojis quedan en el HTML, el PDF sale limpio)
+                const _origText = pdf.text.bind(pdf);
+                pdf.text = function(text, x, y, options) {
+                    if (Array.isArray(text)) {
+                        text = text.map(t => typeof t === 'string' ? cleanText(t) : t);
+                    } else if (typeof text === 'string') {
+                        text = cleanText(text);
+                    }
+                    return _origText(text, x, y, options);
+                };
+
                 const pageWidth = pdf.internal.pageSize.getWidth();
                 const margin = 15;
 
