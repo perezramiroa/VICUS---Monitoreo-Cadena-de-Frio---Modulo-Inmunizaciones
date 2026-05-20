@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Estadística – Cadena de Frío</title>
+    <!-- Inter font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./css/estadistica.css">
+</head>
+<body>
+    <div id="estadisticaOverlay" class="overlay hidden">
+        <div class="modal">
+            <header class="modal-header">
+                <h2>Estadística de Cadena de Frío</h2>
+                <button class="close-btn" aria-label="Cerrar">✕</button>
+            </header>
+            <nav class="tabs">
+                <button data-tab="resumen" class="tab active">Resumen</button>
+                <button data-tab="temp" class="tab">Temperatura</button>
+                <button data-tab="desvios" class="tab">Desvíos</button>
+                <button data-tab="wifi" class="tab">Conectividad</button>
+                <button data-tab="exportar" class="tab">Exportar</button>
+            </nav>
+            <section id="tab-resumen" class="tab-content active">
+                <!-- KPI cards will be injected here -->
+                <div class="kpi-grid"></div>
+            </section>
+            <section id="tab-temp" class="tab-content">
+                <canvas id="tempChart" height="200"></canvas>
+            </section>
+            <section id="tab-desvios" class="tab-content">
+                <table class="data-table" id="desviosTable"></table>
+            </section>
+            <section id="tab-wifi" class="tab-content">
+                <canvas id="wifiChart" height="200"></canvas>
+            </section>
+            <section id="tab-exportar" class="tab-content">
+                <button class="btn-export" id="exportCsv">Exportar CSV</button>
+                <button class="btn-export" id="exportPdf">Exportar PDF</button>
+            </section>
+        </div>
+    </div>
+    <script src="./js/estadistica.js" defer></script>
+</body>
+</html>
