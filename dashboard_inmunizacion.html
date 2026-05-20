@@ -636,7 +636,28 @@
     function toggleNormativa() { const p = document.getElementById('normativaPanel'); p.style.display = p.style.display === 'none' ? 'block' : 'none'; }
     function toggleProtocolo() { document.getElementById('protocoloOverlay').classList.add('visible'); }
     function cerrarProtocolo() { document.getElementById('protocoloOverlay').classList.remove('visible'); }
-    function abrirEstadistica() { alert("Página en construcción. Más adelante se desarrollará."); }
+    function abrirEstadistica() {
+    // Carga bajo demanda del modal de estadística
+    const overlay = document.getElementById('estadisticaOverlay');
+    if (overlay) {
+        // Ya está cargado – solo lo mostramos
+        overlay.classList.add('visible');
+        return;
+    }
+    // No está cargado: lo obtenemos vía fetch y lo insertamos en el DOM
+    fetch('estadistica_modal.html')
+        .then(r => r.text())
+        .then(html => {
+            document.body.insertAdjacentHTML('beforeend', html);
+            // Después de insertar, inicializamos listeners del modal
+            if (window.initEstadistica) {
+                window.initEstadistica();
+            }
+            const newOverlay = document.getElementById('estadisticaOverlay');
+            if (newOverlay) newOverlay.classList.remove('hidden');
+        })
+        .catch(err => console.error('Error cargando estadística:', err));
+}
     function abrirStock() { window.open('stock_inmunizacion_zona1.html', '_blank'); }
     function buscarNorma(q) { window.open(`https://www.google.com/search?q=${encodeURIComponent(q)}`, '_blank'); }
     function buscarTodasNormas() {
