@@ -1,0 +1,180 @@
+/* estadistica.css - estilos premium para el modal Estadística */
+
+/* Variables de color (dark mode) */
+:root {
+    --bg-primary: rgba(10, 20, 30, 0.85);
+    --bg-overlay: rgba(0, 0, 0, 0.6);
+    --card-bg: rgba(255, 255, 255, 0.07);
+    --accent-teal: #10b981;
+    --text-primary: #e5e7eb;
+    --text-secondary: #94a3b8;
+    --border-radius: 12px;
+    --transition: 0.2s ease;
+    --font-family: 'Inter', sans-serif;
+}
+
+body {
+    font-family: var(--font-family);
+    color: var(--text-primary);
+    margin: 0;
+    overflow-x: hidden;
+}
+
+/* Overlay */
+#estadisticaOverlay {
+    position: fixed;
+    inset: 0;
+    background: var(--bg-overlay);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--transition);
+}
+
+#estadisticaOverlay.visible {
+    opacity: 1;
+    pointer-events: all;
+}
+
+/* Modal container */
+#estadisticaOverlay .modal {
+    background: var(--bg-primary);
+    border-radius: var(--border-radius);
+    width: 90%;
+    max-width: 900px;
+    max-height: 92vh;
+    overflow-y: auto;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.4);
+    backdrop-filter: blur(12px);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding-bottom: 8px;
+}
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.4rem;
+    color: var(--text-primary);
+}
+.close-btn {
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: var(--transition);
+}
+.close-btn:hover {
+    color: var(--accent-teal);
+    transform: scale(1.1);
+}
+
+/* Tabs */
+.tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.tabs .tab {
+    background: var(--card-bg);
+    border: none;
+    border-radius: var(--border-radius);
+    padding: 8px 16px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: var(--transition);
+    font-weight: 600;
+}
+.tabs .tab.active, .tabs .tab:hover {
+    background: var(--accent-teal);
+    color: #fff;
+}
+
+/* Tab content */
+.tab-content {
+    display: none;
+    animation: fadeIn 0.3s ease forwards;
+}
+.tab-content.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* KPI Grid */
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+}
+.kpi-card {
+    background: var(--card-bg);
+    border-radius: var(--border-radius);
+    padding: 16px;
+    text-align: center;
+    color: var(--text-primary);
+    transition: var(--transition);
+}
+.kpi-card:hover {
+    background: rgba(255,255,255,0.12);
+    transform: translateY(-2px);
+}
+.kpi-card .value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-top: 4px;
+    color: var(--accent-teal);
+}
+.kpi-card .label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+/* Data table */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    color: var(--text-primary);
+}
+.data-table th, .data-table td {
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 6px 8px;
+    text-align: left;
+}
+.data-table th {
+    background: var(--card-bg);
+    font-weight: 600;
+}
+
+/* Export buttons */
+.btn-export {
+    background: var(--accent-teal);
+    color: #fff;
+    border: none;
+    padding: 10px 16px;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-weight: 600;
+    margin-right: 12px;
+    transition: var(--transition);
+}
+.btn-export:hover {
+    background: #0f9d71;
+    transform: translateY(-2px);
+}
