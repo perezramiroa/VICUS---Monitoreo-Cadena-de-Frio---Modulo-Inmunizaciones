@@ -309,7 +309,7 @@
   <script src="./js/pwa-utils.js"></script>
 </head>
 
-<body onload="initApp()">
+<body onload="waitForConfigAndInit()">
   <div class="header" style="justify-content: center;">
       <div class="logo-bar">
         <div class="logo-item" style="width:100%;">
@@ -539,6 +539,27 @@
       }
     };
 
+    // Esperar a que CONFIG_INMUNO esté disponible antes de inicializar
+    function waitForConfigAndInit() {
+      let attempts = 0;
+      const maxAttempts = 50; // 5 segundos máximo (50 * 100ms)
+      
+      const checkConfig = setInterval(() => {
+        attempts++;
+        
+        if (typeof CONFIG_INMUNO !== 'undefined' && CONFIG_INMUNO.canales && CONFIG_INMUNO.canales.length > 0) {
+          clearInterval(checkConfig);
+          config_actual = CONFIG_INMUNO;
+          sessionStorage.setItem('vicus_inmuno_config', JSON.stringify(config_actual));
+          initApp();
+        } else if (attempts >= maxAttempts) {
+          clearInterval(checkConfig);
+          console.error('[Dashboard] CONFIG_INMUNO no disponible después de 5 segundos');
+          alert("Error: No se pudo cargar la configuración. Por favor, recargue la página.");
+        }
+      }, 100);
+    }
+    
     function initApp() {
       if (!config_actual.canales.length) {
         alert("Sesión no válida. Por favor, reingrese.");
