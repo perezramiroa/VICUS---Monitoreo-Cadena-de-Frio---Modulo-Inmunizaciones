@@ -1,6 +1,6 @@
 /**
- * Torre de Control Zona Uno - Módulo de Estadística v9 FINAL
- * REPLICANDO LÓGICA EXACTA DEL DASHBOARD
+ * Torre de Control Zona Uno - Módulo de Estadística v10
+ * Simplificado: Solo inyecta datos correctos en la estructura HTML existente
  */
 
 window.initEstadistica = function () {
@@ -15,8 +15,7 @@ window.initEstadistica = function () {
 
   let statsData = {
     sensores: [],
-    wifiData: [],
-    wifiTimeSeries: []
+    wifiData: []
   };
 
   // ============ REFERENCIAS AL DOM ============
@@ -24,13 +23,12 @@ window.initEstadistica = function () {
   const tabs = overlay.querySelectorAll('.tab');
   const contents = overlay.querySelectorAll('.tab-content');
 
-  // ============ INICIALIZACIÓN ============
+  // ============ EVENTOS ============
   
   if (closeBtn) {
     closeBtn.addEventListener('click', () => {
       overlay.classList.remove('visible');
       overlay.classList.add('hidden');
-      // Asegurar que el overlay se oculte completamente
       setTimeout(() => {
         overlay.style.display = 'none';
       }, 300);
@@ -67,14 +65,10 @@ window.initEstadistica = function () {
     }
   }
 
-  /**
-   * Carga todos los sensores usando EXACTAMENTE la misma lógica del dashboard
-   */
   async function cargarDatos() {
     const config = getConfigActual();
     statsData.sensores = [];
     statsData.wifiData = [];
-    statsData.wifiTimeSeries = [];
     const ahora = Date.now();
 
     console.log(`[Estadística] Cargando ${config.canales.length} canales...`);
@@ -91,7 +85,7 @@ window.initEstadistica = function () {
 
         const nombreEfector = data.channel.name || c.id;
 
-        // Procesar cada campo (EXACTAMENTE como el dashboard)
+        // Procesar cada campo
         ['field1', 'field2', 'field3', 'field4', 'field5', 'field6', 'field7', 'field8'].forEach(f => {
           const label = data.channel[f];
           if (!label) return;
@@ -138,17 +132,12 @@ window.initEstadistica = function () {
           let wifiValues = [];
           let alertasAltas = 0;
           let alertasBasas = 0;
-          let wifiTimeSeries = [];
 
           for (let i = data.feeds.length - 1; i >= 0; i--) {
             const valTemp = parseFloat(data.feeds[i][f]);
             if (!isNaN(valTemp) && valTemp !== -127) {
               if (isWifi) {
                 wifiValues.push(valTemp);
-                const d = new Date(data.feeds[i].created_at);
-                const pad = n => String(n).padStart(2, '0');
-                const timeStr = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
-                wifiTimeSeries.push({ time: timeStr, value: valTemp });
               } else {
                 tempValues.push(valTemp);
                 if (valTemp > max) alertasAltas++;
@@ -188,16 +177,7 @@ window.initEstadistica = function () {
               actual: lastVal.toFixed(1),
               lastTimeStr: lastTimeStr,
               periodoLectura: periodoLectura,
-              color: generarColorUnico(c.id + f),
-              timeSeries: wifiTimeSeries
-            });
-
-            statsData.wifiTimeSeries.push({
-              nombre: label,
-              nombreEfector: nombreEfector,
-              canalId: c.id,
-              color: generarColorUnico(c.id + f),
-              data: wifiTimeSeries
+              color: generarColorUnico(c.id + f)
             });
           } else if (tempValues.length > 0) {
             const tempPromedio = tempValues.reduce((a, b) => a + b, 0) / tempValues.length;
@@ -257,7 +237,6 @@ window.initEstadistica = function () {
               nombre: label,
               nombreEfector: nombreEfector,
               canalId: c.id,
-              canalInterno: c.nombre || c.id,
               tempActual: isNaN(lastVal) ? null : lastVal.toFixed(1),
               tempPromedio: tempPromedio.toFixed(1),
               tempMax: tempMax.toFixed(1),
@@ -276,12 +255,9 @@ window.initEstadistica = function () {
               isFreezer: isFreezer,
               rango: isFreezer ? `${min}°C a ${max}°C (Freezer)` : `${min}°C a ${max}°C (Heladera)`,
               desvioMasSignificativo: desvioMasSignificativo,
-              rangoAnalisis: '(últimas ~2 horas)',
               tieneFormulario: false,
               mensajeOffline: mensajeOffline
             });
-
-            console.log(`[Estadística] ${nombreEfector} - ${label}: ${lastVal.toFixed(1)}°C (${lastTimeStr}) - ${estado}`);
           }
         });
       } catch (e) {
@@ -313,11 +289,6 @@ window.initEstadistica = function () {
     return colores[Math.abs(hash) % colores.length];
   }
 
-  function calcularTiempoAnalisis() {
-    if (statsData.sensores.length === 0) return 'N/A';
-    return 'últimas ~2 horas (100 lecturas)';
-  }
-
   // ============ RENDERIZADO ============
 
   function renderResumen() {
@@ -329,54 +300,7 @@ window.initEstadistica = function () {
       return;
     }
 
-    // Mostrar sugerencias
-    const sugerencias = [];
-    
-    statsData.sensores.forEach(s => {
-      if (s.estado === 'offline') {
-        sugerencias.push({
-          tipo: 'offline',
-          texto: `📡 **${s.nombre}** (${s.nombreEfector}): OFFLINE ${s.mensajeOffline} - Revisar conectividad`
-        });
-      } else if (s.esAlerta) {
-        const tipo = s.tempActual > s.max ? 'ALTA' : 'BAJA';
-        sugerencias.push({
-          tipo: 'actual',
-          texto: `🚨 **${s.nombre}** (${s.nombreEfector}): ${s.tempActual}°C - Temperatura ${tipo} - Contactar responsable`
-        });
-      } else if (s.desvioMasSignificativo && s.desvioMasSignificativo.temp) {
-        sugerencias.push({
-          tipo: 'historico',
-          texto: `⚠️ **${s.nombre}** (${s.nombreEfector}): Desvío detectado - ${s.desvioMasSignificativo.temp}°C (${s.desvioMasSignificativo.tipo}) el ${s.desvioMasSignificativo.time}`
-        });
-      }
-    });
-
-    if (sugerencias.length > 0) {
-      const sugBox = document.createElement('div');
-      sugBox.className = 'section-box';
-      sugBox.style.background = 'rgba(239, 68, 68, 0.1)';
-      sugBox.style.borderColor = 'rgba(239, 68, 68, 0.3)';
-      sugBox.style.marginBottom = '16px';
-      sugBox.innerHTML = '<h3>💡 Sugerencias de Gestión</h3>';
-      
-      const list = document.createElement('ul');
-      list.style.paddingLeft = '20px';
-      list.style.fontSize = '0.85rem';
-      list.style.color = 'var(--text-primary)';
-      
-      sugerencias.slice(0, 10).forEach(s => {
-        const li = document.createElement('li');
-        li.style.marginBottom = '8px';
-        li.innerHTML = s.texto;
-        list.appendChild(li);
-      });
-      
-      sugBox.appendChild(list);
-      criticidadList.appendChild(sugBox);
-    }
-
-    // Ranking de criticidad
+    // Mostrar ranking de criticidad
     statsData.sensores.forEach((sensor, idx) => {
       const item = document.createElement('div');
       item.className = `criticidad-item ${sensor.criticidad}`;
@@ -417,6 +341,43 @@ window.initEstadistica = function () {
     const alertasAltas = statsData.sensores.reduce((sum, e) => sum + e.alertasAltas, 0);
     const alertasBasas = statsData.sensores.reduce((sum, e) => sum + e.alertasBasas, 0);
 
+    // Sugerencias de gestión
+    const sugerencias = [];
+    statsData.sensores.forEach(s => {
+      if (s.estado === 'offline') {
+        sugerencias.push(`📡 **${s.nombre}** (${s.nombreEfector}): ${s.mensajeOffline} - Revisar conectividad`);
+      } else if (s.esAlerta) {
+        const tipo = s.tempActual > s.max ? 'ALTA' : 'BAJA';
+        sugerencias.push(`🚨 **${s.nombre}** (${s.nombreEfector}): ${s.tempActual}°C - Temperatura ${tipo} - Contactar responsable`);
+      }
+    });
+
+    // Inyectar sugerencias si las hay
+    if (sugerencias.length > 0) {
+      const sugBox = document.createElement('div');
+      sugBox.className = 'section-box';
+      sugBox.style.background = 'rgba(239, 68, 68, 0.1)';
+      sugBox.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+      sugBox.style.marginBottom = '16px';
+      sugBox.innerHTML = '<h3>💡 Sugerencias de Gestión</h3>';
+      
+      const list = document.createElement('ul');
+      list.style.paddingLeft = '20px';
+      list.style.fontSize = '0.85rem';
+      list.style.color = 'var(--text-primary)';
+      
+      sugerencias.slice(0, 10).forEach(s => {
+        const li = document.createElement('li');
+        li.style.marginBottom = '8px';
+        li.innerHTML = s;
+        list.appendChild(li);
+      });
+      
+      sugBox.appendChild(list);
+      criticidadList.insertBefore(sugBox, criticidadList.firstChild);
+    }
+
+    // Actualizar KPIs
     overlay.querySelector('#efectoresOnline').textContent = online;
     overlay.querySelector('#efectoresOffline').textContent = offline;
     overlay.querySelector('#disponibilidad').textContent = disponibilidad + '%';
@@ -426,11 +387,10 @@ window.initEstadistica = function () {
     overlay.querySelector('#kpiAlertasAltas').textContent = alertasAltas;
     overlay.querySelector('#kpiAlertasBasas').textContent = alertasBasas;
 
-    // Vincular botón "Ver detalles" con pestaña de desvíos
-    const desviosBtn = overlay.querySelector('[onclick*="desvios"]') || 
-                       Array.from(overlay.querySelectorAll('button')).find(b => b.textContent.includes('detalles'));
-    if (desviosBtn) {
-      desviosBtn.addEventListener('click', (e) => {
+    // Vincular botón "Ver detalles"
+    const btnVerDesvios = overlay.querySelector('#btnVerDesvios');
+    if (btnVerDesvios) {
+      btnVerDesvios.addEventListener('click', (e) => {
         e.preventDefault();
         const desviosTab = overlay.querySelector('[data-tab="desvios"]');
         if (desviosTab) desviosTab.click();
@@ -449,9 +409,9 @@ window.initEstadistica = function () {
     const sensoresOnline = statsData.sensores.filter(s => s.estado === 'online');
     if (sensoresOnline.length === 0) return;
 
-    const labels = sensoresOnline.map(s => `${s.nombre}\n${s.nombreEfector}\n${s.rango}`);
+    const labels = sensoresOnline.map(s => `${s.nombre}\n${s.nombreEfector}`);
     const datos = sensoresOnline.map(s => parseFloat(s.tempActual) || 0);
-    const colores = sensoresOnline.map((s, idx) => generarColorUnico(s.canalId + s.nombre));
+    const colores = sensoresOnline.map((s) => generarColorUnico(s.canalId + s.nombre));
 
     window.tempChartInstance = new Chart(ctx, {
       type: 'bar',
@@ -503,16 +463,17 @@ window.initEstadistica = function () {
     tbody.innerHTML = sensoresConAlerta.map(s => {
       const desvio = s.desvioMasSignificativo ? `${s.desvioMasSignificativo.temp}°C` : '--';
       const desvioTime = s.desvioMasSignificativo ? s.desvioMasSignificativo.time : '--';
+      const tipo = s.desvioMasSignificativo ? s.desvioMasSignificativo.tipo : '--';
       const estadoIcon = s.estado === 'offline' ? '📡 OFFLINE' : s.esAlerta ? '🚨 ALERTA' : '⚠️ DESVÍO';
       const formulario = s.tieneFormulario ? '✓ Sí' : '✗ No';
       return `
         <tr>
           <td>${s.nombreEfector}</td>
-          <td>${s.nombre}</td>
-          <td>${desvio}</td>
           <td>${desvioTime}</td>
-          <td>${estadoIcon}</td>
+          <td>${tipo}</td>
+          <td>${desvio}</td>
           <td>${formulario}</td>
+          <td>${estadoIcon}</td>
         </tr>
       `;
     }).join('');
@@ -525,7 +486,6 @@ window.initEstadistica = function () {
     const sensoresOnline = statsData.sensores.filter(s => s.estado === 'online').length;
     const sensoresOffline = statsData.sensores.length - sensoresOnline;
 
-    // Estado de conectividad
     let html = `
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
         <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 12px; text-align: center;">
@@ -539,112 +499,11 @@ window.initEstadistica = function () {
       </div>
       <div style="font-size: 0.85rem; color: rgba(148, 163, 184, 0.9); margin-bottom: 20px;">
         <p><strong>Disponibilidad:</strong> ${((sensoresOnline / statsData.sensores.length) * 100).toFixed(1)}%</p>
-        <p><strong>Rango de Análisis:</strong> ${calcularTiempoAnalisis()}</p>
-      </div>
-
-      <h4 style="margin-bottom: 16px;">📊 Gráfica de Niveles de Wi-Fi por Sensor</h4>
-      <div style="margin-bottom: 20px;">
-        <canvas id="wifiChart" style="max-height: 300px;"></canvas>
-      </div>
-
-      <h4 style="margin-bottom: 12px;">📈 Estadísticas de Wi-Fi (Máx, Mín, Promedio)</h4>
-      <div style="overflow-x: auto; font-size: 0.8rem;">
-        <table style="width: 100%; border-collapse: collapse; color: var(--text-primary);">
-          <thead>
-            <tr style="background: rgba(16, 185, 129, 0.1); border-bottom: 1px solid rgba(16, 185, 129, 0.3);">
-              <th style="padding: 8px; text-align: left;">Sensor</th>
-              <th style="padding: 8px; text-align: center;">Efector</th>
-              <th style="padding: 8px; text-align: center;">Máx (%)</th>
-              <th style="padding: 8px; text-align: center;">Mín (%)</th>
-              <th style="padding: 8px; text-align: center;">Prom (%)</th>
-              <th style="padding: 8px; text-align: center;">Período de Lectura</th>
-            </tr>
-          </thead>
-          <tbody>
-    `;
-
-    statsData.wifiData.forEach(w => {
-      html += `
-        <tr style="background: rgba(255, 255, 255, 0.02); border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
-          <td style="padding: 8px;">${w.nombre}</td>
-          <td style="padding: 8px; text-align: center; font-size: 0.75rem;">${w.nombreEfector}</td>
-          <td style="padding: 8px; text-align: center;">${w.max}</td>
-          <td style="padding: 8px; text-align: center;">${w.min}</td>
-          <td style="padding: 8px; text-align: center;">${w.promedio}</td>
-          <td style="padding: 8px; text-align: center;">${w.periodoLectura}</td>
-        </tr>
-      `;
-    });
-
-    html += `
-          </tbody>
-        </table>
+        <p><strong>Rango de Análisis:</strong> últimas ~2 horas (100 lecturas)</p>
       </div>
     `;
 
     timeline.innerHTML = html;
-
-    // Renderizar gráfica de Wi-Fi
-    setTimeout(() => renderGraficoWifi(), 100);
-  }
-
-  function renderGraficoWifi() {
-    const ctx = overlay.querySelector('#wifiChart');
-    if (!ctx || !window.Chart || statsData.wifiTimeSeries.length === 0) return;
-
-    if (window.wifiChartInstance) {
-      window.wifiChartInstance.destroy();
-    }
-
-    // Obtener el máximo número de puntos para alinear todos los gráficos
-    const maxPuntos = Math.max(...statsData.wifiTimeSeries.map(s => s.data.length));
-    const labels = Array.from({ length: maxPuntos }, (_, i) => `${i + 1}`);
-
-    const datasets = statsData.wifiTimeSeries.map(serie => ({
-      label: `${serie.nombre} (${serie.nombreEfector})`,
-      data: serie.data.map(d => d.value),
-      borderColor: serie.color,
-      backgroundColor: serie.color + '33',
-      borderWidth: 2,
-      fill: false,
-      tension: 0.4,
-      pointRadius: 3,
-      pointBackgroundColor: serie.color,
-      pointBorderColor: '#fff',
-      pointBorderWidth: 1
-    }));
-
-    window.wifiChartInstance = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: labels,
-        datasets: datasets
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: true,
-        plugins: {
-          legend: { 
-            labels: { color: 'rgba(229, 231, 235, 0.8)', font: { size: 10 } },
-            maxHeight: 100
-          }
-        },
-        scales: {
-          y: {
-            beginAtZero: true,
-            max: 100,
-            ticks: { color: 'rgba(148, 163, 184, 0.8)' },
-            grid: { color: 'rgba(255, 255, 255, 0.05)' },
-            title: { display: true, text: 'Nivel de Wi-Fi (%)' }
-          },
-          x: {
-            ticks: { color: 'rgba(148, 163, 184, 0.8)', font: { size: 8 } },
-            grid: { color: 'rgba(255, 255, 255, 0.05)' },
-            title: { display: true, text: 'Número de Lectura (100 total)' }
-          }
-        }
-      }
-    });
   }
 
   function renderReportes() {
@@ -660,7 +519,7 @@ window.initEstadistica = function () {
   }
 
   function exportarCsv() {
-    const rows = [['Efector', 'Sensor', 'Rango', 'Temp Actual (°C)', 'Temp Máx (°C)', 'Temp Mín (°C)', 'Temp Prom (°C)', 'Tiempo en Rango (%)', 'Última Lectura', 'Tiempo Inactividad (min)', 'Estado']];
+    const rows = [['Efector', 'Sensor', 'Rango', 'Temp Actual (°C)', 'Temp Máx (°C)', 'Temp Mín (°C)', 'Temp Prom (°C)', 'Tiempo en Rango (%)', 'Última Lectura', 'Estado']];
 
     statsData.sensores.forEach(s => {
       rows.push([
@@ -673,7 +532,6 @@ window.initEstadistica = function () {
         s.tempPromedio || '--',
         s.tiempoEnRango,
         s.lastTimeStr,
-        s.tiempoInactividad,
         s.estado
       ]);
     });
@@ -720,12 +578,11 @@ window.initEstadistica = function () {
         s.tempPromedio || '--',
         s.tiempoEnRango + '%',
         s.lastTimeStr,
-        s.tiempoInactividad,
         s.estado
       ]);
 
       doc.autoTable({
-        head: [['Efector', 'Sensor', 'Rango', 'Actual', 'Máx', 'Mín', 'Prom', 'En Rango', 'Última', 'Inact', 'Estado']],
+        head: [['Efector', 'Sensor', 'Rango', 'Actual', 'Máx', 'Mín', 'Prom', 'En Rango', 'Última', 'Estado']],
         body: tableData,
         startY: yPosition,
         theme: 'grid',
