@@ -85,10 +85,19 @@ window.initEstadistica = function () {
    */
   async function fetchDatosThingSpeak(canalId, apiKey) {
     try {
-      const response = await fetch(
+      // Intentar con API Key primero
+      let response = await fetch(
         `https://api.thingspeak.com/channels/${canalId}.json?api_key=${apiKey}`
       );
-      if (!response.ok) throw new Error('Error en ThingSpeak');
+      
+      // Si falla con 400, intentar sin API Key (para canales públicos)
+      if (!response.ok && response.status === 400) {
+        response = await fetch(
+          `https://api.thingspeak.com/channels/${canalId}.json`
+        );
+      }
+      
+      if (!response.ok) throw new Error(`Error HTTP ${response.status}`);
       return await response.json();
     } catch (e) {
       console.warn(`Error fetching ThingSpeak para canal ${canalId}:`, e);
