@@ -1,5 +1,5 @@
 /**
- * Torre de Control Zona Uno - Módulo de Estadística v5
+ * Torre de Control Zona Uno - Módulo de Estadística v6
  * REPLICANDO LA LÓGICA PROBADA DEL DASHBOARD + MEJORAS
  */
 
@@ -158,6 +158,34 @@ window.initEstadistica = function () {
             lastTimeStr = `${pad(d.getDate())}/${pad(d.getMonth() + 1)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
           }
 
+          // Encontrar el desvío más significativo en el historial
+          let desvioMasSignificativo = null;
+          let maxDesviacion = 0;
+          
+          for (let i = data.feeds.length - 1; i >= 0; i--) {
+            const valTemp = parseFloat(data.feeds[i][f]);
+            if (!isNaN(valTemp) && valTemp !== -127) {
+              let desviacion = 0;
+              if (valTemp > max) {
+                desviacion = valTemp - max;
+              } else if (valTemp < min) {
+                desviacion = min - valTemp;
+              }
+              
+              if (desviacion > maxDesviacion) {
+                maxDesviacion = desviacion;
+                const d = new Date(data.feeds[i].created_at);
+                const pad = n => String(n).padStart(2, '0');
+                const timeStr = `${pad(d.getDate())}/${pad(d.getMonth() + 1)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+                desvioMasSignificativo = {
+                  temp: valTemp.toFixed(1),
+                  time: timeStr,
+                  tipo: valTemp > max ? 'ALTA' : 'BAJA'
+                };
+              }
+            }
+          }
+
           statsData.sensores.push({
             nombre: label,
             canal: canal.nombreLegible,
@@ -175,7 +203,9 @@ window.initEstadistica = function () {
             min: min,
             max: max,
             isFreezer: isFreezer,
-            rango: isFreezer ? `${min}°C a ${max}°C (Freezer)` : `${min}°C a ${max}°C (Heladera)`
+            rango: isFreezer ? `${min}°C a ${max}°C (Freezer)` : `${min}°C a ${max}°C (Heladera)`,
+            desvioMasSignificativo: desvioMasSignificativo,
+            rangoAnalisis: '(últimas 100 lecturas)'
           });
 
           console.log(`[Estadística] ${canal.nombreLegible} - ${label}: ${lastVal.toFixed(1)}°C (${lastTimeStr})`);
@@ -205,12 +235,26 @@ window.initEstadistica = function () {
       return;
     }
 
-    // Mostrar sugerencias primero (solo si hay alertas actuales)
+    // Mostrar sugerencias: alertas actuales + desvíos históricos significativos
     const sugerencias = [];
+    
     statsData.sensores.forEach(s => {
+      // Alerta actual (temperatura fuera de rango AHORA)
       if (s.esAlerta) {
         const tipo = s.tempActual > s.max ? 'ALTA' : 'BAJA';
-        sugerencias.push(`🚨 **${s.nombre}** (${s.canal}): ${s.tempActual}°C - Temperatura ${tipo} - Contactar responsable`);
+        sugerencias.push({
+          tipo: 'actual',
+          texto: `🚨 **${s.nombre}** (${s.canal}): ${s.tempActual}°C - Temperatura ${tipo} - Contactar responsable`,
+          sensor: s
+        });
+      }
+      // Desvío histórico significativo (si no hay alerta actual pero hay desvíos)
+      else if (s.desvioMasSignificativo && s.desvioMasSignificativo.temp) {
+        sugerencias.push({
+          tipo: 'historico',
+          texto: `⚠️ **${s.nombre}** (${s.canal}): Desvío detectado - ${s.desvioMasSignificativo.temp}°C (${s.desvioMasSignificativo.tipo}) el ${s.desvioMasSignificativo.time} ${s.rangoAnalisis}`,
+          sensor: s
+        });
       }
     });
 
@@ -227,10 +271,10 @@ window.initEstadistica = function () {
       list.style.fontSize = '0.85rem';
       list.style.color = 'var(--text-primary)';
       
-      sugerencias.slice(0, 5).forEach(s => {
+      sugerencias.slice(0, 10).forEach(s => {
         const li = document.createElement('li');
         li.style.marginBottom = '8px';
-        li.innerHTML = s;
+        li.innerHTML = s.texto;
         list.appendChild(li);
       });
       
@@ -339,24 +383,28 @@ window.initEstadistica = function () {
     const tbody = overlay.querySelector('#desviosTable tbody');
     if (!tbody) return;
 
-    const sensoresConAlerta = statsData.sensores.filter(s => s.esAlerta);
+    const sensoresConAlerta = statsData.sensores.filter(s => s.esAlerta || s.desvioMasSignificativo);
 
     if (sensoresConAlerta.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="7" class="placeholder">No hay alertas actuales</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="8" class="placeholder">No hay alertas ni desvíos registrados</td></tr>`;
       return;
     }
 
-    tbody.innerHTML = sensoresConAlerta.map(s => `
-      <tr>
-        <td>${s.nombre}</td>
-        <td>${s.canal}</td>
-        <td>${s.rango}</td>
-        <td>${s.tempActual}°C</td>
-        <td>${s.lastTimeStr}</td>
-        <td>${s.alertasAltas}</td>
-        <td>${s.alertasBasas}</td>
-      </tr>
-    `).join('');
+    tbody.innerHTML = sensoresConAlerta.map(s => {
+      const desvio = s.desvioMasSignificativo ? `${s.desvioMasSignificativo.temp}°C (${s.desvioMasSignificativo.tipo}) - ${s.desvioMasSignificativo.time}` : '--';
+      return `
+        <tr>
+          <td>${s.nombre}</td>
+          <td>${s.canal}</td>
+          <td>${s.rango}</td>
+          <td>${s.tempActual}°C</td>
+          <td>${s.lastTimeStr}</td>
+          <td>${desvio}</td>
+          <td>${s.alertasAltas}</td>
+          <td>${s.alertasBasas}</td>
+        </tr>
+      `;
+    }).join('');
   }
 
   function renderConectividad() {
@@ -382,6 +430,7 @@ window.initEstadistica = function () {
       </div>
       <div style="font-size: 0.85rem; color: rgba(148, 163, 184, 0.9);">
         <p><strong>Disponibilidad:</strong> ${((sensoresOnline / statsData.sensores.length) * 100).toFixed(1)}%</p>
+        <p><strong>Rango de Análisis:</strong> Últimas 100 lecturas por sensor</p>
       </div>
     `;
   }
@@ -399,9 +448,10 @@ window.initEstadistica = function () {
   }
 
   function exportarCsv() {
-    const rows = [['Sensor', 'Efector', 'Rango', 'Temperatura (°C)', 'Promedio (°C)', 'Tiempo en Rango (%)', 'Última Lectura', 'Alertas Altas', 'Alertas Bajas']];
+    const rows = [['Sensor', 'Efector', 'Rango', 'Temperatura (°C)', 'Promedio (°C)', 'Tiempo en Rango (%)', 'Última Lectura', 'Desvío Histórico', 'Alertas Altas', 'Alertas Bajas']];
 
     statsData.sensores.forEach(s => {
+      const desvio = s.desvioMasSignificativo ? `${s.desvioMasSignificativo.temp}°C (${s.desvioMasSignificativo.tipo}) - ${s.desvioMasSignificativo.time}` : '--';
       rows.push([
         s.nombre,
         s.canal,
@@ -410,6 +460,7 @@ window.initEstadistica = function () {
         s.tempPromedio || '--',
         s.tiempoEnRango,
         s.lastTimeStr,
+        desvio,
         s.alertasAltas,
         s.alertasBasas
       ]);
@@ -447,23 +498,27 @@ window.initEstadistica = function () {
       doc.text(`Reporte: ${new Date().toLocaleString('es-AR')}`, pageWidth / 2, yPosition, { align: 'center' });
       yPosition += 15;
 
-      const tableData = statsData.sensores.map(s => [
-        s.nombre.substring(0, 25),
-        s.canal.substring(0, 20),
-        s.rango,
-        s.tempActual || '--',
-        s.tempPromedio || '--',
-        s.tiempoEnRango + '%',
-        s.lastTimeStr
-      ]);
+      const tableData = statsData.sensores.map(s => {
+        const desvio = s.desvioMasSignificativo ? `${s.desvioMasSignificativo.temp}°C (${s.desvioMasSignificativo.tipo}) - ${s.desvioMasSignificativo.time}` : '--';
+        return [
+          s.nombre.substring(0, 25),
+          s.canal.substring(0, 20),
+          s.rango,
+          s.tempActual || '--',
+          s.tempPromedio || '--',
+          s.tiempoEnRango + '%',
+          s.lastTimeStr,
+          desvio
+        ];
+      });
 
       doc.autoTable({
-        head: [['Sensor', 'Efector', 'Rango', 'Temp Act.', 'Temp Prom.', 'En Rango', 'Última Lectura']],
+        head: [['Sensor', 'Efector', 'Rango', 'Temp Act.', 'Temp Prom.', 'En Rango', 'Última Lectura', 'Desvío Histórico']],
         body: tableData,
         startY: yPosition,
         theme: 'grid',
-        headStyles: { fillColor: [16, 185, 129], textColor: [255, 255, 255], fontSize: 8 },
-        bodyStyles: { textColor: [0, 0, 0], fontSize: 7 },
+        headStyles: { fillColor: [16, 185, 129], textColor: [255, 255, 255], fontSize: 7 },
+        bodyStyles: { textColor: [0, 0, 0], fontSize: 6 },
         alternateRowStyles: { fillColor: [240, 240, 240] }
       });
 
