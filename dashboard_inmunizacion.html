@@ -505,7 +505,17 @@
     const MIN_GEN = 2.0, MAX_GEN = 8.0;
     const MIN_FREEZER = -28.0, MAX_FREEZER = -18.0;
 
-    let config_actual = JSON.parse(sessionStorage.getItem('vicus_inmuno_config') || '{"nombre":"General","canales":[]}');
+    let config_actual = JSON.parse(sessionStorage.getItem('vicus_inmuno_config') || '{}');
+    
+    // Si no hay config en sessionStorage, usar CONFIG_INMUNO de config-sensores.js
+    if (!config_actual.canales || config_actual.canales.length === 0) {
+      if (typeof CONFIG_INMUNO !== 'undefined') {
+        config_actual = CONFIG_INMUNO;
+        sessionStorage.setItem('vicus_inmuno_config', JSON.stringify(config_actual));
+      } else {
+        config_actual = {"nombre":"General","canales":[]};
+      }
+    }
 
     const GUIA_ALERTA = {
       alta: {
