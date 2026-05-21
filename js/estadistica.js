@@ -1,5 +1,5 @@
 /**
- * Torre de Control Zona Uno - Módulo de Estadística v8
+ * Torre de Control Zona Uno - Módulo de Estadística v9 FINAL
  * REPLICANDO LÓGICA EXACTA DEL DASHBOARD
  */
 
@@ -15,7 +15,8 @@ window.initEstadistica = function () {
 
   let statsData = {
     sensores: [],
-    wifiData: []
+    wifiData: [],
+    wifiTimeSeries: []
   };
 
   // ============ REFERENCIAS AL DOM ============
@@ -29,6 +30,10 @@ window.initEstadistica = function () {
     closeBtn.addEventListener('click', () => {
       overlay.classList.remove('visible');
       overlay.classList.add('hidden');
+      // Asegurar que el overlay se oculte completamente
+      setTimeout(() => {
+        overlay.style.display = 'none';
+      }, 300);
     });
   }
 
@@ -36,6 +41,9 @@ window.initEstadistica = function () {
     if (e.key === 'Escape' && overlay.classList.contains('visible')) {
       overlay.classList.remove('visible');
       overlay.classList.add('hidden');
+      setTimeout(() => {
+        overlay.style.display = 'none';
+      }, 300);
     }
   });
 
@@ -66,6 +74,7 @@ window.initEstadistica = function () {
     const config = getConfigActual();
     statsData.sensores = [];
     statsData.wifiData = [];
+    statsData.wifiTimeSeries = [];
     const ahora = Date.now();
 
     console.log(`[Estadística] Cargando ${config.canales.length} canales...`);
@@ -80,7 +89,7 @@ window.initEstadistica = function () {
           continue;
         }
 
-        const nombreEfector = data.channel.name || c.id; // Nombre del efector desde ThingSpeak
+        const nombreEfector = data.channel.name || c.id;
 
         // Procesar cada campo (EXACTAMENTE como el dashboard)
         ['field1', 'field2', 'field3', 'field4', 'field5', 'field6', 'field7', 'field8'].forEach(f => {
@@ -91,7 +100,7 @@ window.initEstadistica = function () {
           const excludeKeywords = ['ambiente', 'wifi', 'rssi', 'intensidad', 'señal', 'nivel'];
           const isWifi = excludeKeywords.some(key => labelLower.includes(key));
 
-          // Buscar la última lectura válida (omitiendo -127)
+          // Buscar la última lectura válida
           let lastVal = NaN;
           let lastTime = null;
           for (let i = data.feeds.length - 1; i >= 0; i--) {
@@ -103,7 +112,7 @@ window.initEstadistica = function () {
             }
           }
 
-          // Determinar rango según si es freezer o heladera
+          // Determinar rango
           let min = MIN_GEN, max = MAX_GEN;
           let isFreezer = false;
           
@@ -115,9 +124,13 @@ window.initEstadistica = function () {
 
           // Calcular tiempo de inactividad
           let tiempoInactividad = 0;
+          let fechaUltimaLectura = null;
           if (lastTime) {
             const lastTimeMs = new Date(lastTime).getTime();
-            tiempoInactividad = Math.floor((ahora - lastTimeMs) / 1000 / 60); // en minutos
+            tiempoInactividad = Math.floor((ahora - lastTimeMs) / 1000 / 60);
+            const d = new Date(lastTime);
+            const pad = n => String(n).padStart(2, '0');
+            fechaUltimaLectura = `${pad(d.getDate())}/${pad(d.getMonth() + 1)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
           }
 
           // Procesar datos históricos
@@ -125,12 +138,17 @@ window.initEstadistica = function () {
           let wifiValues = [];
           let alertasAltas = 0;
           let alertasBasas = 0;
+          let wifiTimeSeries = [];
 
           for (let i = data.feeds.length - 1; i >= 0; i--) {
             const valTemp = parseFloat(data.feeds[i][f]);
             if (!isNaN(valTemp) && valTemp !== -127) {
               if (isWifi) {
                 wifiValues.push(valTemp);
+                const d = new Date(data.feeds[i].created_at);
+                const pad = n => String(n).padStart(2, '0');
+                const timeStr = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+                wifiTimeSeries.push({ time: timeStr, value: valTemp });
               } else {
                 tempValues.push(valTemp);
                 if (valTemp > max) alertasAltas++;
@@ -148,10 +166,17 @@ window.initEstadistica = function () {
           }
 
           if (isWifi && wifiValues.length > 0) {
-            // Guardar datos de Wi-Fi
             const wifiPromedio = wifiValues.reduce((a, b) => a + b, 0) / wifiValues.length;
             const wifiMax = Math.max(...wifiValues);
             const wifiMin = Math.min(...wifiValues);
+            
+            // Calcular período de lectura
+            const primeraTiempoMs = new Date(data.feeds[0].created_at).getTime();
+            const ultimaTiempoMs = new Date(data.feeds[data.feeds.length - 1].created_at).getTime();
+            const minutosTranscurridos = Math.floor((ultimaTiempoMs - primeraTiempoMs) / 1000 / 60);
+            const periodoLectura = minutosTranscurridos > 60 
+              ? `${Math.floor(minutosTranscurridos / 60)}h ${minutosTranscurridos % 60}m`
+              : `${minutosTranscurridos}m`;
             
             statsData.wifiData.push({
               nombre: label,
@@ -162,18 +187,26 @@ window.initEstadistica = function () {
               min: wifiMin.toFixed(1),
               actual: lastVal.toFixed(1),
               lastTimeStr: lastTimeStr,
-              tiempoInactividad: tiempoInactividad,
-              color: generarColorUnico(c.id + f)
+              periodoLectura: periodoLectura,
+              color: generarColorUnico(c.id + f),
+              timeSeries: wifiTimeSeries
+            });
+
+            statsData.wifiTimeSeries.push({
+              nombre: label,
+              nombreEfector: nombreEfector,
+              canalId: c.id,
+              color: generarColorUnico(c.id + f),
+              data: wifiTimeSeries
             });
           } else if (tempValues.length > 0) {
-            // Procesar temperatura
             const tempPromedio = tempValues.reduce((a, b) => a + b, 0) / tempValues.length;
             const tiempoEnRango = ((tempValues.filter(t => t >= min && t <= max).length / tempValues.length) * 100).toFixed(1);
 
-            // Criticidad basada en TEMPERATURA ACTUAL
             let criticidad = 'normal';
             let esAlerta = false;
             let estado = 'online';
+            let mensajeOffline = null;
             
             if (!isNaN(lastVal)) {
               if (lastVal > max || lastVal < min) {
@@ -182,10 +215,11 @@ window.initEstadistica = function () {
               }
             }
 
-            // Detectar offline: si no hay datos en 30 minutos
+            // Detectar offline
             if (tiempoInactividad > 30) {
               estado = 'offline';
               criticidad = 'warning';
+              mensajeOffline = `OFFLINE desde ${fechaUltimaLectura}`;
             }
 
             // Encontrar desvío más significativo
@@ -243,7 +277,8 @@ window.initEstadistica = function () {
               rango: isFreezer ? `${min}°C a ${max}°C (Freezer)` : `${min}°C a ${max}°C (Heladera)`,
               desvioMasSignificativo: desvioMasSignificativo,
               rangoAnalisis: '(últimas ~2 horas)',
-              tieneFormulario: false // Placeholder, se actualizará si se vincula con Drive
+              tieneFormulario: false,
+              mensajeOffline: mensajeOffline
             });
 
             console.log(`[Estadística] ${nombreEfector} - ${label}: ${lastVal.toFixed(1)}°C (${lastTimeStr}) - ${estado}`);
@@ -301,7 +336,7 @@ window.initEstadistica = function () {
       if (s.estado === 'offline') {
         sugerencias.push({
           tipo: 'offline',
-          texto: `📡 **${s.nombre}** (${s.nombreEfector}): SIN DATOS desde hace ${s.tiempoInactividad} minutos - Revisar conectividad`
+          texto: `📡 **${s.nombre}** (${s.nombreEfector}): OFFLINE ${s.mensajeOffline} - Revisar conectividad`
         });
       } else if (s.esAlerta) {
         const tipo = s.tempActual > s.max ? 'ALTA' : 'BAJA';
@@ -390,6 +425,17 @@ window.initEstadistica = function () {
     overlay.querySelector('#kpiTiempoRango').textContent = tiempoPromedio + '%';
     overlay.querySelector('#kpiAlertasAltas').textContent = alertasAltas;
     overlay.querySelector('#kpiAlertasBasas').textContent = alertasBasas;
+
+    // Vincular botón "Ver detalles" con pestaña de desvíos
+    const desviosBtn = overlay.querySelector('[onclick*="desvios"]') || 
+                       Array.from(overlay.querySelectorAll('button')).find(b => b.textContent.includes('detalles'));
+    if (desviosBtn) {
+      desviosBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const desviosTab = overlay.querySelector('[data-tab="desvios"]');
+        if (desviosTab) desviosTab.click();
+      });
+    }
   }
 
   function renderGraficoTemperatura() {
@@ -405,6 +451,7 @@ window.initEstadistica = function () {
 
     const labels = sensoresOnline.map(s => `${s.nombre}\n${s.nombreEfector}\n${s.rango}`);
     const datos = sensoresOnline.map(s => parseFloat(s.tempActual) || 0);
+    const colores = sensoresOnline.map((s, idx) => generarColorUnico(s.canalId + s.nombre));
 
     window.tempChartInstance = new Chart(ctx, {
       type: 'bar',
@@ -413,18 +460,8 @@ window.initEstadistica = function () {
         datasets: [{
           label: 'Temperatura Actual (°C)',
           data: datos,
-          backgroundColor: datos.map((temp, idx) => {
-            const sensor = sensoresOnline[idx];
-            if (temp > sensor.max) return 'rgba(239, 68, 68, 0.7)';
-            if (temp < sensor.min) return 'rgba(59, 130, 246, 0.7)';
-            return 'rgba(16, 185, 129, 0.7)';
-          }),
-          borderColor: datos.map((temp, idx) => {
-            const sensor = sensoresOnline[idx];
-            if (temp > sensor.max) return 'rgba(239, 68, 68, 1)';
-            if (temp < sensor.min) return 'rgba(59, 130, 246, 1)';
-            return 'rgba(16, 185, 129, 1)';
-          }),
+          backgroundColor: colores.map(c => c + 'B3'),
+          borderColor: colores,
           borderWidth: 2
         }]
       },
@@ -459,7 +496,7 @@ window.initEstadistica = function () {
     const sensoresConAlerta = statsData.sensores.filter(s => s.esAlerta || s.desvioMasSignificativo || s.estado === 'offline');
 
     if (sensoresConAlerta.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="8" class="placeholder">No hay alertas ni desvíos registrados</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6" class="placeholder">No hay alertas ni desvíos registrados</td></tr>`;
       return;
     }
 
@@ -476,8 +513,6 @@ window.initEstadistica = function () {
           <td>${desvioTime}</td>
           <td>${estadoIcon}</td>
           <td>${formulario}</td>
-          <td>${s.alertasAltas}</td>
-          <td>${s.alertasBasas}</td>
         </tr>
       `;
     }).join('');
@@ -522,8 +557,7 @@ window.initEstadistica = function () {
               <th style="padding: 8px; text-align: center;">Máx (%)</th>
               <th style="padding: 8px; text-align: center;">Mín (%)</th>
               <th style="padding: 8px; text-align: center;">Prom (%)</th>
-              <th style="padding: 8px; text-align: center;">Última Lectura</th>
-              <th style="padding: 8px; text-align: center;">Inactividad (min)</th>
+              <th style="padding: 8px; text-align: center;">Período de Lectura</th>
             </tr>
           </thead>
           <tbody>
@@ -537,8 +571,7 @@ window.initEstadistica = function () {
           <td style="padding: 8px; text-align: center;">${w.max}</td>
           <td style="padding: 8px; text-align: center;">${w.min}</td>
           <td style="padding: 8px; text-align: center;">${w.promedio}</td>
-          <td style="padding: 8px; text-align: center;">${w.lastTimeStr}</td>
-          <td style="padding: 8px; text-align: center;">${w.tiempoInactividad}</td>
+          <td style="padding: 8px; text-align: center;">${w.periodoLectura}</td>
         </tr>
       `;
     });
@@ -557,50 +590,57 @@ window.initEstadistica = function () {
 
   function renderGraficoWifi() {
     const ctx = overlay.querySelector('#wifiChart');
-    if (!ctx || !window.Chart || statsData.wifiData.length === 0) return;
+    if (!ctx || !window.Chart || statsData.wifiTimeSeries.length === 0) return;
 
     if (window.wifiChartInstance) {
       window.wifiChartInstance.destroy();
     }
 
-    const labels = statsData.wifiData.map(w => `${w.nombre}\n(${w.nombreEfector})`);
-    const datos = statsData.wifiData.map(w => parseFloat(w.actual) || 0);
-    const colores = statsData.wifiData.map(w => w.color);
+    // Obtener el máximo número de puntos para alinear todos los gráficos
+    const maxPuntos = Math.max(...statsData.wifiTimeSeries.map(s => s.data.length));
+    const labels = Array.from({ length: maxPuntos }, (_, i) => `${i + 1}`);
+
+    const datasets = statsData.wifiTimeSeries.map(serie => ({
+      label: `${serie.nombre} (${serie.nombreEfector})`,
+      data: serie.data.map(d => d.value),
+      borderColor: serie.color,
+      backgroundColor: serie.color + '33',
+      borderWidth: 2,
+      fill: false,
+      tension: 0.4,
+      pointRadius: 3,
+      pointBackgroundColor: serie.color,
+      pointBorderColor: '#fff',
+      pointBorderWidth: 1
+    }));
 
     window.wifiChartInstance = new Chart(ctx, {
       type: 'line',
       data: {
         labels: labels,
-        datasets: [{
-          label: 'Nivel de Wi-Fi (%)',
-          data: datos,
-          borderColor: colores,
-          backgroundColor: colores.map(c => c + '33'),
-          borderWidth: 2,
-          fill: true,
-          tension: 0.4,
-          pointRadius: 5,
-          pointBackgroundColor: colores,
-          pointBorderColor: '#fff',
-          pointBorderWidth: 2
-        }]
+        datasets: datasets
       },
       options: {
         responsive: true,
         maintainAspectRatio: true,
         plugins: {
-          legend: { labels: { color: 'rgba(229, 231, 235, 0.8)' } }
+          legend: { 
+            labels: { color: 'rgba(229, 231, 235, 0.8)', font: { size: 10 } },
+            maxHeight: 100
+          }
         },
         scales: {
           y: {
             beginAtZero: true,
             max: 100,
             ticks: { color: 'rgba(148, 163, 184, 0.8)' },
-            grid: { color: 'rgba(255, 255, 255, 0.05)' }
+            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+            title: { display: true, text: 'Nivel de Wi-Fi (%)' }
           },
           x: {
-            ticks: { color: 'rgba(148, 163, 184, 0.8)', font: { size: 9 } },
-            grid: { color: 'rgba(255, 255, 255, 0.05)' }
+            ticks: { color: 'rgba(148, 163, 184, 0.8)', font: { size: 8 } },
+            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+            title: { display: true, text: 'Número de Lectura (100 total)' }
           }
         }
       }

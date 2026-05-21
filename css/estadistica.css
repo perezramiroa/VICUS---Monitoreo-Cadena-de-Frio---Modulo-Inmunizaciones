@@ -62,6 +62,9 @@ body {
 #estadisticaOverlay.hidden {
     background: rgba(0, 0, 0, 0) !important;
     backdrop-filter: none !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    display: none !important;
 }
 
 #estadisticaOverlay .modal {
