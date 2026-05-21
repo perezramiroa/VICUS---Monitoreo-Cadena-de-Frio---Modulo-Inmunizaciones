@@ -118,7 +118,7 @@ window.initEstadistica = function () {
    * Calcula métricas de un sensor individual
    */
   function calcularMetricasSensor(nombreSensor, nombreCanal, datosHistorico, min = 2.0, max = 8.0) {
-    if (!datosHistorico || !datosHistorico.feeds) {
+    if (!datosHistorico || !datosHistorico.feeds || datosHistorico.feeds.length === 0) {
       return {
         nombre: nombreSensor,
         canal: nombreCanal,
@@ -139,10 +139,10 @@ window.initEstadistica = function () {
     let alertasBasas = 0;
     let datos = [];
 
-    // Extraer temperaturas
+    // Extraer temperaturas (field_value es el formato de feeds.json)
     feeds.forEach(feed => {
       const temp = parseFloat(feed.field_value);
-      if (!isNaN(temp) && temp !== -127) {
+      if (!isNaN(temp) && temp !== null && temp !== -127 && feed.field_value !== '') {
         tempValues.push(temp);
         datos.push({
           timestamp: feed.created_at,
@@ -212,7 +212,7 @@ window.initEstadistica = function () {
         // Procesar cada campo del canal
         for (let i = 1; i <= 8; i++) {
           const fieldName = `field${i}`;
-          const fieldLabel = metadatos.channel[fieldName];
+          const fieldLabel = metadatos.channel[fieldName] || metadatos.channel[`${fieldName}_name`];
           
           if (!fieldLabel) continue;
 
@@ -226,7 +226,8 @@ window.initEstadistica = function () {
 
           // Obtener datos históricos del campo
           const datosHistorico = await fetchCampoHistorico(canal.id, canal.key, i);
-          const metricas = calcularMetricasSensor(fieldLabel, canal.nombre, datosHistorico);
+          const nombreCanal = canal.nombre || `Canal ${canal.id}`;
+          const metricas = calcularMetricasSensor(fieldLabel, nombreCanal, datosHistorico);
           statsData.sensores.push(metricas);
 
           console.log(`[Estadística] ${canal.nombre} - ${fieldLabel}: ${metricas.tempActual}°C (${metricas.estado})`);
