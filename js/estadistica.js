@@ -81,26 +81,19 @@ window.initEstadistica = function () {
   }
 
   /**
-   * Obtiene datos de ThingSpeak incluyendo metadatos de campos
+   * Obtiene metadatos del canal usando feeds con results=0
+   * Esta es una forma más confiable que el endpoint .json directo
    */
-  async function fetchDatosThingSpeak(canalId, apiKey) {
+  async function fetchMetadatosThingSpeak(canalId, apiKey) {
     try {
-      // Intentar con API Key primero
-      let response = await fetch(
-        `https://api.thingspeak.com/channels/${canalId}.json?api_key=${apiKey}`
+      const response = await fetch(
+        `https://api.thingspeak.com/channels/${canalId}/feeds.json?api_key=${apiKey}&results=0`
       );
-      
-      // Si falla con 400, intentar sin API Key (para canales públicos)
-      if (!response.ok && response.status === 400) {
-        response = await fetch(
-          `https://api.thingspeak.com/channels/${canalId}.json`
-        );
-      }
       
       if (!response.ok) throw new Error(`Error HTTP ${response.status}`);
       return await response.json();
     } catch (e) {
-      console.warn(`Error fetching ThingSpeak para canal ${canalId}:`, e);
+      console.warn(`Error fetching metadatos para canal ${canalId}:`, e);
       return null;
     }
   }
@@ -113,7 +106,7 @@ window.initEstadistica = function () {
       const response = await fetch(
         `https://api.thingspeak.com/channels/${canalId}/fields/${field}.json?api_key=${apiKey}&results=100`
       );
-      if (!response.ok) throw new Error('Error en ThingSpeak');
+      if (!response.ok) throw new Error(`Error HTTP ${response.status}`);
       return await response.json();
     } catch (e) {
       console.warn(`Error fetching campo ${field} del canal ${canalId}:`, e);
@@ -213,7 +206,7 @@ window.initEstadistica = function () {
     // Para cada canal, obtener metadatos y luego datos de cada campo
     for (const canal of config.canales) {
       try {
-        const metadatos = await fetchDatosThingSpeak(canal.id, canal.key);
+        const metadatos = await fetchMetadatosThingSpeak(canal.id, canal.key);
         if (!metadatos || !metadatos.channel) continue;
 
         // Procesar cada campo del canal
