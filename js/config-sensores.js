@@ -119,6 +119,26 @@ const CONFIG_INMUNO = {
         }
     },
 
+    // Mapeo de nombres legibles para los efectores
+    nombreEfectores: {
+        "Hosp_Vacunatorio_1": "Hospital Centenario - Vacunatorio 1",
+        "Hosp_Vacunatorio_2": "Hospital Centenario - Vacunatorio 2",
+        "Depo_Vacunatorio_1": "Hospital Centenario - Depósito 1",
+        "Depo_Vacunatorio_2": "Hospital Centenario - Depósito 2",
+        "Sarmiento_1": "Centro de Salud Sarmiento 1",
+        "Sarmiento_2": "Centro de Salud Sarmiento 2",
+        "Villa_Obrera": "Centro de Salud Villa Obrera",
+        "Nueva_Espana": "Centro de Salud Nueva España",
+        "Once_Octubre": "Centro de Salud 11 de Octubre",
+        "VAN": "Vacunatorio VAN",
+        "VAS": "Vacunatorio VAS",
+        "Costa_Reyes": "Centro de Salud Costa de Reyes",
+        "Hosp_Chanar_1": "Hospital Chañar 1",
+        "Hosp_Chanar_2": "Hospital Chañar 2",
+        "Zona1_1": "Zona Uno - Sensor 1",
+        "Zona1_2": "Zona Uno - Sensor 2"
+    },
+
     // Mapeo de Contraseñas -> Canales autorizados
     accesos: {
         "Zona uno": ["Zona1_1", "Zona1_2", "Hosp_Vacunatorio_1", "Hosp_Vacunatorio_2", "Depo_Vacunatorio_1", "Depo_Vacunatorio_2", "Sarmiento_1", "Sarmiento_2", "Villa_Obrera", "Nueva_Espana", "Once_Octubre", "VAN", "VAS", "Costa_Reyes", "Hosp_Chanar_1", "Hosp_Chanar_2"],

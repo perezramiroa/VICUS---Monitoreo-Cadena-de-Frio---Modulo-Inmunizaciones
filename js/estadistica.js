@@ -1,6 +1,6 @@
 /**
- * Torre de Control Zona Uno - Módulo de Estadística v4
- * REPLICANDO LA LÓGICA PROBADA DEL DASHBOARD
+ * Torre de Control Zona Uno - Módulo de Estadística v5
+ * REPLICANDO LA LÓGICA PROBADA DEL DASHBOARD + MEJORAS
  */
 
 window.initEstadistica = function () {
@@ -54,6 +54,7 @@ window.initEstadistica = function () {
             id: config.id,
             key: config.key,
             nombre: nombre,
+            nombreLegible: CONFIG_INMUNO.nombreEfectores?.[nombre] || nombre,
             isFreezer: config.isFreezer || false,
             fieldFreezer: config.fieldFreezer || 'field2',
             ...config
@@ -86,7 +87,7 @@ window.initEstadistica = function () {
         const data = await res.json();
         
         if (!data.channel || !data.feeds || data.feeds.length === 0) {
-          console.warn(`[Estadística] Sin datos para canal ${canal.nombre}`);
+          console.warn(`[Estadística] Sin datos para canal ${canal.nombreLegible}`);
           continue;
         }
 
@@ -106,10 +107,14 @@ window.initEstadistica = function () {
           let lastVal = NaN;
           let lastTime = null;
 
+          // Determinar rango según si es freezer o heladera
           let min = MIN_GEN, max = MAX_GEN;
+          let isFreezer = false;
+          
           if (canal.isFreezer && f === canal.fieldFreezer) {
             min = MIN_FREEZER;
             max = MAX_FREEZER;
+            isFreezer = true;
           }
 
           // Recorrer feeds para obtener última lectura válida y estadísticas
@@ -131,16 +136,32 @@ window.initEstadistica = function () {
           const tempPromedio = tempValues.reduce((a, b) => a + b, 0) / tempValues.length;
           const tiempoEnRango = ((tempValues.filter(t => t >= min && t <= max).length / tempValues.length) * 100).toFixed(1);
 
+          // Criticidad basada en TEMPERATURA ACTUAL, no en el historial
           let criticidad = 'normal';
-          if (alertasAltas > 5 || alertasBasas > 5) {
-            criticidad = 'critical';
-          } else if (alertasAltas > 2 || alertasBasas > 2) {
-            criticidad = 'warning';
+          let esAlerta = false;
+          
+          if (!isNaN(lastVal)) {
+            if (lastVal > max) {
+              criticidad = 'critical';
+              esAlerta = true;
+            } else if (lastVal < min) {
+              criticidad = 'critical';
+              esAlerta = true;
+            }
+          }
+
+          // Formato de fecha/hora
+          let lastTimeStr = '--/-- --:--';
+          if (lastTime) {
+            const d = new Date(lastTime);
+            const pad = n => String(n).padStart(2, '0');
+            lastTimeStr = `${pad(d.getDate())}/${pad(d.getMonth() + 1)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
           }
 
           statsData.sensores.push({
             nombre: label,
-            canal: canal.nombre,
+            canal: canal.nombreLegible,
+            canalInterno: canal.nombre,
             tempActual: isNaN(lastVal) ? null : lastVal.toFixed(1),
             tempPromedio: tempPromedio.toFixed(1),
             tiempoEnRango: parseFloat(tiempoEnRango),
@@ -148,13 +169,19 @@ window.initEstadistica = function () {
             alertasBasas,
             estado: 'online',
             criticidad,
-            lastTime: lastTime
+            esAlerta,
+            lastTime: lastTime,
+            lastTimeStr: lastTimeStr,
+            min: min,
+            max: max,
+            isFreezer: isFreezer,
+            rango: isFreezer ? `${min}°C a ${max}°C (Freezer)` : `${min}°C a ${max}°C (Heladera)`
           });
 
-          console.log(`[Estadística] ${canal.nombre} - ${label}: ${lastVal.toFixed(1)}°C`);
+          console.log(`[Estadística] ${canal.nombreLegible} - ${label}: ${lastVal.toFixed(1)}°C (${lastTimeStr})`);
         });
       } catch (e) {
-        console.error(`Error procesando canal ${canal.nombre}:`, e);
+        console.error(`Error procesando canal ${canal.nombreLegible}:`, e);
       }
     }
 
@@ -178,21 +205,20 @@ window.initEstadistica = function () {
       return;
     }
 
-    // Mostrar sugerencias primero
+    // Mostrar sugerencias primero (solo si hay alertas actuales)
     const sugerencias = [];
     statsData.sensores.forEach(s => {
-      if (s.criticidad === 'critical') {
-        sugerencias.push(`🚨 **${s.nombre}** (${s.canal}): ${s.tempActual}°C - Contactar responsable`);
-      } else if (s.criticidad === 'warning') {
-        sugerencias.push(`⚠️ **${s.nombre}** (${s.canal}): Inestabilidad - Revisar equipo`);
+      if (s.esAlerta) {
+        const tipo = s.tempActual > s.max ? 'ALTA' : 'BAJA';
+        sugerencias.push(`🚨 **${s.nombre}** (${s.canal}): ${s.tempActual}°C - Temperatura ${tipo} - Contactar responsable`);
       }
     });
 
     if (sugerencias.length > 0) {
       const sugBox = document.createElement('div');
       sugBox.className = 'section-box';
-      sugBox.style.background = 'rgba(59, 130, 246, 0.1)';
-      sugBox.style.borderColor = 'rgba(59, 130, 246, 0.3)';
+      sugBox.style.background = 'rgba(239, 68, 68, 0.1)';
+      sugBox.style.borderColor = 'rgba(239, 68, 68, 0.3)';
       sugBox.style.marginBottom = '16px';
       sugBox.innerHTML = '<h3>💡 Sugerencias de Gestión</h3>';
       
@@ -218,7 +244,9 @@ window.initEstadistica = function () {
       item.className = `criticidad-item ${sensor.criticidad}`;
       item.innerHTML = `
         <div class="criticidad-info">
-          <div class="criticidad-name">#${idx + 1} ${sensor.nombre} (${sensor.canal})</div>
+          <div class="criticidad-name">#${idx + 1} ${sensor.nombre}</div>
+          <div class="criticidad-detail">${sensor.canal}</div>
+          <div class="criticidad-detail" style="font-size: 0.75rem; color: rgba(148, 163, 184, 0.8);">Rango: ${sensor.rango} | Última: ${sensor.lastTimeStr}</div>
           <div class="criticidad-detail">online • ${sensor.tiempoEnRango}% en rango</div>
         </div>
         <div class="criticidad-value">${sensor.tempActual || '--'}°C</div>
@@ -241,7 +269,7 @@ window.initEstadistica = function () {
     overlay.querySelector('#efectoresOnline').textContent = online;
     overlay.querySelector('#efectoresOffline').textContent = 0;
     overlay.querySelector('#disponibilidad').textContent = disponibilidad + '%';
-    overlay.querySelector('#desviosPendientes').textContent = '0';
+    overlay.querySelector('#desviosPendientes').textContent = sugerencias.length;
     overlay.querySelector('#kpiTempPromedio').textContent = tempPromedio;
     overlay.querySelector('#kpiTiempoRango').textContent = tiempoPromedio + '%';
     overlay.querySelector('#kpiAlertasAltas').textContent = alertasAltas;
@@ -258,7 +286,7 @@ window.initEstadistica = function () {
 
     if (statsData.sensores.length === 0) return;
 
-    const labels = statsData.sensores.map(s => `${s.nombre}\n(${s.canal})`);
+    const labels = statsData.sensores.map(s => `${s.nombre}\n(${s.canal})\n${s.rango}`);
     const datos = statsData.sensores.map(s => parseFloat(s.tempActual) || 0);
 
     window.tempChartInstance = new Chart(ctx, {
@@ -268,14 +296,16 @@ window.initEstadistica = function () {
         datasets: [{
           label: 'Temperatura Actual (°C)',
           data: datos,
-          backgroundColor: datos.map(temp => {
-            if (temp > 8) return 'rgba(239, 68, 68, 0.7)';
-            if (temp < 2) return 'rgba(59, 130, 246, 0.7)';
+          backgroundColor: datos.map((temp, idx) => {
+            const sensor = statsData.sensores[idx];
+            if (temp > sensor.max) return 'rgba(239, 68, 68, 0.7)';
+            if (temp < sensor.min) return 'rgba(59, 130, 246, 0.7)';
             return 'rgba(16, 185, 129, 0.7)';
           }),
-          borderColor: datos.map(temp => {
-            if (temp > 8) return 'rgba(239, 68, 68, 1)';
-            if (temp < 2) return 'rgba(59, 130, 246, 1)';
+          borderColor: datos.map((temp, idx) => {
+            const sensor = statsData.sensores[idx];
+            if (temp > sensor.max) return 'rgba(239, 68, 68, 1)';
+            if (temp < sensor.min) return 'rgba(59, 130, 246, 1)';
             return 'rgba(16, 185, 129, 1)';
           }),
           borderWidth: 2
@@ -291,13 +321,13 @@ window.initEstadistica = function () {
         scales: {
           x: {
             beginAtZero: true,
-            min: -5,
-            max: 15,
+            min: -25,
+            max: 25,
             ticks: { color: 'rgba(148, 163, 184, 0.8)' },
             grid: { color: 'rgba(255, 255, 255, 0.05)' }
           },
           y: {
-            ticks: { color: 'rgba(148, 163, 184, 0.8)', font: { size: 10 } },
+            ticks: { color: 'rgba(148, 163, 184, 0.8)', font: { size: 9 } },
             grid: { color: 'rgba(255, 255, 255, 0.05)' }
           }
         }
@@ -309,10 +339,10 @@ window.initEstadistica = function () {
     const tbody = overlay.querySelector('#desviosTable tbody');
     if (!tbody) return;
 
-    const sensoresConAlerta = statsData.sensores.filter(s => s.alertasAltas > 0 || s.alertasBasas > 0);
+    const sensoresConAlerta = statsData.sensores.filter(s => s.esAlerta);
 
     if (sensoresConAlerta.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6" class="placeholder">No hay desvíos registrados</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="7" class="placeholder">No hay alertas actuales</td></tr>`;
       return;
     }
 
@@ -320,10 +350,11 @@ window.initEstadistica = function () {
       <tr>
         <td>${s.nombre}</td>
         <td>${s.canal}</td>
+        <td>${s.rango}</td>
+        <td>${s.tempActual}°C</td>
+        <td>${s.lastTimeStr}</td>
         <td>${s.alertasAltas}</td>
         <td>${s.alertasBasas}</td>
-        <td>${s.tiempoEnRango}%</td>
-        <td>${s.tempActual}°C</td>
       </tr>
     `).join('');
   }
@@ -332,15 +363,25 @@ window.initEstadistica = function () {
     const timeline = overlay.querySelector('#timelineConectividad');
     if (!timeline) return;
 
+    const sensoresOnline = statsData.sensores.filter(s => s.estado === 'online').length;
+    const sensoresOffline = statsData.sensores.length - sensoresOnline;
+
     timeline.innerHTML = `
       <p style="margin-bottom: 12px;">
-        <strong>Estado de Conectividad:</strong> ${statsData.sensores.length} en línea
+        <strong>Estado de Conectividad Regional:</strong>
       </p>
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
         <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 12px; text-align: center;">
-          <div style="font-size: 24px; font-weight: bold; color: rgba(16, 185, 129, 1);">${statsData.sensores.length}</div>
+          <div style="font-size: 24px; font-weight: bold; color: rgba(16, 185, 129, 1);">${sensoresOnline}</div>
           <div style="font-size: 12px; color: rgba(148, 163, 184, 0.8);">Sensores Online</div>
         </div>
+        <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; padding: 12px; text-align: center;">
+          <div style="font-size: 24px; font-weight: bold; color: rgba(239, 68, 68, 1);">${sensoresOffline}</div>
+          <div style="font-size: 12px; color: rgba(148, 163, 184, 0.8);">Sensores Offline</div>
+        </div>
+      </div>
+      <div style="font-size: 0.85rem; color: rgba(148, 163, 184, 0.9);">
+        <p><strong>Disponibilidad:</strong> ${((sensoresOnline / statsData.sensores.length) * 100).toFixed(1)}%</p>
       </div>
     `;
   }
@@ -358,15 +399,17 @@ window.initEstadistica = function () {
   }
 
   function exportarCsv() {
-    const rows = [['Sensor', 'Canal', 'Temperatura (°C)', 'Promedio (°C)', 'Tiempo en Rango (%)', 'Alertas Altas', 'Alertas Bajas']];
+    const rows = [['Sensor', 'Efector', 'Rango', 'Temperatura (°C)', 'Promedio (°C)', 'Tiempo en Rango (%)', 'Última Lectura', 'Alertas Altas', 'Alertas Bajas']];
 
     statsData.sensores.forEach(s => {
       rows.push([
         s.nombre,
         s.canal,
+        s.rango,
         s.tempActual || '--',
         s.tempPromedio || '--',
         s.tiempoEnRango,
+        s.lastTimeStr,
         s.alertasAltas,
         s.alertasBasas
       ]);
@@ -407,18 +450,20 @@ window.initEstadistica = function () {
       const tableData = statsData.sensores.map(s => [
         s.nombre.substring(0, 25),
         s.canal.substring(0, 20),
+        s.rango,
         s.tempActual || '--',
         s.tempPromedio || '--',
-        s.tiempoEnRango + '%'
+        s.tiempoEnRango + '%',
+        s.lastTimeStr
       ]);
 
       doc.autoTable({
-        head: [['Sensor', 'Canal', 'Temp Act.', 'Temp Prom.', 'En Rango']],
+        head: [['Sensor', 'Efector', 'Rango', 'Temp Act.', 'Temp Prom.', 'En Rango', 'Última Lectura']],
         body: tableData,
         startY: yPosition,
         theme: 'grid',
-        headStyles: { fillColor: [16, 185, 129], textColor: [255, 255, 255], fontSize: 9 },
-        bodyStyles: { textColor: [0, 0, 0], fontSize: 8 },
+        headStyles: { fillColor: [16, 185, 129], textColor: [255, 255, 255], fontSize: 8 },
+        bodyStyles: { textColor: [0, 0, 0], fontSize: 7 },
         alternateRowStyles: { fillColor: [240, 240, 240] }
       });
 
