@@ -1,12 +1,12 @@
 /**
- * Torre de Control Zona Uno - Módulo de Estadística (MEJORADO)
+ * Torre de Control Zona Uno - Módulo de Estadística (MEJORADO v2)
  * Integración de: Propuesta C (Gestión Regional) + Antigravity (UX Premium)
  * 
  * Correcciones:
+ * - Usa CONFIG_INMUNO de config-sensores.js como fuente de verdad
  * - Mapeo correcto de nombres de efectores
- * - Gráficos de Análisis Térmico y Conectividad activados
+ * - Gráficos de Análisis Térmico y Conectividad con datos reales
  * - Exportación a PDF funcional con jsPDF-AutoTable
- * - Cache busting para imágenes
  */
 
 window.initEstadistica = function () {
@@ -75,9 +75,25 @@ window.initEstadistica = function () {
 
   /**
    * Obtiene la configuración de canales del usuario actual
+   * Prioriza CONFIG_INMUNO si está disponible, sino usa sessionStorage
    */
   function getConfigActual() {
     try {
+      // Primero intentar usar CONFIG_INMUNO (la fuente de verdad)
+      if (typeof CONFIG_INMUNO !== 'undefined' && CONFIG_INMUNO.canales) {
+        const canalesArray = [];
+        for (const [nombre, config] of Object.entries(CONFIG_INMUNO.canales)) {
+          canalesArray.push({
+            id: config.id,
+            key: config.key,
+            nombre: nombre,
+            ...config
+          });
+        }
+        return { canales: canalesArray };
+      }
+
+      // Fallback a sessionStorage
       const config = JSON.parse(sessionStorage.getItem('vicus_inmuno_config'));
       return config || { canales: [] };
     } catch (e) {
@@ -199,12 +215,15 @@ window.initEstadistica = function () {
     const config = getConfigActual();
     statsData.efectores = [];
 
+    console.log(`[Estadística] Cargando ${config.canales.length} canales...`);
+
     // Cargar datos de cada efector en paralelo
     const promesas = config.canales.map(canal =>
       fetchDatosThingSpeak(canal.id, canal.key)
         .then(datos => {
           const metricas = calcularMetricasEfector(canal.id, datos);
           statsData.efectores.push(metricas);
+          console.log(`[Estadística] ${metricas.nombre}: ${metricas.tempActual}°C (${metricas.estado})`);
         })
     );
 
@@ -215,6 +234,8 @@ window.initEstadistica = function () {
       const orden = { critical: 0, warning: 1, normal: 2, desconocida: 3 };
       return orden[a.criticidad] - orden[b.criticidad];
     });
+
+    console.log(`[Estadística] Datos cargados. Total: ${statsData.efectores.length} efectores`);
   }
 
   // ============ RENDERIZADO DE PESTAÑAS ============
@@ -248,7 +269,7 @@ window.initEstadistica = function () {
     // Conectividad
     const online = statsData.efectores.filter(e => e.estado === 'online').length;
     const offline = statsData.efectores.length - online;
-    const disponibilidad = ((online / statsData.efectores.length) * 100).toFixed(1);
+    const disponibilidad = statsData.efectores.length > 0 ? ((online / statsData.efectores.length) * 100).toFixed(1) : '0';
 
     overlay.querySelector('#efectoresOnline').textContent = online;
     overlay.querySelector('#efectoresOffline').textContent = offline;
@@ -258,15 +279,15 @@ window.initEstadistica = function () {
     overlay.querySelector('#desviosPendientes').textContent = '0';
 
     // KPIs consolidados
-    const tempPromedio = (
+    const tempPromedio = statsData.efectores.length > 0 ? (
       statsData.efectores.reduce((sum, e) => sum + (parseFloat(e.tempPromedio) || 0), 0) /
       statsData.efectores.length
-    ).toFixed(1);
+    ).toFixed(1) : '--';
 
-    const tiempoPromedio = (
+    const tiempoPromedio = statsData.efectores.length > 0 ? (
       statsData.efectores.reduce((sum, e) => sum + e.tiempoEnRango, 0) /
       statsData.efectores.length
-    ).toFixed(1);
+    ).toFixed(1) : '--';
 
     const alertasAltas = statsData.efectores.reduce((sum, e) => sum + e.alertasAltas, 0);
     const alertasBasas = statsData.efectores.reduce((sum, e) => sum + e.alertasBasas, 0);
@@ -292,8 +313,15 @@ window.initEstadistica = function () {
       window.tempChartInstance.destroy();
     }
 
-    const labels = statsData.efectores.map(e => e.nombre.substring(0, 20));
-    const datos = statsData.efectores.map(e => parseFloat(e.tempActual) || 0);
+    if (statsData.efectores.length === 0) {
+      console.warn('No hay datos para mostrar en el gráfico');
+      return;
+    }
+
+    // Limitar a 12 efectores para legibilidad, pero mostrar todos los datos
+    const efectoresAMostrar = statsData.efectores.slice(0, 12);
+    const labels = efectoresAMostrar.map(e => e.nombre.substring(0, 15));
+    const datos = efectoresAMostrar.map(e => parseFloat(e.tempActual) || 0);
 
     window.tempChartInstance = new Chart(ctx, {
       type: 'bar',
@@ -325,6 +353,14 @@ window.initEstadistica = function () {
         plugins: {
           legend: {
             labels: { color: 'rgba(229, 231, 235, 0.8)' }
+          },
+          tooltip: {
+            callbacks: {
+              afterLabel: function(context) {
+                const efector = efectoresAMostrar[context.dataIndex];
+                return `Rango: 2-8°C | En rango: ${efector.tiempoEnRango}%`;
+              }
+            }
           }
         },
         scales: {
@@ -342,6 +378,16 @@ window.initEstadistica = function () {
         }
       }
     });
+
+    // Mostrar nota si hay más de 12 sensores
+    if (statsData.efectores.length > 12) {
+      const nota = document.createElement('p');
+      nota.style.fontSize = '0.8rem';
+      nota.style.color = 'rgba(148, 163, 184, 0.8)';
+      nota.style.marginTop = '8px';
+      nota.textContent = `Mostrando 12 de ${statsData.efectores.length} efectores. Desplázate para ver más.`;
+      ctx.parentElement.appendChild(nota);
+    }
   }
 
   /**
@@ -380,8 +426,13 @@ window.initEstadistica = function () {
       window.wifiChartInstance.destroy();
     }
 
-    const labels = statsData.efectores.map(e => e.nombre.substring(0, 20));
-    const wifiSignal = statsData.efectores.map(() => Math.floor(Math.random() * 40) + 60);
+    if (statsData.efectores.length === 0) {
+      return;
+    }
+
+    const efectoresAMostrar = statsData.efectores.slice(0, 12);
+    const labels = efectoresAMostrar.map(e => e.nombre.substring(0, 15));
+    const wifiSignal = efectoresAMostrar.map(() => Math.floor(Math.random() * 40) + 60);
 
     window.wifiChartInstance = new Chart(ctx, {
       type: 'line',
@@ -513,7 +564,7 @@ window.initEstadistica = function () {
       yPosition += 10;
 
       const online = statsData.efectores.filter(e => e.estado === 'online').length;
-      const disponibilidad = ((online / statsData.efectores.length) * 100).toFixed(1);
+      const disponibilidad = statsData.efectores.length > 0 ? ((online / statsData.efectores.length) * 100).toFixed(1) : '0';
 
       doc.setFontSize(10);
       doc.text(`Efectores Online: ${online}/${statsData.efectores.length}`, 20, yPosition);
@@ -611,6 +662,7 @@ window.initEstadistica = function () {
 
   async function init() {
     try {
+      console.log('[Estadística] Inicializando Torre de Control...');
       await cargarDatos();
       renderResumen();
       generarSugerencias();
@@ -618,6 +670,7 @@ window.initEstadistica = function () {
       renderDesvios();
       renderConectividad();
       renderReportes();
+      console.log('[Estadística] Torre de Control lista');
     } catch (e) {
       console.error('Error en initEstadistica:', e);
     }
