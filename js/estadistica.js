@@ -1,6 +1,6 @@
 /**
- * Torre de Control Zona Uno - Módulo de Estadística v6
- * REPLICANDO LA LÓGICA PROBADA DEL DASHBOARD + MEJORAS
+ * Torre de Control Zona Uno - Módulo de Estadística v7
+ * VERSIÓN COMPLETA CON CONECTIVIDAD Y ESTADÍSTICAS DETALLADAS
  */
 
 window.initEstadistica = function () {
@@ -11,9 +11,11 @@ window.initEstadistica = function () {
   const MAX_GEN = 8.0;
   const MIN_FREEZER = -20;
   const MAX_FREEZER = -15;
+  const TIMEOUT_OFFLINE_MS = 30 * 60 * 1000; // 30 minutos
 
   let statsData = {
-    sensores: []
+    sensores: [],
+    wifiData: []
   };
 
   // ============ REFERENCIAS AL DOM ============
@@ -26,12 +28,14 @@ window.initEstadistica = function () {
   if (closeBtn) {
     closeBtn.addEventListener('click', () => {
       overlay.classList.remove('visible');
+      overlay.classList.add('hidden');
     });
   }
 
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && overlay.classList.contains('visible')) {
       overlay.classList.remove('visible');
+      overlay.classList.add('hidden');
     }
   });
 
@@ -77,12 +81,13 @@ window.initEstadistica = function () {
   async function cargarDatos() {
     const config = getConfigActual();
     statsData.sensores = [];
+    statsData.wifiData = [];
+    const ahora = Date.now();
 
     console.log(`[Estadística] Cargando ${config.canales.length} canales...`);
 
     for (const canal of config.canales) {
       try {
-        // Usar la MISMA URL que el dashboard
         const res = await fetch(`https://api.thingspeak.com/channels/${canal.id}/feeds.json?api_key=${canal.key}&results=100`);
         const data = await res.json();
         
@@ -91,21 +96,23 @@ window.initEstadistica = function () {
           continue;
         }
 
-        // Procesar cada campo (igual que el dashboard)
+        // Procesar cada campo
         ['field1', 'field2', 'field3', 'field4', 'field5', 'field6', 'field7', 'field8'].forEach(f => {
           const label = data.channel[f];
           if (!label) return;
 
           const labelLower = label.toLowerCase();
           const excludeKeywords = ['ambiente', 'wifi', 'rssi', 'intensidad', 'señal', 'nivel'];
-          if (excludeKeywords.some(key => labelLower.includes(key))) return;
+          const isWifi = excludeKeywords.some(key => labelLower.includes(key));
 
-          // Extraer todas las temperaturas válidas para análisis
+          // Extraer temperaturas O datos de Wi-Fi
           let tempValues = [];
+          let wifiValues = [];
           let alertasAltas = 0;
           let alertasBasas = 0;
           let lastVal = NaN;
           let lastTime = null;
+          let tiempoInactividad = 0;
 
           // Determinar rango según si es freezer o heladera
           let min = MIN_GEN, max = MAX_GEN;
@@ -117,98 +124,126 @@ window.initEstadistica = function () {
             isFreezer = true;
           }
 
-          // Recorrer feeds para obtener última lectura válida y estadísticas
+          // Recorrer feeds
           for (let i = data.feeds.length - 1; i >= 0; i--) {
             const valTemp = parseFloat(data.feeds[i][f]);
             if (!isNaN(valTemp) && valTemp !== -127) {
               if (isNaN(lastVal)) {
                 lastVal = valTemp;
                 lastTime = data.feeds[i].created_at;
-              }
-              tempValues.push(valTemp);
-              if (valTemp > max) alertasAltas++;
-              if (valTemp < min) alertasBasas++;
-            }
-          }
-
-          if (tempValues.length === 0) return;
-
-          const tempPromedio = tempValues.reduce((a, b) => a + b, 0) / tempValues.length;
-          const tiempoEnRango = ((tempValues.filter(t => t >= min && t <= max).length / tempValues.length) * 100).toFixed(1);
-
-          // Criticidad basada en TEMPERATURA ACTUAL, no en el historial
-          let criticidad = 'normal';
-          let esAlerta = false;
-          
-          if (!isNaN(lastVal)) {
-            if (lastVal > max) {
-              criticidad = 'critical';
-              esAlerta = true;
-            } else if (lastVal < min) {
-              criticidad = 'critical';
-              esAlerta = true;
-            }
-          }
-
-          // Formato de fecha/hora
-          let lastTimeStr = '--/-- --:--';
-          if (lastTime) {
-            const d = new Date(lastTime);
-            const pad = n => String(n).padStart(2, '0');
-            lastTimeStr = `${pad(d.getDate())}/${pad(d.getMonth() + 1)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-          }
-
-          // Encontrar el desvío más significativo en el historial
-          let desvioMasSignificativo = null;
-          let maxDesviacion = 0;
-          
-          for (let i = data.feeds.length - 1; i >= 0; i--) {
-            const valTemp = parseFloat(data.feeds[i][f]);
-            if (!isNaN(valTemp) && valTemp !== -127) {
-              let desviacion = 0;
-              if (valTemp > max) {
-                desviacion = valTemp - max;
-              } else if (valTemp < min) {
-                desviacion = min - valTemp;
+                const lastTimeMs = new Date(lastTime).getTime();
+                tiempoInactividad = Math.floor((ahora - lastTimeMs) / 1000 / 60); // en minutos
               }
               
-              if (desviacion > maxDesviacion) {
-                maxDesviacion = desviacion;
-                const d = new Date(data.feeds[i].created_at);
-                const pad = n => String(n).padStart(2, '0');
-                const timeStr = `${pad(d.getDate())}/${pad(d.getMonth() + 1)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-                desvioMasSignificativo = {
-                  temp: valTemp.toFixed(1),
-                  time: timeStr,
-                  tipo: valTemp > max ? 'ALTA' : 'BAJA'
-                };
+              if (isWifi) {
+                wifiValues.push(valTemp);
+              } else {
+                tempValues.push(valTemp);
+                if (valTemp > max) alertasAltas++;
+                if (valTemp < min) alertasBasas++;
               }
             }
           }
 
-          statsData.sensores.push({
-            nombre: label,
-            canal: canal.nombreLegible,
-            canalInterno: canal.nombre,
-            tempActual: isNaN(lastVal) ? null : lastVal.toFixed(1),
-            tempPromedio: tempPromedio.toFixed(1),
-            tiempoEnRango: parseFloat(tiempoEnRango),
-            alertasAltas,
-            alertasBasas,
-            estado: 'online',
-            criticidad,
-            esAlerta,
-            lastTime: lastTime,
-            lastTimeStr: lastTimeStr,
-            min: min,
-            max: max,
-            isFreezer: isFreezer,
-            rango: isFreezer ? `${min}°C a ${max}°C (Freezer)` : `${min}°C a ${max}°C (Heladera)`,
-            desvioMasSignificativo: desvioMasSignificativo,
-            rangoAnalisis: '(últimas 100 lecturas)'
-          });
+          if (isWifi && wifiValues.length > 0) {
+            // Guardar datos de Wi-Fi
+            const wifiPromedio = wifiValues.reduce((a, b) => a + b, 0) / wifiValues.length;
+            const wifiMax = Math.max(...wifiValues);
+            const wifiMin = Math.min(...wifiValues);
+            
+            statsData.wifiData.push({
+              nombre: label,
+              canal: canal.nombreLegible,
+              promedio: wifiPromedio.toFixed(1),
+              max: wifiMax.toFixed(1),
+              min: wifiMin.toFixed(1),
+              actual: lastVal.toFixed(1),
+              lastTimeStr: formatearFecha(lastTime),
+              tiempoInactividad: tiempoInactividad
+            });
+          } else if (tempValues.length > 0) {
+            // Procesar temperatura
+            const tempPromedio = tempValues.reduce((a, b) => a + b, 0) / tempValues.length;
+            const tiempoEnRango = ((tempValues.filter(t => t >= min && t <= max).length / tempValues.length) * 100).toFixed(1);
 
-          console.log(`[Estadística] ${canal.nombreLegible} - ${label}: ${lastVal.toFixed(1)}°C (${lastTimeStr})`);
+            // Criticidad basada en TEMPERATURA ACTUAL
+            let criticidad = 'normal';
+            let esAlerta = false;
+            let estado = 'online';
+            
+            if (!isNaN(lastVal)) {
+              if (lastVal > max || lastVal < min) {
+                criticidad = 'critical';
+                esAlerta = true;
+              }
+            }
+
+            // Detectar offline: si no hay datos en 30 minutos
+            if (tiempoInactividad > 30) {
+              estado = 'offline';
+              criticidad = 'warning';
+            }
+
+            let lastTimeStr = '--/-- --:--';
+            if (lastTime) {
+              lastTimeStr = formatearFecha(lastTime);
+            }
+
+            // Encontrar desvío más significativo
+            let desvioMasSignificativo = null;
+            let maxDesviacion = 0;
+            
+            for (let i = data.feeds.length - 1; i >= 0; i--) {
+              const valTemp = parseFloat(data.feeds[i][f]);
+              if (!isNaN(valTemp) && valTemp !== -127) {
+                let desviacion = 0;
+                if (valTemp > max) {
+                  desviacion = valTemp - max;
+                } else if (valTemp < min) {
+                  desviacion = min - valTemp;
+                }
+                
+                if (desviacion > maxDesviacion) {
+                  maxDesviacion = desviacion;
+                  desvioMasSignificativo = {
+                    temp: valTemp.toFixed(1),
+                    time: formatearFecha(data.feeds[i].created_at),
+                    tipo: valTemp > max ? 'ALTA' : 'BAJA'
+                  };
+                }
+              }
+            }
+
+            const tempMax = Math.max(...tempValues);
+            const tempMin = Math.min(...tempValues);
+
+            statsData.sensores.push({
+              nombre: label,
+              canal: canal.nombreLegible,
+              canalInterno: canal.nombre,
+              tempActual: isNaN(lastVal) ? null : lastVal.toFixed(1),
+              tempPromedio: tempPromedio.toFixed(1),
+              tempMax: tempMax.toFixed(1),
+              tempMin: tempMin.toFixed(1),
+              tiempoEnRango: parseFloat(tiempoEnRango),
+              alertasAltas,
+              alertasBasas,
+              estado: estado,
+              criticidad,
+              esAlerta,
+              lastTime: lastTime,
+              lastTimeStr: lastTimeStr,
+              tiempoInactividad: tiempoInactividad,
+              min: min,
+              max: max,
+              isFreezer: isFreezer,
+              rango: isFreezer ? `${min}°C a ${max}°C (Freezer)` : `${min}°C a ${max}°C (Heladera)`,
+              desvioMasSignificativo: desvioMasSignificativo,
+              rangoAnalisis: '(últimas 100 lecturas)'
+            });
+
+            console.log(`[Estadística] ${canal.nombreLegible} - ${label}: ${lastVal.toFixed(1)}°C (${lastTimeStr}) - ${estado}`);
+          }
         });
       } catch (e) {
         console.error(`Error procesando canal ${canal.nombreLegible}:`, e);
@@ -224,6 +259,21 @@ window.initEstadistica = function () {
     console.log(`[Estadística] Datos cargados. Total: ${statsData.sensores.length} sensores`);
   }
 
+  // ============ UTILIDADES ============
+
+  function formatearFecha(dateStr) {
+    if (!dateStr) return '--/-- --:--';
+    const d = new Date(dateStr);
+    const pad = n => String(n).padStart(2, '0');
+    return `${pad(d.getDate())}/${pad(d.getMonth() + 1)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+
+  function calcularTiempoAnalisis() {
+    if (statsData.sensores.length === 0) return 'N/A';
+    // Asumir que las últimas 100 lecturas cubren aproximadamente 1-2 horas dependiendo de la frecuencia
+    return 'últimas ~2 horas (100 lecturas)';
+  }
+
   // ============ RENDERIZADO ============
 
   function renderResumen() {
@@ -235,25 +285,25 @@ window.initEstadistica = function () {
       return;
     }
 
-    // Mostrar sugerencias: alertas actuales + desvíos históricos significativos
+    // Mostrar sugerencias
     const sugerencias = [];
     
     statsData.sensores.forEach(s => {
-      // Alerta actual (temperatura fuera de rango AHORA)
       if (s.esAlerta) {
         const tipo = s.tempActual > s.max ? 'ALTA' : 'BAJA';
         sugerencias.push({
           tipo: 'actual',
-          texto: `🚨 **${s.nombre}** (${s.canal}): ${s.tempActual}°C - Temperatura ${tipo} - Contactar responsable`,
-          sensor: s
+          texto: `🚨 **${s.nombre}** (${s.canal}): ${s.tempActual}°C - Temperatura ${tipo} - Contactar responsable`
         });
-      }
-      // Desvío histórico significativo (si no hay alerta actual pero hay desvíos)
-      else if (s.desvioMasSignificativo && s.desvioMasSignificativo.temp) {
+      } else if (s.estado === 'offline') {
+        sugerencias.push({
+          tipo: 'offline',
+          texto: `📡 **${s.nombre}** (${s.canal}): SIN DATOS desde hace ${s.tiempoInactividad} minutos - Revisar conectividad`
+        });
+      } else if (s.desvioMasSignificativo && s.desvioMasSignificativo.temp) {
         sugerencias.push({
           tipo: 'historico',
-          texto: `⚠️ **${s.nombre}** (${s.canal}): Desvío detectado - ${s.desvioMasSignificativo.temp}°C (${s.desvioMasSignificativo.tipo}) el ${s.desvioMasSignificativo.time} ${s.rangoAnalisis}`,
-          sensor: s
+          texto: `⚠️ **${s.nombre}** (${s.canal}): Desvío detectado - ${s.desvioMasSignificativo.temp}°C (${s.desvioMasSignificativo.tipo}) el ${s.desvioMasSignificativo.time}`
         });
       }
     });
@@ -286,12 +336,13 @@ window.initEstadistica = function () {
     statsData.sensores.forEach((sensor, idx) => {
       const item = document.createElement('div');
       item.className = `criticidad-item ${sensor.criticidad}`;
+      const estadoIcon = sensor.estado === 'offline' ? '📡' : '✓';
       item.innerHTML = `
         <div class="criticidad-info">
           <div class="criticidad-name">#${idx + 1} ${sensor.nombre}</div>
           <div class="criticidad-detail">${sensor.canal}</div>
           <div class="criticidad-detail" style="font-size: 0.75rem; color: rgba(148, 163, 184, 0.8);">Rango: ${sensor.rango} | Última: ${sensor.lastTimeStr}</div>
-          <div class="criticidad-detail">online • ${sensor.tiempoEnRango}% en rango</div>
+          <div class="criticidad-detail">${estadoIcon} ${sensor.estado} • ${sensor.tiempoEnRango}% en rango</div>
         </div>
         <div class="criticidad-value">${sensor.tempActual || '--'}°C</div>
       `;
@@ -299,19 +350,20 @@ window.initEstadistica = function () {
     });
 
     // KPIs
-    const online = statsData.sensores.length;
-    const disponibilidad = 100;
+    const online = statsData.sensores.filter(s => s.estado === 'online').length;
+    const offline = statsData.sensores.length - online;
+    const disponibilidad = statsData.sensores.length > 0 ? ((online / statsData.sensores.length) * 100).toFixed(1) : 0;
     const tempPromedio = statsData.sensores.length > 0 ? (
-      statsData.sensores.reduce((sum, e) => sum + parseFloat(e.tempPromedio), 0) / statsData.sensores.length
+      statsData.sensores.filter(s => s.estado === 'online').reduce((sum, e) => sum + parseFloat(e.tempPromedio), 0) / statsData.sensores.filter(s => s.estado === 'online').length
     ).toFixed(1) : '--';
     const tiempoPromedio = statsData.sensores.length > 0 ? (
-      statsData.sensores.reduce((sum, e) => sum + e.tiempoEnRango, 0) / statsData.sensores.length
+      statsData.sensores.filter(s => s.estado === 'online').reduce((sum, e) => sum + e.tiempoEnRango, 0) / statsData.sensores.filter(s => s.estado === 'online').length
     ).toFixed(1) : '--';
     const alertasAltas = statsData.sensores.reduce((sum, e) => sum + e.alertasAltas, 0);
     const alertasBasas = statsData.sensores.reduce((sum, e) => sum + e.alertasBasas, 0);
 
     overlay.querySelector('#efectoresOnline').textContent = online;
-    overlay.querySelector('#efectoresOffline').textContent = 0;
+    overlay.querySelector('#efectoresOffline').textContent = offline;
     overlay.querySelector('#disponibilidad').textContent = disponibilidad + '%';
     overlay.querySelector('#desviosPendientes').textContent = sugerencias.length;
     overlay.querySelector('#kpiTempPromedio').textContent = tempPromedio;
@@ -328,10 +380,11 @@ window.initEstadistica = function () {
       window.tempChartInstance.destroy();
     }
 
-    if (statsData.sensores.length === 0) return;
+    const sensoresOnline = statsData.sensores.filter(s => s.estado === 'online');
+    if (sensoresOnline.length === 0) return;
 
-    const labels = statsData.sensores.map(s => `${s.nombre}\n(${s.canal})\n${s.rango}`);
-    const datos = statsData.sensores.map(s => parseFloat(s.tempActual) || 0);
+    const labels = sensoresOnline.map(s => `${s.nombre}\n(${s.canal})\n${s.rango}`);
+    const datos = sensoresOnline.map(s => parseFloat(s.tempActual) || 0);
 
     window.tempChartInstance = new Chart(ctx, {
       type: 'bar',
@@ -341,13 +394,13 @@ window.initEstadistica = function () {
           label: 'Temperatura Actual (°C)',
           data: datos,
           backgroundColor: datos.map((temp, idx) => {
-            const sensor = statsData.sensores[idx];
+            const sensor = sensoresOnline[idx];
             if (temp > sensor.max) return 'rgba(239, 68, 68, 0.7)';
             if (temp < sensor.min) return 'rgba(59, 130, 246, 0.7)';
             return 'rgba(16, 185, 129, 0.7)';
           }),
           borderColor: datos.map((temp, idx) => {
-            const sensor = statsData.sensores[idx];
+            const sensor = sensoresOnline[idx];
             if (temp > sensor.max) return 'rgba(239, 68, 68, 1)';
             if (temp < sensor.min) return 'rgba(59, 130, 246, 1)';
             return 'rgba(16, 185, 129, 1)';
@@ -383,15 +436,16 @@ window.initEstadistica = function () {
     const tbody = overlay.querySelector('#desviosTable tbody');
     if (!tbody) return;
 
-    const sensoresConAlerta = statsData.sensores.filter(s => s.esAlerta || s.desvioMasSignificativo);
+    const sensoresConAlerta = statsData.sensores.filter(s => s.esAlerta || s.desvioMasSignificativo || s.estado === 'offline');
 
     if (sensoresConAlerta.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="8" class="placeholder">No hay alertas ni desvíos registrados</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="9" class="placeholder">No hay alertas ni desvíos registrados</td></tr>`;
       return;
     }
 
     tbody.innerHTML = sensoresConAlerta.map(s => {
       const desvio = s.desvioMasSignificativo ? `${s.desvioMasSignificativo.temp}°C (${s.desvioMasSignificativo.tipo}) - ${s.desvioMasSignificativo.time}` : '--';
+      const estadoIcon = s.estado === 'offline' ? '📡 OFFLINE' : s.esAlerta ? '🚨 ALERTA' : '⚠️ DESVÍO';
       return `
         <tr>
           <td>${s.nombre}</td>
@@ -399,6 +453,7 @@ window.initEstadistica = function () {
           <td>${s.rango}</td>
           <td>${s.tempActual}°C</td>
           <td>${s.lastTimeStr}</td>
+          <td>${estadoIcon}</td>
           <td>${desvio}</td>
           <td>${s.alertasAltas}</td>
           <td>${s.alertasBasas}</td>
@@ -414,7 +469,8 @@ window.initEstadistica = function () {
     const sensoresOnline = statsData.sensores.filter(s => s.estado === 'online').length;
     const sensoresOffline = statsData.sensores.length - sensoresOnline;
 
-    timeline.innerHTML = `
+    // Tabla de estadísticas detalladas
+    let tableHtml = `
       <p style="margin-bottom: 12px;">
         <strong>Estado de Conectividad Regional:</strong>
       </p>
@@ -428,11 +484,51 @@ window.initEstadistica = function () {
           <div style="font-size: 12px; color: rgba(148, 163, 184, 0.8);">Sensores Offline</div>
         </div>
       </div>
-      <div style="font-size: 0.85rem; color: rgba(148, 163, 184, 0.9);">
+      <div style="font-size: 0.85rem; color: rgba(148, 163, 184, 0.9); margin-bottom: 16px;">
         <p><strong>Disponibilidad:</strong> ${((sensoresOnline / statsData.sensores.length) * 100).toFixed(1)}%</p>
-        <p><strong>Rango de Análisis:</strong> Últimas 100 lecturas por sensor</p>
+        <p><strong>Rango de Análisis:</strong> ${calcularTiempoAnalisis()}</p>
+      </div>
+
+      <h4 style="margin-top: 20px; margin-bottom: 12px;">📊 Estadísticas por Sensor:</h4>
+      <div style="overflow-x: auto; font-size: 0.8rem;">
+        <table style="width: 100%; border-collapse: collapse; color: var(--text-primary);">
+          <thead>
+            <tr style="background: rgba(16, 185, 129, 0.1); border-bottom: 1px solid rgba(16, 185, 129, 0.3);">
+              <th style="padding: 8px; text-align: left;">Sensor</th>
+              <th style="padding: 8px; text-align: center;">Efector</th>
+              <th style="padding: 8px; text-align: center;">Máx (°C)</th>
+              <th style="padding: 8px; text-align: center;">Mín (°C)</th>
+              <th style="padding: 8px; text-align: center;">Prom (°C)</th>
+              <th style="padding: 8px; text-align: center;">Inactividad (min)</th>
+              <th style="padding: 8px; text-align: center;">Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+    `;
+
+    statsData.sensores.forEach(s => {
+      const estadoColor = s.estado === 'offline' ? 'rgba(239, 68, 68, 0.3)' : 'rgba(16, 185, 129, 0.1)';
+      const estadoIcon = s.estado === 'offline' ? '📡' : '✓';
+      tableHtml += `
+        <tr style="background: ${estadoColor}; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+          <td style="padding: 8px;">${s.nombre}</td>
+          <td style="padding: 8px; text-align: center; font-size: 0.75rem;">${s.canal}</td>
+          <td style="padding: 8px; text-align: center;">${s.tempMax}</td>
+          <td style="padding: 8px; text-align: center;">${s.tempMin}</td>
+          <td style="padding: 8px; text-align: center;">${s.tempPromedio}</td>
+          <td style="padding: 8px; text-align: center;">${s.tiempoInactividad}</td>
+          <td style="padding: 8px; text-align: center;">${estadoIcon} ${s.estado}</td>
+        </tr>
+      `;
+    });
+
+    tableHtml += `
+          </tbody>
+        </table>
       </div>
     `;
+
+    timeline.innerHTML = tableHtml;
   }
 
   function renderReportes() {
@@ -448,7 +544,7 @@ window.initEstadistica = function () {
   }
 
   function exportarCsv() {
-    const rows = [['Sensor', 'Efector', 'Rango', 'Temperatura (°C)', 'Promedio (°C)', 'Tiempo en Rango (%)', 'Última Lectura', 'Desvío Histórico', 'Alertas Altas', 'Alertas Bajas']];
+    const rows = [['Sensor', 'Efector', 'Rango', 'Temp Actual (°C)', 'Temp Máx (°C)', 'Temp Mín (°C)', 'Temp Prom (°C)', 'Tiempo en Rango (%)', 'Última Lectura', 'Tiempo Inactividad (min)', 'Estado', 'Desvío Histórico']];
 
     statsData.sensores.forEach(s => {
       const desvio = s.desvioMasSignificativo ? `${s.desvioMasSignificativo.temp}°C (${s.desvioMasSignificativo.tipo}) - ${s.desvioMasSignificativo.time}` : '--';
@@ -457,12 +553,14 @@ window.initEstadistica = function () {
         s.canal,
         s.rango,
         s.tempActual || '--',
+        s.tempMax || '--',
+        s.tempMin || '--',
         s.tempPromedio || '--',
         s.tiempoEnRango,
         s.lastTimeStr,
-        desvio,
-        s.alertasAltas,
-        s.alertasBasas
+        s.tiempoInactividad,
+        s.estado,
+        desvio
       ]);
     });
 
@@ -501,24 +599,28 @@ window.initEstadistica = function () {
       const tableData = statsData.sensores.map(s => {
         const desvio = s.desvioMasSignificativo ? `${s.desvioMasSignificativo.temp}°C (${s.desvioMasSignificativo.tipo}) - ${s.desvioMasSignificativo.time}` : '--';
         return [
-          s.nombre.substring(0, 25),
-          s.canal.substring(0, 20),
+          s.nombre.substring(0, 20),
+          s.canal.substring(0, 18),
           s.rango,
           s.tempActual || '--',
+          s.tempMax || '--',
+          s.tempMin || '--',
           s.tempPromedio || '--',
           s.tiempoEnRango + '%',
           s.lastTimeStr,
+          s.tiempoInactividad,
+          s.estado,
           desvio
         ];
       });
 
       doc.autoTable({
-        head: [['Sensor', 'Efector', 'Rango', 'Temp Act.', 'Temp Prom.', 'En Rango', 'Última Lectura', 'Desvío Histórico']],
+        head: [['Sensor', 'Efector', 'Rango', 'Actual', 'Máx', 'Mín', 'Prom', 'En Rango', 'Última', 'Inact (min)', 'Estado', 'Desvío']],
         body: tableData,
         startY: yPosition,
         theme: 'grid',
-        headStyles: { fillColor: [16, 185, 129], textColor: [255, 255, 255], fontSize: 7 },
-        bodyStyles: { textColor: [0, 0, 0], fontSize: 6 },
+        headStyles: { fillColor: [16, 185, 129], textColor: [255, 255, 255], fontSize: 6 },
+        bodyStyles: { textColor: [0, 0, 0], fontSize: 5 },
         alternateRowStyles: { fillColor: [240, 240, 240] }
       });
 
