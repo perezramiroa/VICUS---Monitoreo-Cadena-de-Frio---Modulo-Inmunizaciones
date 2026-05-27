@@ -509,8 +509,11 @@
     
     // Si no hay config en sessionStorage, usar CONFIG_INMUNO de config-sensores.js
     if (!config_actual.canales || config_actual.canales.length === 0) {
-      if (typeof CONFIG_INMUNO !== 'undefined') {
-        config_actual = CONFIG_INMUNO;
+      if (typeof CONFIG_INMUNO !== 'undefined' && CONFIG_INMUNO.canales) {
+        config_actual = {
+          nombre: "Todos los sensores",
+          canales: Object.values(CONFIG_INMUNO.canales)
+        };
         sessionStorage.setItem('vicus_inmuno_config', JSON.stringify(config_actual));
       } else {
         config_actual = {"nombre":"General","canales":[]};
@@ -547,15 +550,26 @@
       const checkConfig = setInterval(() => {
         attempts++;
         
-        if (typeof CONFIG_INMUNO !== 'undefined' && CONFIG_INMUNO.canales && CONFIG_INMUNO.canales.length > 0) {
+        // Si ya tenemos una configuración válida en sessionStorage, inicializamos
+        if (config_actual && config_actual.canales && config_actual.canales.length > 0) {
           clearInterval(checkConfig);
-          config_actual = CONFIG_INMUNO;
+          initApp();
+        } 
+        // Si no, esperamos a que CONFIG_INMUNO se cargue y convertimos a array
+        else if (typeof CONFIG_INMUNO !== 'undefined' && CONFIG_INMUNO.canales && Object.keys(CONFIG_INMUNO.canales).length > 0) {
+          clearInterval(checkConfig);
+          config_actual = {
+            nombre: "Todos los sensores",
+            canales: Object.values(CONFIG_INMUNO.canales)
+          };
           sessionStorage.setItem('vicus_inmuno_config', JSON.stringify(config_actual));
           initApp();
-        } else if (attempts >= maxAttempts) {
+        } 
+        else if (attempts >= maxAttempts) {
           clearInterval(checkConfig);
           console.error('[Dashboard] CONFIG_INMUNO no disponible después de 5 segundos');
-          alert("Error: No se pudo cargar la configuración. Por favor, recargue la página.");
+          alert("Error: No se pudo cargar la configuración. Por favor, recargue la página o reingrese desde el portal.");
+          window.location.href = "index.html";
         }
       }, 100);
     }
