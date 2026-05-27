@@ -1195,8 +1195,9 @@
             let totalDuracion = 0, altas = 0, bajas = 0;
             eventos.forEach(e => {
                 totalDuracion += e.duracion;
-                if (e.estado.toLowerCase().includes('alta')) altas++;
-                else if (e.estado.toLowerCase().includes('baja')) bajas++;
+                const st = e.estado.toLowerCase();
+                if (st.includes('alta') || st.includes('high')) altas++;
+                else if (st.includes('baja') || st.includes('low')) bajas++;
             });
 
             let analisis = `Se registraron desvíos térmicos acumulados por un total de ${formatDurationFull(totalDuracion)}.\n`;
@@ -1219,8 +1220,8 @@
 
         function generarRecomendacionesAlertas(eventos) {
             if (!eventos || eventos.length === 0) return "";
-            const tieneAltas = eventos.some(e => e.estado.toLowerCase().includes('alta'));
-            const tieneBajas = eventos.some(e => e.estado.toLowerCase().includes('baja'));
+            const tieneAltas = eventos.some(e => { const st = e.estado.toLowerCase(); return st.includes('alta') || st.includes('high'); });
+            const tieneBajas = eventos.some(e => { const st = e.estado.toLowerCase(); return st.includes('baja') || st.includes('low'); });
             let recom = [];
 
             if (tieneAltas) {
