@@ -533,6 +533,7 @@
                                 <th>Valor</th>
                                 <th>Estado</th>
                                 <th>Duración</th>
+                                <th>Pico Registrado</th>
                                 <th>Observaciones</th>
                             </tr>
                         </thead>
@@ -1105,33 +1106,54 @@
         function fillAlerts(feeds, field) {
             const tbody = document.querySelector('#alertTable tbody');
             let rows = '', lastState = 'normal', startTime = null, alertData = [];
+            let picoValor = null, picoHora = null;
 
             feeds.forEach(f => {
                 const val = parseFloat(f[field]);
                 if (isNaN(val)) return;
                 const state = (val > MAX) ? 'high' : (val < MIN) ? 'low' : 'normal';
 
+                if (state !== 'normal') {
+                    if (picoValor === null) {
+                        picoValor = val;
+                        picoHora = f.created_at;
+                    } else {
+                        if (state === 'high' && val > picoValor) {
+                            picoValor = val;
+                            picoHora = f.created_at;
+                        } else if (state === 'low' && val < picoValor) {
+                            picoValor = val;
+                            picoHora = f.created_at;
+                        }
+                    }
+                }
+
                 if (state !== lastState) {
                     if (state !== 'normal') {
                         startTime = f.created_at;
+                        picoValor = val;
+                        picoHora = f.created_at;
                         const label = state === 'high' ? '🔥 Alta (Calor)' : '❄️ Baja (Frío / Riesgo Congelación)';
                         const obsId = `alerta_${f.created_at}`;
                         const valorGuardado = observaciones[obsId] || '';
                         const inputHtml = `<td><input type="text" style="width:100%; border:1px solid #ddd; border-radius:4px; padding:2px 4px;" value="${valorGuardado.replace(/"/g, '&quot;')}" placeholder="Nota..." onchange="guardarObservacion(this, '${obsId}')"></td>`;
-                        rows += `<tr class="row-alert"><td>${formatDateTime(f.created_at)}</td><td>${val.toFixed(1)}°C</td><td>${label}</td><td>--</td>${inputHtml}</tr>`;
+                        rows += `<tr class="row-alert"><td>${formatDateTime(f.created_at)}</td><td>${val.toFixed(1)}°C</td><td>${label}</td><td>--</td><td>--</td>${inputHtml}</tr>`;
                     } else if (startTime) {
                         const dur = (new Date(f.created_at) - new Date(startTime)) / 60000;
                         const obsId = `recuperacion_${f.created_at}`;
                         const valorGuardado = observaciones[obsId] || '';
                         const inputHtml = `<td><input type="text" style="width:100%; border:1px solid #ddd; border-radius:4px; padding:2px 4px;" value="${valorGuardado.replace(/"/g, '&quot;')}" placeholder="Nota..." onchange="guardarObservacion(this, '${obsId}')"></td>`;
-                        rows += `<tr><td>${formatDateTime(f.created_at)}</td><td>${val.toFixed(1)}°C</td><td>✅ Recuperación</td><td>${formatDurationFull(dur)}</td>${inputHtml}</tr>`;
+                        const picoStr = picoValor !== null ? `${picoValor.toFixed(1)}°C (${formatDateTime(picoHora)})` : '--';
+                        rows += `<tr><td>${formatDateTime(f.created_at)}</td><td>${val.toFixed(1)}°C</td><td>✅ Recuperación</td><td>${formatDurationFull(dur)}</td><td>${picoStr}</td>${inputHtml}</tr>`;
                         alertData.push({ estado: lastState, duracion: dur });
+                        picoValor = null;
+                        picoHora = null;
                     }
                     lastState = state;
                 }
             });
 
-            tbody.innerHTML = rows || '<tr><td colspan="5" class="empty">✅ Sin eventos de alerta en este rango.</td></tr>';
+            tbody.innerHTML = rows || '<tr><td colspan="6" class="empty">✅ Sin eventos de alerta en este rango.</td></tr>';
             
             const an = document.getElementById('analisisAlertasContenido'), re = document.getElementById('recomendacionesAlertasContenido');
             if (alertData.length > 0) {
@@ -1383,7 +1405,7 @@
                 // --- TABLA 1: ALERTAS Y RECUPERACIONES ---
                 const alertRows = [];
                 document.querySelectorAll('#alertTable tbody tr').forEach(tr => {
-                    const cells = Array.from(tr.cells).map((td, i) => i === 4 ? cleanText(td.querySelector('input')?.value || '') : cleanText(td.innerText));
+                    const cells = Array.from(tr.cells).map((td, i) => i === 5 ? cleanText(td.querySelector('input')?.value || '') : cleanText(td.innerText));
                     if (!cells[0].includes('Sin eventos')) alertRows.push(cells);
                 });
 
@@ -1395,7 +1417,7 @@
                 if (alertRows.length > 0) {
                     pdf.autoTable({
                         startY: yPos,
-                        head: [['Fecha y Hora', 'Valor', 'Estado', 'Duración', 'Observaciones']],
+                        head: [['Fecha y Hora', 'Valor', 'Estado', 'Duración', 'Pico Registrado', 'Observaciones']],
                         body: alertRows,
                         theme: 'grid',
                         styles: { fontSize: 8, cellPadding: 2 },
