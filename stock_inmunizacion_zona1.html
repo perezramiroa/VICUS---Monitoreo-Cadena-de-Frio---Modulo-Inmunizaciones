@@ -75,7 +75,7 @@
   <!-- HEADER -->
   <div class="header">
     <div class="logo-bar">
-      <div class="logo-item"><img src="logos/portal-vicus.png" alt="VICUS"></div>
+      <div class="logo-item"><img src="logos/logo_rih.jpg" alt="RIH"></div>
     </div>
     <div class="title-section">
       <h1>Control de Stock de Vacunas</h1>
@@ -1423,7 +1423,8 @@
 
   <!-- FOOTER -->
   <div class="footer">
-    <img src="logos/footer.jpg" alt="Pie de página">
+    <img src="logos/footer.jpg?t=" id="footerImg" alt="Pie de página">
+    <script>document.getElementById('footerImg').src='logos/footer.jpg?t='+new Date().getTime();</script>
   </div>
 
 </body>
