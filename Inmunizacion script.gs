@@ -97,73 +97,73 @@ function ejecutarReporteSemanal() {
   const fechaEmision = Utilities.formatDate(hoy, "GMT-3", "dd/MM/yyyy");
   const rangoTexto = Utilities.formatDate(haceSieteDias, "GMT-3", "dd/MM/yyyy") + " - " + fechaEmision;
 
-  // Procesar exactamente 1 centro por ejecución para máxima seguridad y evitar límites de 6 min
-  const limite = Math.min(currentCentroIndex + 1, nombresCentros.length);
+  // Procesar un centro por ejecución para evitar límites de 6 min
+  // El índice del centro actual se gestiona a través de las propiedades del script.
+
   console.log(`Iniciando procesamiento: Centro ${currentCentroIndex + 1} de ${nombresCentros.length}`);
   
-  for (let idx = currentCentroIndex; idx < limite; idx++) {
-    const nombreCentro = nombresCentros[idx];
-    console.log(`Procesando centro: ${nombreCentro}`);
-    
-    const configCentro = CENTROS[nombreCentro];
-    const sensoresDelCentro = SENSORES.filter(s => s.centro === nombreCentro);
-    const feedsPorSensor = [];
-    
-    sensoresDelCentro.forEach(s => {
-      try {
-        const data = fetchThingSpeakDataCompleto(s.id, s.k, 7);
-        const hasData = (data && data.feeds && data.feeds.length > 0);
-        
-        const trazabilidad = "AUTO-INM-" + Utilities.formatDate(hoy, "GMT-3", "yyyyMMdd") + "-" + s.id;
-        let analizada, conectividad, grafico;
+  // Procesar solo el centro actual en esta ejecución
+  const nombreCentro = nombresCentros[currentCentroIndex];
+  console.log(`Procesando centro: ${nombreCentro}`);
 
-        if (hasData) {
-          feedsPorSensor.push({ sensor: s, feeds: data.feeds });
-          analizada = analizarDatos(data.feeds, s.field, s);
-          conectividad = analizarConectividad(data.feeds, s.field, s);
-          grafico = generarGraficoCurva(data.feeds, s.field, s.n);
-        } else {
-          feedsPorSensor.push({ sensor: s, feeds: [] });
-          analizada = {
-            alertasFilas: [],
-            textoAnalisis: "SENSOR OFFLINE. No se registraron datos en los últimos 7 días.",
-            textoRecom: "• Verificar conexión eléctrica y WiFi del equipo.\n• Contactar a soporte técnico de inmediato.",
-            notaTecnica: "El sensor no ha transmitido datos hacia la plataforma en el período especificado. Equipo fuera de línea.",
-            notaResponsabilidad: "Ante la ausencia de registros de temperatura automatizados, la viabilidad de las vacunas debe justificarse mediante los registros manuales físicos en papel, en estricto cumplimiento de la normativa."
-          };
-          conectividad = {
-            filas: [],
-            analisis: "Sensor sin conexión a internet.",
-            recom: "Revisar alimentación y red WiFi."
-          };
-          grafico = generarGraficoCurva([], s.field, s.n);
-        }
-        
-        const pdfBlob = generarPDFOficial(s, fechaEmision, rangoTexto, trazabilidad, analizada, conectividad, grafico);
-        
-        const carpeta = DriveApp.getFolderById(configCentro.semanal);
-        const file = carpeta.createFile(pdfBlob);
-        file.setName("Informe_Semanal_" + s.n.replace(/ /g,"_") + "_" + trazabilidad + ".pdf");
-        console.log(`  -> PDF generado para: ${s.n}`);
-      } catch (e) {
-        console.error(`  Error en sensor ${s.n}: ` + e.message);
+  const configCentro = CENTROS[nombreCentro];
+  const sensoresDelCentro = SENSORES.filter(s => s.centro === nombreCentro);
+  const feedsPorSensor = [];
+
+  sensoresDelCentro.forEach(s => {
+    try {
+      const data = fetchThingSpeakDataCompleto(s.id, s.k, 7);
+      const hasData = (data && data.feeds && data.feeds.length > 0);
+      
+      const trazabilidad = "AUTO-INM-" + Utilities.formatDate(hoy, "GMT-3", "yyyyMMdd") + "-" + s.id;
+      let analizada, conectividad, grafico;
+
+      if (hasData) {
+        feedsPorSensor.push({ sensor: s, feeds: data.feeds });
+        analizada = analizarDatos(data.feeds, s.field, s);
+        conectividad = analizarConectividad(data.feeds, s.field, s);
+        grafico = generarGraficoCurva(data.feeds, s.field, s.n);
+      } else {
+        feedsPorSensor.push({ sensor: s, feeds: [] });
+        analizada = {
+          alertasFilas: [],
+          textoAnalisis: "SENSOR OFFLINE. No se registraron datos en los últimos 7 días.",
+          textoRecom: "• Verificar conexión eléctrica y WiFi del equipo.\n• Contactar a soporte técnico de inmediato.",
+          notaTecnica: "El sensor no ha transmitido datos hacia la plataforma en el período especificado. Equipo fuera de línea.",
+          notaResponsabilidad: "Ante la ausencia de registros de temperatura automatizados, la viabilidad de las vacunas debe justificarse mediante los registros manuales físicos en papel, en estricto cumplimiento de la normativa."
+        };
+        conectividad = {
+          filas: [],
+          analisis: "Sensor sin conexión a internet.",
+          recom: "Revisar alimentación y red WiFi."
+        };
+        grafico = generarGraficoCurva([], s.field, s.n);
       }
-    });
-    
-    if (feedsPorSensor.length > 0) {
-      try {
-        generarSheetSemanal(feedsPorSensor, rangoTexto, hoy, configCentro.sheet);
-        console.log(`  -> Planilla consolidada unificada creada para: ${nombreCentro}`);
-      } catch (e) {
-        console.error(`  Error generando planilla para ${nombreCentro}: ` + e.message);
-      }
+      
+      const pdfBlob = generarPDFOficial(s, fechaEmision, rangoTexto, trazabilidad, analizada, conectividad, grafico);
+      
+      const carpeta = DriveApp.getFolderById(configCentro.semanal);
+      const file = carpeta.createFile(pdfBlob);
+      file.setName("Informe_Semanal_" + s.n.replace(/ /g,"_") + "_" + trazabilidad + ".pdf");
+      console.log(`  -> PDF generado para: ${s.n}`);
+    } catch (e) {
+      console.error(`  Error en sensor ${s.n}: ` + e.message);
+    }
+  });
+
+  if (feedsPorSensor.length > 0) {
+    try {
+      generarSheetSemanal(feedsPorSensor, rangoTexto, hoy, configCentro.sheet);
+      console.log(`  -> Planilla consolidada unificada creada para: ${nombreCentro}`);
+    } catch (e) {
+      console.error(`  Error generando planilla para ${nombreCentro}: ` + e.message);
     }
   }
-  
+
   // Actualizar índice para el siguiente bloque
-  properties.setProperty("CURRENT_CENTRO_INDEX", limite.toString());
-  
-  if (limite >= nombresCentros.length) {
+  properties.setProperty("CURRENT_CENTRO_INDEX", (currentCentroIndex + 1).toString());
+
+  if ((currentCentroIndex + 1) >= nombresCentros.length) {
     // Terminamos todo en esta corrida
     properties.deleteProperty("CURRENT_CENTRO_INDEX");
     eliminarTriggersDeContinuacion();
@@ -242,15 +242,11 @@ function generarPDFOficial(sensor, fecha, rango, trazabilidad, analizada, conect
   const maxRange = sensor.isFreezer ? "-18°C" : "8°C";
   body.appendParagraph(`\nALERTAS Y RECUPERACIONES (${minRange} - ${maxRange})`)
     .setBold(true).setFontSize(10).setSpacingAfter(4);
-  const tablaAlertas = [["Fecha y Hora", "Valor", "Estado", "Duración", "Pico Registrado"]];
+  const tablaAlertas = [["Fecha y Hora", "Valor", "Estado", "Duración"]];
   if (analizada.alertasFilas.length > 0) {
-    analizada.alertasFilas.forEach(f => tablaAlertas.push([f.h, f.v, f.e, f.d, f.p]));
+    analizada.alertasFilas.forEach(f => tablaAlertas.push([f.h, f.v, f.e, f.d]));
   } else {
-    if (analizada.textoAnalisis && analizada.textoAnalisis.includes("OFFLINE")) {
-      tablaAlertas.push(["-", "-", "Sensor Offline - Sin datos registrados", "-", "-"]);
-    } else {
-      tablaAlertas.push(["-", "-", "Sin eventos fuera de rango", "-", "-"]);
-    }
+    tablaAlertas.push(["-", "-", "Sin eventos fuera de rango", "-"]);
   }
   estilizarTabla(body.appendTable(tablaAlertas));
 
@@ -261,11 +257,7 @@ function generarPDFOficial(sensor, fecha, rango, trazabilidad, analizada, conect
   if (conectividad.filas.length > 0) {
     conectividad.filas.forEach(f => tablaWifi.push([f.inicio, f.fin, f.tipo, f.antes, f.despues, f.duracion]));
   } else {
-    if (analizada.textoAnalisis && analizada.textoAnalisis.includes("OFFLINE")) {
-      tablaWifi.push(["-", "-", "Sensor Offline - Sin datos registrados", "-", "-", "-"]);
-    } else {
-      tablaWifi.push(["-", "-", "Sin interrupciones significativas", "-", "-", "-"]);
-    }
+    tablaWifi.push(["-", "-", "Sin interrupciones significativas", "-", "-", "-"]);
   }
   estilizarTabla(body.appendTable(tablaWifi));
 
@@ -299,264 +291,72 @@ function generarPDFOficial(sensor, fecha, rango, trazabilidad, analizada, conect
     fp.setAlignment(DocumentApp.HorizontalAlignment.CENTER);
     fp.appendInlineImage(logoF).setWidth(anchoMax).setHeight(50);
   } else {
-    footer.appendParagraph("Hospital Natalio Burd - Vicus Monitoreo").setAlignment(DocumentApp.HorizontalAlignment.CENTER).setFontSize(8);
+    footer.appendParagraph("Hospital Natalio Burd - Programa de Inmunizaciones").setAlignment(DocumentApp.HorizontalAlignment.CENTER).setFontSize(8);
   }
 
   doc.saveAndClose();
-  const pdf = doc.getAs('application/pdf');
+  const pdfBlob = DriveApp.getFileById(doc.getId()).getBlob();
   DriveApp.getFileById(doc.getId()).setTrashed(true);
-  return pdf;
+  return pdfBlob;
 }
 
-function analizarConectividad(feeds, field, sensor) {
-  let filas = [];
-  let totalMinutos = 0;
-  const minVal = sensor && sensor.isFreezer ? -28.0 : 2.0;
-  const maxVal = sensor && sensor.isFreezer ? -18.0 : 8.0;
-  
-  for (let i = 1; i < feeds.length; i++) {
-    const d1 = new Date(feeds[i-1].created_at);
-    const d2 = new Date(feeds[i].created_at);
-    const diff = (d2 - d1) / 60000;
-    if (diff > 10) {
-      const v1 = parseFloat(feeds[i-1][field]);
-      const v2 = parseFloat(feeds[i][field]);
-      const tipo = (v2 > maxVal || v2 < minVal) && v2 !== -127 ? 'Corte Energía' : 'Corte WiFi';
-      filas.push({
-        inicio: Utilities.formatDate(d1, "GMT-3", "dd/MM HH:mm"),
-        fin: Utilities.formatDate(d2, "GMT-3", "dd/MM HH:mm"),
-        tipo: tipo,
-        antes: (isNaN(v1) || v1 === -127) ? "--" : v1.toFixed(2) + "°C",
-        despues: (isNaN(v2) || v2 === -127) ? "--" : v2.toFixed(2) + "°C",
-        duracion: formatDur(diff)
-      });
-      totalMinutos += diff;
-    }
-  }
-  return {
-    filas: filas,
-    analisis: filas.length > 0 
-      ? `Se detectaron ${filas.length} ${filas.length === 1 ? 'interrupción' : 'interrupciones'} de datos.\n• Tiempo total sin datos: ${formatDur(totalMinutos)}\n• Durante los cortes no se puede garantizar el control de la cadena de frío.` 
-      : "Sin problemas de conectividad. Monitoreo continuo confirmado.",
-    recom: filas.length > 0
-      ? "Verificar el estado del router y la conexión a internet.\n• Revisar la distancia entre el sensor y el punto de acceso WiFi.\n• Considerar registro manual de temperatura durante los períodos sin datos.\n• Evaluar instalación de UPS para el equipo de red."
-      : "Mantener el equipo de red en condiciones óptimas para asegurar monitoreo continuo."
-  };
-}
-
-function analizarDatos(feeds, field, sensor) {
-  let alertasFilas = [];
-  let lastState = 'normal';
-  let startTime = null;
-  let stats = [];
-  let picoValor = null;
-  let picoHora = null;
-  const minVal = sensor && sensor.isFreezer ? -28.0 : 2.0;
-  const maxVal = sensor && sensor.isFreezer ? -18.0 : 8.0;
-
-  feeds.forEach(f => {
-    const val = parseFloat(f[field]);
-    if (isNaN(val) || val === -127) return;
-    const state = (val > maxVal) ? 'Alta' : (val < minVal) ? 'Baja' : 'normal';
-
-    if (state !== 'normal') {
-      if (picoValor === null) {
-        picoValor = val;
-        picoHora = new Date(f.created_at);
-      } else {
-        if (state === 'Alta' && val > picoValor) {
-          picoValor = val;
-          picoHora = new Date(f.created_at);
-        } else if (state === 'Baja' && val < picoValor) {
-          picoValor = val;
-          picoHora = new Date(f.created_at);
-        }
-      }
-    }
-
-    if (state !== lastState) {
-      const hora = Utilities.formatDate(new Date(f.created_at), "GMT-3", "dd/MM HH:mm");
-      if (state !== 'normal') {
-        startTime = new Date(f.created_at);
-        picoValor = val;
-        picoHora = new Date(f.created_at);
-        alertasFilas.push({ h: hora, v: val.toFixed(1) + "°C", e: state === 'Alta' ? `Alerta Alta (>${maxVal}°C)` : `Alerta Baja (<${minVal}°C)`, d: "--", p: "--" });
-      } else if (startTime) {
-        const dur = (new Date(f.created_at) - startTime) / 60000;
-        const picoStr = picoValor !== null ? `${picoValor.toFixed(1)}°C (${Utilities.formatDate(picoHora, "GMT-3", "dd/MM HH:mm")})` : '--';
-        alertasFilas.push({ h: hora, v: val.toFixed(1) + "°C", e: "Recuperación", d: formatDur(dur), p: picoStr });
-        stats.push({ s: lastState, d: dur });
-        picoValor = null;
-        picoHora = null;
-      }
-      lastState = state;
-    }
-  });
-
-  const tieneAltas = stats.some(s => s.s === 'Alta');
-  const tieneBajas = stats.some(s => s.s === 'Baja');
-  const durTotal = stats.reduce((a, b) => a + b.d, 0);
-
-  let textoAnalisis = "Estabilidad térmica confirmada. Sin desvíos en el período.";
-  let textoRecom = "• Continuar monitoreo habitual.\n• Realizar mantenimiento preventivo según calendario.\n• Verificar calibración del sensor periódicamente.";
-
-  if (stats.length > 0) {
-    textoAnalisis = `Se detectaron ${stats.length} ${stats.length === 1 ? 'desvío térmico' : 'desvíos térmicos'} (duración acumulada fuera de rango: ${formatDur(durTotal)}).\n`;
-    if (tieneAltas) textoAnalisis += `• Temperatura ALTA (>${maxVal}°C): riesgo de pérdida de potencia y degradación acelerada de vacunas y termolábiles.\n`;
-    if (tieneBajas) textoAnalisis += `• Temperatura BAJA (<${minVal}°C): riesgo crítico de congelación (pérdida irreversible de inmunogenicidad en vacunas adyuvadas como Hepatitis B, DPT, etc.).\n`;
-    if (durTotal < 30) {
-      textoAnalisis += "Los desvíos fueron breves. Se recomienda extremar vigilancia las próximas horas.";
-    } else if (durTotal < 120) {
-      textoAnalisis += "Desvíos de moderada duración. Evaluar stock afectado según protocolo de cadena de frío.";
-    } else {
-      textoAnalisis += "Desvíos prolongados. Requiere intervención técnica urgente y auditoría de viabilidad de dosis según Disposición ANMAT 10.872/2020.";
-    }
-
-    textoRecom = "";
-    if (tieneAltas) {
-      textoRecom += `• Temperatura ALTA detectada: comprobar burletes, sellado de puertas y frecuencia de aperturas.\n`;
-      textoRecom += "  → Las vacunas expuestas a calor pueden degradarse y perder su efectividad inmunológica de manera acumulativa.\n";
-      textoRecom += "• Controlar termostato, limpieza del condensador y estado del compresor.\n";
-      textoRecom += "  → Un termostato mal calibrado o fallas en el circuito de refrigeración son las causas principales de alzas térmicas.\n";
-      textoRecom += "• Apartar lote afectado de forma preventiva hasta dictamen de viabilidad.\n";
-      textoRecom += "  → El Programa Nacional de Inmunizaciones exige resguardo preventivo de dosis ante rupturas de cadena de frío.\n";
-    }
-    if (tieneBajas) {
-      textoRecom += `• Temperatura BAJA detectada: verificar calibración del termostato (subir nivel de temperatura).\n`;
-      textoRecom += "  → La congelación destruye instantáneamente la estructura coloidal de las vacunas adyuvadas por aluminio.\n";
-      textoRecom += "• Reubicar dosis lejos de las placas de evaporación directa.\n";
-      textoRecom += "  → Las cajas de vacunas en contacto con la pared del evaporador pueden congelarse aun con promedio de aire normal.\n";
-      textoRecom += "• Ejecutar el Test de Vacunación / Test de Agitación si se sospecha congelamiento.\n";
-    }
-    textoRecom += "• Asentar el incidente completo en la planilla física de desvíos del sector.\n";
-    textoRecom += "  → Todo desvío térmico debe contar con trazabilidad documentada para auditorías sanitarias del Ministerio de Salud.\n";
-  }
-
-  const notaTecnica = "NOTA TÉCNICA: Ante cualquier desvío térmico o falla del equipo, la intervención correctiva debe ser realizada por personal técnico de refrigeración calificado o servicio técnico autorizado. Toda intervención de mantenimiento debe quedar asentada con fecha, firma del técnico actuante y descripción detallada, conforme a la Disposición ANMAT 10.872/2020 y las directrices del Programa Provincial de Inmunizaciones.";
-
-  const notaResponsabilidad = "RESPONSABILIDAD: La responsabilidad del estricto cumplimiento de las condiciones de conservación, cadena de frío y viabilidad de las vacunas en el sector de Inmunizaciones recae sobre la Jefatura de Inmunizaciones y la Dirección del Hospital, conforme a la Ley Nacional de Vacunas N° 27.491. Ante todo desvío térmico confirmado, se debe notificar inmediatamente a las autoridades competentes y al referente del Programa de Inmunizaciones antes de descartar o utilizar cualquier lote.";
-
-  return { alertasFilas, textoAnalisis, textoRecom, notaTecnica, notaResponsabilidad };
-}
-
-function generarSheetSemanal(feedsPorSensor, rangoTexto, fechaHoy, folderId) {
-  const centroNombre = feedsPorSensor[0].sensor.centro;
-  console.log(`[Sheet - ${centroNombre}] Iniciando generarSheetSemanal...`);
+function generarSheetSemanal(feedsPorSensor, rango, hoy, sheetId) {
   try {
-    console.log(`[Sheet - ${centroNombre}] Conectando con Google Drive folder: ${folderId}`);
-    const carpeta = DriveApp.getFolderById(folderId);
-    const nombreArchivo = "Consolidado Semanal - " + centroNombre;
+    const ss = SpreadsheetApp.openById(sheetId);
+    const centroNombre = feedsPorSensor[0].sensor.centro;
+    const nombreHoja = Utilities.formatDate(hoy, "GMT-3", "dd-MM-yyyy");
     
-    console.log(`[Sheet - ${centroNombre}] Buscando archivo: "${nombreArchivo}"`);
-    const archivos = carpeta.getFilesByName(nombreArchivo);
-    let ss;
-    if (archivos.hasNext()) {
-      const archivo = archivos.next();
-      console.log(`[Sheet - ${centroNombre}] Archivo existente encontrado. Abriendo Spreadsheet ID: ${archivo.getId()}`);
-      ss = SpreadsheetApp.openById(archivo.getId());
-    } else {
-      console.log(`[Sheet - ${centroNombre}] Archivo no encontrado. Creando nueva planilla...`);
-      ss = SpreadsheetApp.create(nombreArchivo);
-      const archivoDrive = DriveApp.getFileById(ss.getId());
-      carpeta.addFile(archivoDrive);
-      DriveApp.getRootFolder().removeFile(archivoDrive);
-      console.log(`[Sheet - ${centroNombre}] Nueva planilla creada y movida a su carpeta.`);
-    }
+    let hoja = ss.getSheetByName(nombreHoja);
+    if (hoja) ss.deleteSheet(hoja);
+    hoja = ss.insertSheet(nombreHoja);
     
-    const nombreHoja = "Semana " + Utilities.formatDate(fechaHoy, "GMT-3", "dd-MM-yyyy");
-    console.log(`[Sheet - ${centroNombre}] Creando/reemplazando hoja: "${nombreHoja}"`);
+    console.log(`[Sheet - ${centroNombre}] Generando planilla consolidada...`);
     
-    const hojaExistente = ss.getSheetByName(nombreHoja);
-    if (hojaExistente) {
-      console.log(`[Sheet - ${centroNombre}] Hoja previa duplicada encontrada. Eliminándola...`);
-      ss.deleteSheet(hojaExistente);
-    }
+    hoja.getRange("A1").setValue("INFORME CONSOLIDADO SEMANAL - " + centroNombre.toUpperCase())
+        .setFontWeight("bold").setFontSize(14).setFontColor("#00384d");
+    hoja.getRange("A2").setValue("Período: " + rango).setFontItalic(true);
     
-    const hoja = ss.insertSheet(nombreHoja);
-    console.log(`[Sheet - ${centroNombre}] Hoja insertada con éxito.`);
+    const encabezados = ["Fecha y Hora"];
+    feedsPorSensor.forEach(fs => encabezados.push(fs.sensor.n + " (°C)"));
     
-    // ── ENCABEZADO PRINCIPAL ──────────────────────────────────
-    hoja.getRange("A1").setValue("REGISTRO SEMANAL DE TEMPERATURAS - INMUNIZACIÓN");
-    hoja.getRange("A1").setFontSize(13).setFontWeight("bold").setFontColor("#00384d");
-    hoja.getRange("A2").setValue("Período: " + rangoTexto);
-    hoja.getRange("A2").setFontSize(10).setFontStyle("italic");
-    hoja.getRange("A3").setValue("Generado: " + Utilities.formatDate(fechaHoy, "GMT-3", "dd/MM/yyyy HH:mm"));
-    hoja.getRange("A3").setFontSize(9).setFontColor("#64748b");
-    
-    // ── CONSTRUIR COLUMNAS DINÁMICAMENTE ─────────────────────
-    const encabezados = ["Fecha / Hora"];
+    const filaEncabezado = 4;
+    hoja.getRange(filaEncabezado, 1, 1, encabezados.length)
+        .setValues([encabezados])
+        .setBackground("#00384d")
+        .setFontColor("white")
+        .setFontWeight("bold")
+        .setHorizontalAlignment("center");
+        
+    const todosLosTimestamps = new Set();
     feedsPorSensor.forEach(fs => {
-      encabezados.push(fs.sensor.n + "\n(" + fs.sensor.eq + ")");
-    });
-    
-    const filaEncabezado = 5;
-    const rangoEnc = hoja.getRange(filaEncabezado, 1, 1, encabezados.length);
-    rangoEnc.setValues([encabezados]);
-    rangoEnc.setBackground("#00384d").setFontColor("#ffffff").setFontWeight("bold")
-            .setFontSize(10).setWrap(true).setVerticalAlignment("middle")
-            .setHorizontalAlignment("center");
-    hoja.setRowHeight(filaEncabezado, 45);
-    
-    // ── UNIFICAR TIMESTAMPS AGRUPANDO POR MINUTO ─────────────
-    console.log(`[Sheet - ${centroNombre}] Agrupando y alineando lecturas por minuto en memoria...`);
-    const mapaTemp = {};
-    feedsPorSensor.forEach((fs, idx) => {
-      fs.feeds.forEach(feed => {
-        const val = parseFloat(feed[fs.sensor.field]);
-        if (isNaN(val) || val === -127) return;
-        
-        // Parsear fecha y truncar segundos y milisegundos para alinear al minuto
-        const d = new Date(feed.created_at);
-        d.setSeconds(0, 0);
-        d.setMilliseconds(0);
-        const ts = d.getTime();
-        
-        if (!mapaTemp[ts]) mapaTemp[ts] = { ts: ts, valores: {} };
-        if (mapaTemp[ts].valores[idx] !== undefined) {
-          mapaTemp[ts].valores[idx] = (mapaTemp[ts].valores[idx] + val) / 2;
-        } else {
-          mapaTemp[ts].valores[idx] = val;
-        }
+      fs.feeds.forEach(f => {
+        const ts = Utilities.formatDate(new Date(f.created_at), "GMT-3", "dd/MM/yyyy HH:mm");
+        todosLosTimestamps.add(ts);
       });
     });
     
-    // Ordenar los timestamps numéricos de manera ascendente
-    const timestamps = Object.keys(mapaTemp).map(Number).sort((a, b) => a - b);
+    const timestampsOrdenados = Array.from(todosLosTimestamps).sort((a, b) => {
+      const dateA = new Date(a.split(' ')[0].split('/').reverse().join('-') + 'T' + a.split(' ')[1]);
+      const dateB = new Date(b.split(' ')[0].split('/').reverse().join('-') + 'T' + b.split(' ')[1]);
+      return dateA - dateB;
+    });
     
-    // Función auxiliar ultra-rápida para formatear fecha a GMT-3 en JS puro
-    const formatFechaGMT3 = ts => {
-      const shifted = new Date(ts - 3 * 60 * 60 * 1000);
-      const pad = n => String(n).padStart(2, '0');
-      const dia = pad(shifted.getUTCDate());
-      const mes = pad(shifted.getUTCMonth() + 1);
-      const anio = shifted.getUTCFullYear();
-      const hora = pad(shifted.getUTCHours());
-      const min = pad(shifted.getUTCMinutes());
-      return `${dia}/${mes}/${anio} ${hora}:${min}`;
-    };
-    
-    const filas = timestamps.map(ts => {
-      const entrada = mapaTemp[ts];
-      const fechaStr = formatFechaGMT3(ts);
-      const fila = [fechaStr];
-      feedsPorSensor.forEach((_, idx) => {
-        const v = entrada.valores[idx];
-        fila.push(v !== undefined ? Math.round(v * 100) / 100 : "");
+    const filas = timestampsOrdenados.map(ts => {
+      const fila = [ts];
+      feedsPorSensor.forEach(fs => {
+        const feed = fs.feeds.find(f => Utilities.formatDate(new Date(f.created_at), "GMT-3", "dd/MM/yyyy HH:mm") === ts);
+        fila.push(feed ? parseFloat(feed[fs.sensor.field]) : "");
       });
       return fila;
     });
     
-    console.log(`[Sheet - ${centroNombre}] Cantidad total de filas unificadas a escribir: ${filas.length}`);
     if (filas.length > 0) {
       const filaInicio = filaEncabezado + 1;
-      console.log(`[Sheet - ${centroNombre}] Escribiendo matriz de lecturas en lote...`);
       hoja.getRange(filaInicio, 1, filas.length, encabezados.length).setValues(filas);
       
-      console.log(`[Sheet - ${centroNombre}] Aplicando reglas de Formato Condicional Dinámico...`);
       feedsPorSensor.forEach((fs, idx) => {
         const col = idx + 2;
         const rangoCol = hoja.getRange(filaInicio, col, filas.length, 1);
-        
         const minVal = fs.sensor.isFreezer ? -28.0 : 2.0;
         const maxVal = fs.sensor.isFreezer ? -18.0 : 8.0;
         
@@ -580,12 +380,10 @@ function generarSheetSemanal(feedsPorSensor, rangoTexto, fechaHoy, folderId) {
         hoja.setConditionalFormatRules(reglas);
       });
       
-
-      
       hoja.setColumnWidth(1, 140);
       feedsPorSensor.forEach((_, idx) => hoja.setColumnWidth(idx + 2, 130));
       
-      console.log(`[Sheet - ${centroNombre}] Aplicando colores alternados en un único lote ultra-veloz...`);
+      console.log(`[Sheet - ${centroNombre}] Aplicando colores alternados...`);
       const colores2D = [];
       for (let i = 0; i < filas.length; i++) {
         const color = i % 2 === 0 ? "#f8fafc" : "#ffffff";
@@ -597,7 +395,6 @@ function generarSheetSemanal(feedsPorSensor, rangoTexto, fechaHoy, folderId) {
           .setHorizontalAlignment("center").setNumberFormat("0.00");
     }
     
-    console.log(`[Sheet - ${centroNombre}] Generando bloque de Resumen Estadístico...`);
     const filaResumen = filaEncabezado + filas.length + 2;
     hoja.getRange(filaResumen, 1).setValue("RESUMEN ESTADÍSTICO")
         .setFontWeight("bold").setFontColor("#00384d").setFontSize(10);
@@ -634,7 +431,7 @@ function generarSheetSemanal(feedsPorSensor, rangoTexto, fechaHoy, folderId) {
         .setBackground("#f1f5f9").setBorder(true, true, true, true, true, true);
         
     hoja.setFrozenRows(filaEncabezado);
-    console.log(`[Sheet - ${centroNombre}] ¡generarSheetSemanal completado de forma ultra-rápida!`);
+    console.log(`[Sheet - ${centroNombre}] ¡generarSheetSemanal completado!`);
   } catch(e) { console.error("Error en Sheet: " + e.message); }
 }
 
@@ -657,7 +454,6 @@ function fetchThingSpeakDataCompleto(id, key, dias) {
     
     if (!data.feeds || data.feeds.length === 0) break;
     
-    // Agregar feeds nuevos (evitar duplicados por timestamp)
     const ultimoTs = todosLosFeeds.length > 0 
       ? new Date(todosLosFeeds[todosLosFeeds.length - 1].created_at).getTime() 
       : 0;
@@ -665,10 +461,8 @@ function fetchThingSpeakDataCompleto(id, key, dias) {
     const nuevos = data.feeds.filter(f => new Date(f.created_at).getTime() > ultimoTs);
     todosLosFeeds = todosLosFeeds.concat(nuevos);
     
-    // Si devolvió menos de 8000, ya tenemos todo
     if (data.feeds.length < 8000) break;
     
-    // Avanzar desde el último registro recibido
     fechaDesde = new Date(data.feeds[data.feeds.length - 1].created_at);
     fechaDesde = new Date(fechaDesde.getTime() + 60000); // +1 minuto
     intentos++;
@@ -692,29 +486,17 @@ function generarGraficoCurva(feeds, field, nombre) {
   let yMin = minVal - 0.5;
   let yMax = maxVal + 0.5;
 
-  const numPuntos = 800; // Mucho más detalle para igualar al reporte manual
+  const numPuntos = 800;
   const step = Math.max(1, Math.floor(feeds.length / numPuntos));
-  let lastDate = null;
   
-  if (feeds.length === 0) {
-    dataTable.addRow(["Sin Datos", null]);
-  } else {
-    for (let i = 0; i < feeds.length; i += step) {
-      let f = feeds[i];
-      let val = parseFloat(f[field]);
-      let date = new Date(f.created_at);
-      
-      if (!isNaN(val) && !isNaN(date.getTime())) {
-        if (lastDate !== null) {
-          let diffMins = (date - lastDate) / 60000;
-          if (diffMins > 10) {
-            dataTable.addRow(['--- CORTE ---', null]);
-          }
-        }
-        let label = Utilities.formatDate(date, "GMT-3", "dd/MM HH:mm");
-        dataTable.addRow([label, val]);
-        lastDate = date;
-      }
+  for (let i = 0; i < feeds.length; i += step) {
+    let f = feeds[i];
+    let val = parseFloat(f[field]);
+    let date = new Date(f.created_at);
+    
+    if (!isNaN(val) && !isNaN(date.getTime())) {
+      let label = Utilities.formatDate(date, "GMT-3", "dd/MM HH:mm");
+      dataTable.addRow([label, val]);
     }
   }
 
@@ -741,7 +523,6 @@ function generarGraficoCurva(feeds, field, nombre) {
     .setOption("chartArea", { width: '94%', height: '70%', left: '4%', right: '1%', top: '4%' })
     .setOption("legend", { position: 'none' })
     .setOption("backgroundColor", "white")
-    .setOption("interpolateNulls", false)
     .build().getAs('image/png');
 }
 
