@@ -313,7 +313,8 @@
   <div class="header" style="justify-content: center;">
       <div class="logo-bar">
         <div class="logo-item" style="width:100%;">
-          <img src="logos/logo_rih.jpg?v=1" alt="RIH" style="width:100%; height:100%; object-fit:contain;">
+          <img id="dashLogo" alt="RIH" style="width:100%; height:100%; object-fit:contain;">
+          <script>document.getElementById('dashLogo').src = 'logos/logo_rih.jpg?t=' + new Date().getTime();</script>
         </div>
       </div>
   </div>
@@ -333,7 +334,8 @@
 
   <footer style="margin-top: 40px; width: 100%;">
     <div style="background-color: #00384d; padding: 0; width: 100%;">
-      <img src="logos/footer.jpg?v=1" alt="Institucional" style="width: 100%; height: auto; display: block;">
+      <img id="dashFooter" alt="Institucional" style="width: 100%; height: auto; display: block;">
+      <script>document.getElementById('dashFooter').src = 'logos/footer.jpg?t=' + new Date().getTime();</script>
     </div>
   </footer>
 
@@ -359,7 +361,8 @@
       </div>
       <div style="text-align:center; margin-bottom:20px;">
         <div style="display:flex; justify-content:center; margin-bottom:16px;">
-          <img src="logos/logo_rih.jpg?v=1" alt="RIH" style="max-height:100px; width:auto; object-fit:contain;">
+          <img id="dashNormLogo" alt="RIH" style="max-height:100px; width:auto; object-fit:contain;">
+          <script>document.getElementById('dashNormLogo').src = 'logos/logo_rih.jpg?t=' + new Date().getTime();</script>
         </div>
         <h1 style="color:#1d4ed8; font-size:24px; font-weight:700; letter-spacing:-0.5px;">Marco Normativo para la Cadena de Frío</h1>
         <p>Sistemas de monitoreo – Vicus | Vigencia: Enero 2026</p>
