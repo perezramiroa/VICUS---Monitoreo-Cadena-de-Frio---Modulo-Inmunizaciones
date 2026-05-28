@@ -69,6 +69,15 @@ const SENSORES = [
   { id: '3016636', k: 'SAP43F3FB83V79KP', n: 'Saiar 4', eq: 'Inmuno 2', field: 'field2', centro: 'Zona 1' }
 ];
 
+// =====================================================================
+// ESTA ES LA FUNCIÓN QUE DEBES SELECCIONAR EN TU ACTIVADOR SEMANAL
+// =====================================================================
+function iniciarReporteSemanal() {
+  const properties = PropertiesService.getScriptProperties();
+  properties.deleteProperty("CURRENT_CENTRO_INDEX"); // Asegura que empiece desde cero
+  ejecutarReporteSemanal();
+}
+
 function ejecutarReporteSemanal() {
   const properties = PropertiesService.getScriptProperties();
   let currentCentroIndex = parseInt(properties.getProperty("CURRENT_CENTRO_INDEX") || "0");
@@ -103,14 +112,32 @@ function ejecutarReporteSemanal() {
     sensoresDelCentro.forEach(s => {
       try {
         const data = fetchThingSpeakDataCompleto(s.id, s.k, 7);
-        if (!data || !data.feeds || data.feeds.length === 0) return;
-        
-        feedsPorSensor.push({ sensor: s, feeds: data.feeds });
+        const hasData = (data && data.feeds && data.feeds.length > 0);
         
         const trazabilidad = "AUTO-INM-" + Utilities.formatDate(hoy, "GMT-3", "yyyyMMdd") + "-" + s.id;
-        const analizada = analizarDatos(data.feeds, s.field, s);
-        const conectividad = analizarConectividad(data.feeds, s.field, s);
-        const grafico = generarGraficoCurva(data.feeds, s.field, s.n);
+        let analizada, conectividad, grafico;
+
+        if (hasData) {
+          feedsPorSensor.push({ sensor: s, feeds: data.feeds });
+          analizada = analizarDatos(data.feeds, s.field, s);
+          conectividad = analizarConectividad(data.feeds, s.field, s);
+          grafico = generarGraficoCurva(data.feeds, s.field, s.n);
+        } else {
+          feedsPorSensor.push({ sensor: s, feeds: [] });
+          analizada = {
+            alertasFilas: [],
+            textoAnalisis: "SENSOR OFFLINE. No se registraron datos en los últimos 7 días.",
+            textoRecom: "• Verificar conexión eléctrica y WiFi del equipo.\n• Contactar a soporte técnico de inmediato.",
+            notaTecnica: "El sensor no ha transmitido datos hacia la plataforma en el período especificado. Equipo fuera de línea.",
+            notaResponsabilidad: "Ante la ausencia de registros de temperatura automatizados, la viabilidad de las vacunas debe justificarse mediante los registros manuales físicos en papel, en estricto cumplimiento de la normativa."
+          };
+          conectividad = {
+            filas: [],
+            analisis: "Sensor sin conexión a internet.",
+            recom: "Revisar alimentación y red WiFi."
+          };
+          grafico = generarGraficoCurva([], s.field, s.n);
+        }
         
         const pdfBlob = generarPDFOficial(s, fechaEmision, rangoTexto, trazabilidad, analizada, conectividad, grafico);
         
@@ -215,11 +242,15 @@ function generarPDFOficial(sensor, fecha, rango, trazabilidad, analizada, conect
   const maxRange = sensor.isFreezer ? "-18°C" : "8°C";
   body.appendParagraph(`\nALERTAS Y RECUPERACIONES (${minRange} - ${maxRange})`)
     .setBold(true).setFontSize(10).setSpacingAfter(4);
-  const tablaAlertas = [["Fecha y Hora", "Valor", "Estado", "Duración"]];
+  const tablaAlertas = [["Fecha y Hora", "Valor", "Estado", "Duración", "Pico Registrado"]];
   if (analizada.alertasFilas.length > 0) {
-    analizada.alertasFilas.forEach(f => tablaAlertas.push([f.h, f.v, f.e, f.d]));
+    analizada.alertasFilas.forEach(f => tablaAlertas.push([f.h, f.v, f.e, f.d, f.p]));
   } else {
-    tablaAlertas.push(["-", "-", "Sin eventos fuera de rango", "-"]);
+    if (analizada.textoAnalisis && analizada.textoAnalisis.includes("OFFLINE")) {
+      tablaAlertas.push(["-", "-", "Sensor Offline - Sin datos registrados", "-", "-"]);
+    } else {
+      tablaAlertas.push(["-", "-", "Sin eventos fuera de rango", "-", "-"]);
+    }
   }
   estilizarTabla(body.appendTable(tablaAlertas));
 
@@ -230,7 +261,11 @@ function generarPDFOficial(sensor, fecha, rango, trazabilidad, analizada, conect
   if (conectividad.filas.length > 0) {
     conectividad.filas.forEach(f => tablaWifi.push([f.inicio, f.fin, f.tipo, f.antes, f.despues, f.duracion]));
   } else {
-    tablaWifi.push(["-", "-", "Sin interrupciones significativas", "-", "-", "-"]);
+    if (analizada.textoAnalisis && analizada.textoAnalisis.includes("OFFLINE")) {
+      tablaWifi.push(["-", "-", "Sensor Offline - Sin datos registrados", "-", "-", "-"]);
+    } else {
+      tablaWifi.push(["-", "-", "Sin interrupciones significativas", "-", "-", "-"]);
+    }
   }
   estilizarTabla(body.appendTable(tablaWifi));
 
@@ -314,6 +349,8 @@ function analizarDatos(feeds, field, sensor) {
   let lastState = 'normal';
   let startTime = null;
   let stats = [];
+  let picoValor = null;
+  let picoHora = null;
   const minVal = sensor && sensor.isFreezer ? -28.0 : 2.0;
   const maxVal = sensor && sensor.isFreezer ? -18.0 : 8.0;
 
@@ -321,15 +358,36 @@ function analizarDatos(feeds, field, sensor) {
     const val = parseFloat(f[field]);
     if (isNaN(val) || val === -127) return;
     const state = (val > maxVal) ? 'Alta' : (val < minVal) ? 'Baja' : 'normal';
+
+    if (state !== 'normal') {
+      if (picoValor === null) {
+        picoValor = val;
+        picoHora = new Date(f.created_at);
+      } else {
+        if (state === 'Alta' && val > picoValor) {
+          picoValor = val;
+          picoHora = new Date(f.created_at);
+        } else if (state === 'Baja' && val < picoValor) {
+          picoValor = val;
+          picoHora = new Date(f.created_at);
+        }
+      }
+    }
+
     if (state !== lastState) {
       const hora = Utilities.formatDate(new Date(f.created_at), "GMT-3", "dd/MM HH:mm");
       if (state !== 'normal') {
         startTime = new Date(f.created_at);
-        alertasFilas.push({ h: hora, v: val.toFixed(1) + "°C", e: state === 'Alta' ? `Alerta Alta (>${maxVal}°C)` : `Alerta Baja (<${minVal}°C)`, d: "--" });
+        picoValor = val;
+        picoHora = new Date(f.created_at);
+        alertasFilas.push({ h: hora, v: val.toFixed(1) + "°C", e: state === 'Alta' ? `Alerta Alta (>${maxVal}°C)` : `Alerta Baja (<${minVal}°C)`, d: "--", p: "--" });
       } else if (startTime) {
         const dur = (new Date(f.created_at) - startTime) / 60000;
-        alertasFilas.push({ h: hora, v: val.toFixed(1) + "°C", e: "Recuperación", d: formatDur(dur) });
+        const picoStr = picoValor !== null ? `${picoValor.toFixed(1)}°C (${Utilities.formatDate(picoHora, "GMT-3", "dd/MM HH:mm")})` : '--';
+        alertasFilas.push({ h: hora, v: val.toFixed(1) + "°C", e: "Recuperación", d: formatDur(dur), p: picoStr });
         stats.push({ s: lastState, d: dur });
+        picoValor = null;
+        picoHora = null;
       }
       lastState = state;
     }
@@ -636,15 +694,27 @@ function generarGraficoCurva(feeds, field, nombre) {
 
   const numPuntos = 800; // Mucho más detalle para igualar al reporte manual
   const step = Math.max(1, Math.floor(feeds.length / numPuntos));
+  let lastDate = null;
   
-  for (let i = 0; i < feeds.length; i += step) {
-    let f = feeds[i];
-    let val = parseFloat(f[field]);
-    let date = new Date(f.created_at);
-    
-    if (!isNaN(val) && !isNaN(date.getTime())) {
-      let label = Utilities.formatDate(date, "GMT-3", "dd/MM HH:mm");
-      dataTable.addRow([label, val]);
+  if (feeds.length === 0) {
+    dataTable.addRow(["Sin Datos", null]);
+  } else {
+    for (let i = 0; i < feeds.length; i += step) {
+      let f = feeds[i];
+      let val = parseFloat(f[field]);
+      let date = new Date(f.created_at);
+      
+      if (!isNaN(val) && !isNaN(date.getTime())) {
+        if (lastDate !== null) {
+          let diffMins = (date - lastDate) / 60000;
+          if (diffMins > 10) {
+            dataTable.addRow(['--- CORTE ---', null]);
+          }
+        }
+        let label = Utilities.formatDate(date, "GMT-3", "dd/MM HH:mm");
+        dataTable.addRow([label, val]);
+        lastDate = date;
+      }
     }
   }
 
@@ -671,6 +741,7 @@ function generarGraficoCurva(feeds, field, nombre) {
     .setOption("chartArea", { width: '94%', height: '70%', left: '4%', right: '1%', top: '4%' })
     .setOption("legend", { position: 'none' })
     .setOption("backgroundColor", "white")
+    .setOption("interpolateNulls", false)
     .build().getAs('image/png');
 }
 
