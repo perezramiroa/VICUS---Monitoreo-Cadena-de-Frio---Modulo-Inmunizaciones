@@ -1081,11 +1081,25 @@
             const ctx = document.getElementById('chart').getContext('2d');
             if (chartInstance) chartInstance.destroy();
             
-            const temps = feeds.map(f => parseFloat(f[field]));
-            const labels = feeds.map(f => {
+            const temps = [];
+            const labels = [];
+            
+            for (let i = 0; i < feeds.length; i++) {
+                const f = feeds[i];
                 const d = new Date(f.created_at);
-                return `${d.getDate()}/${d.getMonth()+1} ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`;
-            });
+                const labelStr = `${d.getDate()}/${d.getMonth()+1} ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`;
+                
+                if (i > 0) {
+                    const prevD = new Date(feeds[i-1].created_at);
+                    const diffMins = (d - prevD) / 60000;
+                    if (diffMins > WIFI_CUTOFF) {
+                        temps.push(null);
+                        labels.push('--- CORTE ---');
+                    }
+                }
+                temps.push(parseFloat(f[field]));
+                labels.push(labelStr);
+            }
 
             chartInstance = new Chart(ctx, {
                 type: 'line',
@@ -1099,7 +1113,8 @@
                         pointRadius: 0,
                         tension: 0.3,
                         fill: true,
-                        backgroundColor: 'rgba(59,130,246,0.1)'
+                        backgroundColor: 'rgba(59,130,246,0.1)',
+                        spanGaps: false
                     }]
                 },
                 options: {
@@ -1903,11 +1918,25 @@
         tempCanvas.height = 300;
         tempCanvas.id = canvasId;
         
-        const labels = feeds.map(f => {
+        const labels = [];
+        const values = [];
+        
+        for (let i = 0; i < feeds.length; i++) {
+            const f = feeds[i];
             const d = new Date(f.created_at);
-            return `${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
-        });
-        const values = feeds.map(f => parseFloat(f[field]));
+            const labelStr = `${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+            
+            if (i > 0) {
+                const prevD = new Date(feeds[i-1].created_at);
+                const diffMins = (d - prevD) / 60000;
+                if (diffMins > WIFI_CUTOFF) {
+                    values.push(null);
+                    labels.push('--- CORTE ---');
+                }
+            }
+            values.push(parseFloat(f[field]));
+            labels.push(labelStr);
+        }
         
         if (window.tempChart) window.tempChart.destroy();
         
@@ -1923,7 +1952,8 @@
                     borderWidth: 2,
                     pointRadius: 1,
                     tension: 0.3,
-                    fill: true
+                    fill: true,
+                    spanGaps: false
                 }]
             },
             options: {
