@@ -528,13 +528,13 @@
                 <button class="btn-day" onclick="run(7, this)">7 días</button>
                 <div style="display: flex; align-items: center; gap: 8px; margin: 0 10px;"><label style="font-weight:600;">Día:</label><input type="date" id="targetDay" onchange="applyDay()" /></div>
                 <div class="range-group"><label>Rango:</label><input type="date" id="dateStart" /><label>al</label><input type="date" id="dateEnd" /><button id="rangeBtn" onclick="applyRange()">Buscar</button></div>
-                <div style="margin-left: auto; display: flex; gap: 10px;"><button id="downloadBtn" onclick="downloadPDF()">ðŸ“¥ PDF</button><button id="desvioBtn" style="background:#dc2626; color:white; padding:6px 14px; border:none; border-radius:6px; cursor:pointer; font-weight:600;" onclick="iniciarReporteDesvio()">âš ï¸ Reportar Desvío</button><button id="backBtn" onclick="window.close()">â† Volver</button></div>
+                <div style="margin-left: auto; display: flex; gap: 10px;"><button id="downloadBtn" onclick="downloadPDF()">📥 PDF</button><button id="desvioBtn" style="background:#dc2626; color:white; padding:6px 14px; border:none; border-radius:6px; cursor:pointer; font-weight:600;" onclick="iniciarReporteDesvio()">⚠️ Reportar Desvío</button><button id="backBtn" onclick="window.close()">← Volver</button></div>
             </div>
 
             <div class="chart-container"><canvas id="chart"></canvas></div>
 
             <div class="section">
-                <h2>âš ï¸ Alertas y Recuperaciones (Fuera de rango)</h2>
+                <h2>⚠️ Alertas y Recuperaciones (Fuera de rango)</h2>
                 <div style="max-height:250px; overflow-y:auto; border:1px solid var(--border); border-radius:8px;">
                     <table id="alertTable">
                         <thead>
@@ -550,12 +550,12 @@
                         <tbody></tbody>
                     </table>
                 </div>
-                <div id="analisisAlertas" class="analisis-section" style="display:none;"><strong>ANíLISIS Tí‰CNICO:</strong><div id="analisisAlertasContenido"></div></div>
+                <div id="analisisAlertas" class="analisis-section" style="display:none;"><strong>ANÁLISIS TÉCNICO:</strong><div id="analisisAlertasContenido"></div></div>
                 <div id="recomendacionesAlertas" class="recomendaciones-section" style="display:none;"><strong>RECOMENDACIONES:</strong><div id="recomendacionesAlertasContenido"></div></div>
             </div>
 
             <div class="section" style="margin-top: 32px;">
-                <h2>ðŸ“¡ Eventos detectados (>10 min sin datos)</h2>
+                <h2>📡 Eventos detectados (>10 min sin datos)</h2>
                 <div style="max-height:250px; overflow-y:auto; border:1px solid var(--border); border-radius:8px;">
                     <table id="wifiTable">
                         <thead>
@@ -572,14 +572,14 @@
                         <tbody></tbody>
                     </table>
                 </div>
-                <div id="analisisWifi" class="analisis-section" style="display:none;"><strong>ANíLISIS Tí‰CNICO (CONECTIVIDAD):</strong><div id="analisisWifiContenido"></div></div>
+                <div id="analisisWifi" class="analisis-section" style="display:none;"><strong>ANÁLISIS TÉCNICO (CONECTIVIDAD):</strong><div id="analisisWifiContenido"></div></div>
                 <div id="recomendacionesWifi" class="recomendaciones-section" style="display:none;"><strong>RECOMENDACIONES DE CONECTIVIDAD:</strong><div id="recomendacionesWifiContenido"></div></div>
             </div>
         </div>
     </div>
 
 <!-- =========================================== -->
-<!-- MODAL PARA SELECCIONAR FECHA DEL DESVíO -->
+<!-- MODAL PARA SELECCIONAR FECHA DEL DESVÍO -->
 <!-- =========================================== -->
 <div id="modalFechaDesvio" class="modal-desvio" style="display: none;">
     <div class="modal-desvio-content" style="max-width: 500px;">
@@ -599,7 +599,7 @@
 </div>
 
 <!-- =========================================== -->
-<!-- BOTí“N Y FORMULARIO DE DESVíO -->
+<!-- BOTÓN Y FORMULARIO DE DESVÍO -->
 <!-- =========================================== -->
 <!-- Modal del Formulario de Desvío -->
 <div id="modalDesvio" class="modal-desvio">
@@ -633,9 +633,9 @@
                 <p style="margin-top: 15px; font-style: italic; color: #475569;">Documento autogenerado por sistema digital de monitoreo continuo</p>
             </div>
             
-            <!-- SECCIí“N 1: IDENTIFICACIí“N -->
+            <!-- SECCIÓN 1: IDENTIFICACIÓN -->
             <div class="form-desvio-section">
-                <h3 class="form-desvio-title">1. IDENTIFICACIí“N DEL DESVíO</h3>
+                <h3 class="form-desvio-title">1. IDENTIFICACIÓN DEL DESVÍO</h3>
                 
                 <div class="form-desvio-grid">
                     <div class="form-desvio-group">
@@ -677,20 +677,20 @@
                 </div>
             </div>
 
-            <!-- SECCIí“N 2: EQUIPOS FRIGORíFICOS (MíšLTIPLES) -->
+            <!-- SECCIÓN 2: EQUIPOS FRIGORÍFICOS (MÚLTIPLES) -->
             <div class="form-desvio-section">
-                <h3 class="form-desvio-title">2. EQUIPOS FRIGORíFICOS</h3>
+                <h3 class="form-desvio-title">2. EQUIPOS FRIGORÍFICOS</h3>
                 
                 <div id="equipos-container">
                     <!-- Los equipos se agregarán dinámicamente aquí -->
                 </div>
                 
                 <button type="button" onclick="agregarEquipo()" class="btn-agregar">
-                    âž• Agregar Equipo Frigorífico
+                    ➕ Agregar Equipo Frigorífico
                 </button>
             </div>
 
-            <!-- SECCIí“N 3: DATOS DE TEMPERATURA (MíšLTIPLES HELADERAS) -->
+            <!-- SECCIÓN 3: DATOS DE TEMPERATURA (MÚLTIPLES HELADERAS) -->
             <div class="form-desvio-section">
                 <h3 class="form-desvio-title">3. DATOS DE TEMPERATURA</h3>
                 <p style="color: #64748b; font-size: 14px; margin-bottom: 20px;">Registre los datos de temperatura por cada heladera/equipo afectado</p>
@@ -700,20 +700,20 @@
                 </div>
                 
                 <button type="button" onclick="agregarHeladera()" class="btn-agregar">
-                    âž• Agregar Heladera/Equipo
+                    ➕ Agregar Heladera/Equipo
                 </button>
             </div>
 
-            <!-- SECCIí“N 4: INSPECCIí“N VISUAL -->
+            <!-- SECCIÓN 4: INSPECCIÓN VISUAL -->
             <div class="form-desvio-section">
-                <h3 class="form-desvio-title">4. INSPECCIí“N VISUAL AL MOMENTO DEL DESVíO</h3>
+                <h3 class="form-desvio-title">4. INSPECCIÓN VISUAL AL MOMENTO DEL DESVÍO</h3>
                 
                 <div class="form-desvio-radio-group">
                     <label class="form-desvio-radio-label">
-                        <input type="radio" name="inspeccion_visual" value="congelada"> â„ï¸ Vacuna Congelada
+                        <input type="radio" name="inspeccion_visual" value="congelada"> ❄️ Vacuna Congelada
                     </label>
                     <label class="form-desvio-radio-label">
-                        <input type="radio" name="inspeccion_visual" value="descongelada"> ðŸ’§ Vacuna Descongelada
+                        <input type="radio" name="inspeccion_visual" value="descongelada"> 💧 Vacuna Descongelada
                     </label>
                 </div>
 
@@ -723,7 +723,7 @@
                 </div>
             </div>
 
-            <!-- SECCIí“N 5: MODALIDAD DE MONITOREO -->
+            <!-- SECCIÓN 5: MODALIDAD DE MONITOREO -->
             <div class="form-desvio-section">
                 <h3 class="form-desvio-title">5. MODALIDAD DE MONITOREO</h3>
                 
@@ -750,7 +750,7 @@
                 </div>
             </div>
 
-            <!-- SECCIí“N 6: FRECUENCIA DEL MONITOREO (TEXTO FIJO) -->
+            <!-- SECCIÓN 6: FRECUENCIA DEL MONITOREO (TEXTO FIJO) -->
             <div class="form-desvio-section">
                 <h3 class="form-desvio-title">6. FRECUENCIA DEL MONITOREO</h3>
                 <div style="background: #f1f5f9; padding: 20px; border-radius: 12px; border-left: 4px solid #3b82f6;">
@@ -763,9 +763,9 @@
                 <input type="hidden" id="frecuencia_monitoreo" value="automática cada 1 minuto">
             </div>
 
-            <!-- SECCIí“N 7: CAUSA DEL DESVíO -->
+            <!-- SECCIÓN 7: CAUSA DEL DESVÍO -->
             <div class="form-desvio-section">
-                <h3 class="form-desvio-title">7. CAUSA DEL DESVíO</h3>
+                <h3 class="form-desvio-title">7. CAUSA DEL DESVÍO</h3>
                 
                 <div class="form-desvio-checkbox-group">
                     <label class="form-desvio-checkbox-label">
@@ -795,7 +795,7 @@
                 </div>
             </div>
 
-            <!-- SECCIí“N 8: ACCIONES TOMADAS -->
+            <!-- SECCIÓN 8: ACCIONES TOMADAS -->
             <div class="form-desvio-section">
                 <h3 class="form-desvio-title">8. ACCIONES TOMADAS</h3>
                 
@@ -826,7 +826,7 @@
                 </div>
             </div>
 
-            <!-- SECCIí“N 9: ACCIONES CORRECTIVAS Y PREVENTIVAS -->
+            <!-- SECCIÓN 9: ACCIONES CORRECTIVAS Y PREVENTIVAS -->
             <div class="form-desvio-section">
                 <h3 class="form-desvio-title">9. ACCIONES CORRECTIVAS Y/O PREVENTIVAS PLANIFICADAS</h3>
                 
@@ -854,7 +854,7 @@
                 </div>
             </div>
 
-            <!-- SECCIí“N 10: DOSIS AFECTADAS POR EQUIPO -->
+            <!-- SECCIÓN 10: DOSIS AFECTADAS POR EQUIPO -->
             <div class="form-desvio-section">
                 <h3 class="form-desvio-title">10. DOSIS AFECTADAS POR EQUIPO</h3>
                 
@@ -863,13 +863,13 @@
                 </div>
                 
                 <button type="button" onclick="agregarDosisPorEquipo()" class="btn-agregar">
-                    âž• Agregar Dosis por Equipo
+                    ➕ Agregar Dosis por Equipo
                 </button>
             </div>
 
-            <!-- SECCIí“N 11: FIRMA -->
+            <!-- SECCIÓN 11: FIRMA -->
             <div class="form-desvio-section">
-                <h3 class="form-desvio-title">11. COMPLETí“ EL FORMULARIO</h3>
+                <h3 class="form-desvio-title">11. COMPLETÓ EL FORMULARIO</h3>
                 
                 <div class="form-desvio-grid">
                     <div class="form-desvio-group">
@@ -883,7 +883,7 @@
                 </div>
             </div>
 
-            <!-- SECCIí“N 12: DICEI -->
+            <!-- SECCIÓN 12: DICEI -->
             <div class="form-desvio-dicei">
                 <h3 style="margin: 0 0 20px 0; color: #92400e; font-size: 20px;">A COMPLETAR POR LA DICEI</h3>
                 
@@ -922,7 +922,7 @@
         <!-- Footer del Modal -->
         <div class="modal-desvio-footer">
             <button onclick="cerrarModalDesvio()" class="btn-desvio-secondary">Cancelar</button>
-            <button onclick="generarPDFDesvioProfesional()" class="btn-desvio-primary">ðŸ“¥ Descargar Formulario (PDF)</button>
+            <button onclick="generarPDFDesvioProfesional()" class="btn-desvio-primary">📥 Descargar Formulario (PDF)</button>
         </div>
     </div>
 </div>
@@ -996,10 +996,10 @@
         function cleanText(t) {
             if (!t) return "";
             return t.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F900}-\u{1F9FF}\u{1F1E6}-\u{1F1FF}]/gu, '')
-                .replace(/[ðŸ’‰ðŸ’Šâš ï¸â„ï¸ðŸ”¥âœ…âš¡ðŸ“¶ðŸ“¡]/gu, '')
+                .replace(/[💉💊⚠️❄️🔥✅⚡📶📡]/gu, '')
                 .replace(/á/g, 'a').replace(/é/g, 'e').replace(/í/g, 'i').replace(/ó/g, 'o').replace(/ú/g, 'u')
-                .replace(/í/g, 'A').replace(/í‰/g, 'E').replace(/í/g, 'I').replace(/í“/g, 'O').replace(/íš/g, 'U')
-                .replace(/ñ/g, 'n').replace(/í‘/g, 'N')
+                .replace(/Á/g, 'A').replace(/É/g, 'E').replace(/Í/g, 'I').replace(/Ó/g, 'O').replace(/Ú/g, 'U')
+                .replace(/ñ/g, 'n').replace(/Ñ/g, 'N')
                 .trim();
         }
 
@@ -1174,7 +1174,7 @@
                         startTime = f.created_at;
                         picoValor = val;
                         picoHora = f.created_at;
-                        const label = state === 'high' ? 'ðŸ”¥ Alta (Calor)' : 'â„ï¸ Baja (Frío / Riesgo Congelación)';
+                        const label = state === 'high' ? '🔥 Alta (Calor)' : '❄️ Baja (Frío / Riesgo Congelación)';
                         const obsId = `alerta_${f.created_at}`;
                         const valorGuardado = observaciones[obsId] || '';
                         const inputHtml = `<td><input type="text" style="width:100%; border:1px solid #ddd; border-radius:4px; padding:2px 4px;" value="${valorGuardado.replace(/"/g, '&quot;')}" placeholder="Nota..." onchange="guardarObservacion(this, '${obsId}')"></td>`;
@@ -1185,7 +1185,7 @@
                         const valorGuardado = observaciones[obsId] || '';
                         const inputHtml = `<td><input type="text" style="width:100%; border:1px solid #ddd; border-radius:4px; padding:2px 4px;" value="${valorGuardado.replace(/"/g, '&quot;')}" placeholder="Nota..." onchange="guardarObservacion(this, '${obsId}')"></td>`;
                         const picoStr = picoValor !== null ? `${picoValor.toFixed(1)}°C (${formatDateTime(picoHora)})` : '--';
-                        rows += `<tr><td>${formatDateTime(f.created_at)}</td><td>${val.toFixed(1)}°C</td><td>âœ… Recuperación</td><td>${formatDurationFull(dur)}</td><td>${picoStr}</td>${inputHtml}</tr>`;
+                        rows += `<tr><td>${formatDateTime(f.created_at)}</td><td>${val.toFixed(1)}°C</td><td>✅ Recuperación</td><td>${formatDurationFull(dur)}</td><td>${picoStr}</td>${inputHtml}</tr>`;
                         alertData.push({ estado: lastState, duracion: dur });
                         picoValor = null;
                         picoHora = null;
@@ -1194,7 +1194,7 @@
                 }
             });
 
-            tbody.innerHTML = rows || '<tr><td colspan="6" class="empty">âœ… Sin eventos de alerta en este rango.</td></tr>';
+            tbody.innerHTML = rows || '<tr><td colspan="6" class="empty">✅ Sin eventos de alerta en este rango.</td></tr>';
             
             const an = document.getElementById('analisisAlertasContenido'), re = document.getElementById('recomendacionesAlertasContenido');
             if (alertData.length > 0) {
@@ -1204,7 +1204,7 @@
                 document.getElementById('recomendacionesAlertas').style.display = 'block';
             } else {
                 an.innerText = "No se registraron desvíos de temperatura en el período analizado. El equipo se mantuvo dentro del rango térmico de seguridad programado.";
-                re.innerText = "â€¢ Continuar con el monitoreo automático y rutinario.\nâ€¢ Verificar el correcto cierre hermético de puertas.\nâ€¢ Mantener actualizados los inventarios de vacunas.";
+                re.innerText = "• Continuar con el monitoreo automático y rutinario.\n• Verificar el correcto cierre hermético de puertas.\n• Mantener actualizados los inventarios de vacunas.";
                 document.getElementById('analisisAlertas').style.display = 'block';
                 document.getElementById('recomendacionesAlertas').style.display = 'block';
             }
@@ -1220,7 +1220,7 @@
                     const tempAntes = parseFloat(feeds[i-1][field]);
                     const tempDespues = parseFloat(feeds[i][field]);
                     // Clasificación del corte
-                    const type = (!isNaN(tempDespues) && (tempDespues > MAX || tempDespues < MIN)) ? 'âš¡ Corte de Energía' : 'ðŸ“¶ Corte de WiFi';
+                    const type = (!isNaN(tempDespues) && (tempDespues > MAX || tempDespues < MIN)) ? '⚡ Corte de Energía' : '📶 Corte de WiFi';
                     
                     const obsId = `wifi_${feeds[i].created_at}`;
                     const valorGuardado = observaciones[obsId] || '';
@@ -1234,7 +1234,7 @@
                 }
             }
 
-            tbody.innerHTML = rows || '<tr><td colspan="7" class="empty">âœ… Sin cortes ni interrupciones detectadas.</td></tr>';
+            tbody.innerHTML = rows || '<tr><td colspan="7" class="empty">✅ Sin cortes ni interrupciones detectadas.</td></tr>';
             
             const an = document.getElementById('analisisWifiContenido'), re = document.getElementById('recomendacionesWifiContenido');
             if (wifiData.length > 0) {
@@ -1244,14 +1244,14 @@
                 document.getElementById('recomendacionesWifi').style.display = 'block';
             } else {
                 an.innerText = "Transmisión continua de datos WiFi confirmada. No se registraron brechas de trazabilidad digital en el período.";
-                re.innerText = "â€¢ Mantener los equipos de comunicación de red WiFi conectados de manera ininterrumpida.\nâ€¢ Revisar periódicamente la señal (RSSI) del dispositivo datalogger.";
+                re.innerText = "• Mantener los equipos de comunicación de red WiFi conectados de manera ininterrumpida.\n• Revisar periódicamente la señal (RSSI) del dispositivo datalogger.";
                 document.getElementById('analisisWifi').style.display = 'block';
                 document.getElementById('recomendacionesWifi').style.display = 'block';
             }
         }
 
         // ============================================================
-        // MOTOR CLíNICO-DIAGNí“STICO PERSONALIZADO (INMUNIZACIONES)
+        // MOTOR CLÍNICO-DIAGNÓSTICO PERSONALIZADO (INMUNIZACIONES)
         // ============================================================
         function generarAnalisisAlertas(eventos) {
             if (!eventos || eventos.length === 0) return "";
@@ -1264,11 +1264,11 @@
             });
 
             let analisis = `Se registraron desvíos térmicos acumulados por un total de ${formatDurationFull(totalDuracion)}.\n`;
-            analisis += `â€¢ Incidentes de calor (>8°C o >Max): ${altas}\n`;
-            analisis += `â€¢ Incidentes de frío (<2°C o <Min): ${bajas}\n\n`;
+            analisis += `• Incidentes de calor (>8°C o >Max): ${altas}\n`;
+            analisis += `• Incidentes de frío (<2°C o <Min): ${bajas}\n\n`;
 
             if (bajas > 0) {
-                analisis += "âš ï¸ ADVERTENCIA CRíTICA: Se detectó riesgo de CONGELACIí“N. La exposición a temperaturas inferiores a 2°C (o al límite del congelador) puede inactivar de forma irreversible la potencia de vacunas adyuvadas (Hepatitis B, Gripal, Neumococo, VPH, DPT). Esto compromete seriamente la efectividad de los esquemas vacunales y requiere especial atención.\n\n";
+                analisis += "⚠️ ADVERTENCIA CRÍTICA: Se detectó riesgo de CONGELACIÓN. La exposición a temperaturas inferiores a 2°C (o al límite del congelador) puede inactivar de forma irreversible la potencia de vacunas adyuvadas (Hepatitis B, Gripal, Neumococo, VPH, DPT). Esto compromete seriamente la efectividad de los esquemas vacunales y requiere especial atención.\n\n";
             }
 
             if (totalDuracion < 15) {
@@ -1276,7 +1276,7 @@
             } else if (totalDuracion < 120) {
                 analisis += "Desvío térmico moderado. Se recomienda formalizar la novedad en el libro de incidencias y reportar al Referente de Vacunas para su supervisión.";
             } else {
-                analisis += "DESVíO CRíTICO Y PROLONGADO: Se sugiere apartar de manera temporal el lote involucrado colocándolo en un contenedor seguro rotulado 'NO UTILIZAR - BLOQUEADO', suspender temporalmente su colocación y realizar la consulta formal de estabilidad al Departamento de Inmunizaciones provincial.";
+                analisis += "DESVÍO CRÍTICO Y PROLONGADO: Se sugiere apartar de manera temporal el lote involucrado colocándolo en un contenedor seguro rotulado 'NO UTILIZAR - BLOQUEADO', suspender temporalmente su colocación y realizar la consulta formal de estabilidad al Departamento de Inmunizaciones provincial.";
             }
             return analisis;
         }
@@ -1288,15 +1288,15 @@
             let recom = [];
 
             if (tieneAltas) {
-                recom.push("â€¢ Calor excesivo: Comprobar el cierre magnético de las puertas y la limpieza del radiador externo del motor.");
-                recom.push("â€¢ Mantener la colocación de botellas de agua fría en la parte inferior para aumentar la inercia térmica.");
+                recom.push("• Calor excesivo: Comprobar el cierre magnético de las puertas y la limpieza del radiador externo del motor.");
+                recom.push("• Mantener la colocación de botellas de agua fría en la parte inferior para aumentar la inercia térmica.");
             }
             if (tieneBajas) {
-                recom.push("â€¢ Frío extremo: Comprobar que los empaques no estén en contacto con la pared fría trasera del refrigerador.");
-                recom.push("â€¢ Ejecutar el 'Test de Agitación' en vacunas combinadas adyuvadas en caso de sospechar cristalización.");
+                recom.push("• Frío extremo: Comprobar que los empaques no estén en contacto con la pared fría trasera del refrigerador.");
+                recom.push("• Ejecutar el 'Test de Agitación' en vacunas combinadas adyuvadas en caso de sospechar cristalización.");
             }
-            recom.push("â€¢ Registrar obligatoriamente el incidente clínico en el registro manual de novedades de la cadena de frío.");
-            recom.push("â€¢ Calibrar y constatar la lectura del datalogger con un termómetro patrón habilitado.");
+            recom.push("• Registrar obligatoriamente el incidente clínico en el registro manual de novedades de la cadena de frío.");
+            recom.push("• Calibrar y constatar la lectura del datalogger con un termómetro patrón habilitado.");
             return recom.join('\n');
         }
 
@@ -1305,7 +1305,7 @@
             let totalDuracion = 0;
             eventos.forEach(e => { totalDuracion += e.duracion; });
             let analisis = `Interrupciones de transmisión de datos detectadas: ${eventos.length}.\n`;
-            analisis += `â€¢ Duración acumulada sin datos: ${formatDurationFull(totalDuracion)}\n\n`;
+            analisis += `• Duración acumulada sin datos: ${formatDurationFull(totalDuracion)}\n\n`;
 
             if (totalDuracion < 60) {
                 analisis += "Los cortes de señal WiFi fueron breves y no comprometen la trazabilidad clínica global. Se asume estabilidad de la heladera.";
@@ -1317,14 +1317,14 @@
 
         function generarRecomendacionesEventos(eventos) {
             if (!eventos || eventos.length === 0) return "";
-            let recom = "â€¢ Verificar el suministro de alimentación eléctrica del router local (se aconseja usar UPS).\n";
-            recom += "â€¢ Asegurar la correcta orientación de la antena del datalogger y evitar barreras metálicas.\n";
-            recom += "â€¢ Ante cortes de señal recurrentes, asentar lecturas de temperatura de forma manual en planillas oficiales cada 4 horas.";
+            let recom = "• Verificar el suministro de alimentación eléctrica del router local (se aconseja usar UPS).\n";
+            recom += "• Asegurar la correcta orientación de la antena del datalogger y evitar barreras metálicas.\n";
+            recom += "• Ante cortes de señal recurrentes, asentar lecturas de temperatura de forma manual en planillas oficiales cada 4 horas.";
             return recom;
         }
 
         // ============================================================
-        // EXPORTACIí“N E INTERPRETACIí“N PDF DE ALTA CALIDAD (JSPDF)
+        // EXPORTACIÓN E INTERPRETACIÓN PDF DE ALTA CALIDAD (JSPDF)
         // ============================================================
         function checkPageBreak(doc, yPos, espacioNecesario, marginTop = 45, marginBottom = 30) {
             const pageHeight = doc.internal.pageSize.getHeight();
@@ -1337,7 +1337,7 @@
 
         async function downloadPDF() {
             try {
-                mostrarToast("Generando reporte PDF institucional... â³", "#3b82f6");
+                mostrarToast("Generando reporte PDF institucional... ⏳", "#3b82f6");
                 const trazabilidad = generarCodigoTrazabilidad();
                 const { jsPDF } = window.jspdf;
                 const pdf = new jsPDF('p', 'mm', 'a4');
@@ -1399,7 +1399,7 @@
                 const teamName = cleanText(document.getElementById('teamName').innerText);
 
                 pdf.setFontSize(14); pdf.setFont('helvetica', 'bold'); pdf.setTextColor(0, 56, 77);
-                const titleStr = "INFORME Tí‰CNICO OFICIAL DE CADENA DE FRíO";
+                const titleStr = "INFORME TÉCNICO OFICIAL DE CADENA DE FRÍO";
                 pdf.text(titleStr, margin, yPos);
                 
                 yPos += 8; pdf.setFontSize(10); pdf.setFont('helvetica', 'italic'); pdf.setTextColor(100);
@@ -1452,7 +1452,7 @@
 
                 yPos = checkPageBreak(pdf, yPos, 20);
                 pdf.setFont('helvetica', 'bold'); pdf.setFontSize(11); pdf.setTextColor(0, 56, 77);
-                pdf.text("âš ï¸ ALERTAS Y RECUPERACIONES:", margin, yPos);
+                pdf.text("⚠️ ALERTAS Y RECUPERACIONES:", margin, yPos);
                 yPos += 6;
 
                 if (alertRows.length > 0) {
@@ -1472,13 +1472,13 @@
                     yPos += 12;
                 }
 
-                // --- ANíLISIS CLíNICO VACUNAS ---
+                // --- ANÁLISIS CLÍNICO VACUNAS ---
                 yPos = checkPageBreak(pdf, yPos, 40);
                 pdf.setFont('helvetica', 'bold'); pdf.setFontSize(11); pdf.setTextColor(0, 56, 77);
-                pdf.text("ANíLISIS Tí‰CNICO CLíNICO:", margin, yPos);
+                pdf.text("ANÁLISIS TÉCNICO CLÍNICO:", margin, yPos);
                 yPos += 7;
                 pdf.setFont('helvetica', 'normal'); pdf.setFontSize(9); pdf.setTextColor(30, 41, 59);
-                const txtClinico = generarAnalisisAlertas(alertRows.map(r => ({ estado: r[2], duracion: parseDurationToMinutes(r[3]) }))) + "\n\nRECOMENDACIONES CLíNICAS:\n" + generarRecomendacionesAlertas(alertRows.map(r => ({ estado: r[2], duracion: parseDurationToMinutes(r[3]) })));
+                const txtClinico = generarAnalisisAlertas(alertRows.map(r => ({ estado: r[2], duracion: parseDurationToMinutes(r[3]) }))) + "\n\nRECOMENDACIONES CLÍNICAS:\n" + generarRecomendacionesAlertas(alertRows.map(r => ({ estado: r[2], duracion: parseDurationToMinutes(r[3]) })));
                 const splitClinico = pdf.splitTextToSize(txtClinico, pageWidth - (margin * 2));
                 pdf.text(splitClinico, margin, yPos);
                 yPos += (splitClinico.length * 5) + 10;
@@ -1492,7 +1492,7 @@
 
                 yPos = checkPageBreak(pdf, yPos, 20);
                 pdf.setFont('helvetica', 'bold'); pdf.setFontSize(11); pdf.setTextColor(0, 56, 77);
-                pdf.text("ðŸ“¡ EVENTOS DE CONECTIVIDAD DETECTADOS (>10 min):", margin, yPos);
+                pdf.text("📡 EVENTOS DE CONECTIVIDAD DETECTADOS (>10 min):", margin, yPos);
                 yPos += 6;
 
                 if (wifiRows.length > 0) {
@@ -1512,10 +1512,10 @@
                     yPos += 12;
                 }
 
-                // --- ANíLISIS RED WIFI ---
+                // --- ANÁLISIS RED WIFI ---
                 yPos = checkPageBreak(pdf, yPos, 35);
                 pdf.setFont('helvetica', 'bold'); pdf.setFontSize(11); pdf.setTextColor(0, 56, 77);
-                pdf.text("ANíLISIS DE CONECTIVIDAD Y RED:", margin, yPos);
+                pdf.text("ANÁLISIS DE CONECTIVIDAD Y RED:", margin, yPos);
                 yPos += 7;
                 pdf.setFont('helvetica', 'normal'); pdf.setFontSize(9); pdf.setTextColor(30, 41, 59);
                 const txtRed = generarAnalisisEventos(wifiRows.map(r => ({ tipo: r[2], duracion: parseDurationToMinutes(r[5]) }))) + "\n\nRECOMENDACIONES DE RED:\n" + generarRecomendacionesEventos(wifiRows.map(r => ({ tipo: r[2], duracion: parseDurationToMinutes(r[5]) })));
@@ -1523,10 +1523,10 @@
                 pdf.text(splitRed, margin, yPos);
                 yPos += (splitRed.length * 5) + 10;
 
-                // --- NOTA Tí‰CNICA Y GARANTíA ---
+                // --- NOTA TÉCNICA Y GARANTÍA ---
                 yPos = checkPageBreak(pdf, yPos, 25);
                 pdf.setFontSize(9); pdf.setFont('helvetica', 'bold'); pdf.setTextColor(71, 85, 105);
-                pdf.text('NOTA Tí‰CNICA:', margin, yPos);
+                pdf.text('NOTA TÉCNICA:', margin, yPos);
                 yPos += 5;
                 pdf.setFont('helvetica', 'italic'); pdf.setFontSize(7.5);
                 const notaTecnica = 'Las calibraciones de los registradores continuos de temperatura deben realizarse al menos anualmente por ' +
@@ -1539,7 +1539,7 @@
                 pdf.text(splitNota, margin, yPos);
                 yPos += (splitNota.length * 4.5) + 6;
 
-                // --- CLíUSULA DE RESPONSABILIDAD LEGAL DE VACUNAS (LEY N° 27.491) ---
+                // --- CLÁUSULA DE RESPONSABILIDAD LEGAL DE VACUNAS (LEY N° 27.491) ---
                 yPos = checkPageBreak(pdf, yPos, 25);
                 pdf.setFontSize(9); pdf.setFont('helvetica', 'bold'); pdf.setTextColor(71, 85, 105);
                 pdf.text('RESPONSABILIDAD INSTITUCIONAL:', margin, yPos);
@@ -1577,7 +1577,7 @@
                             })
                         })
                         .then(() => {
-                            mostrarToast("Â¡Informe guardado con éxito en Google Drive! âœ…", "#10b981");
+                            mostrarToast("Â¡Informe guardado con éxito en Google Drive! ✅", "#10b981");
                         })
                         .catch(err => {
                             console.error("Error en Apps Script:", err);
@@ -1595,7 +1595,7 @@
 
 
     // ============================================================
-    // FUNCIí“N AUXILIAR PARA MAPEO DE CENTRO DE Drive
+    // FUNCIÓN AUXILIAR PARA MAPEO DE CENTRO DE Drive
     // ============================================================
     function obtenerCentroPorCanalId(channelId) {
         const id = parseInt(channelId);
@@ -1617,10 +1617,10 @@
         function cleanText(t) {
             if (!t) return "";
             return t.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F900}-\u{1F9FF}\u{1F1E6}-\u{1F1FF}]/gu, '')
-                .replace(/[ðŸ’‰ðŸ’Šâš ï¸â„ï¸ðŸ”¥âœ…âš¡ðŸ“¶ðŸ“¡]/gu, '')
+                .replace(/[💉💊⚠️❄️🔥✅⚡📶📡]/gu, '')
                 .replace(/á/g, 'a').replace(/é/g, 'e').replace(/í/g, 'i').replace(/ó/g, 'o').replace(/ú/g, 'u')
-                .replace(/í/g, 'A').replace(/í‰/g, 'E').replace(/í/g, 'I').replace(/í“/g, 'O').replace(/íš/g, 'U')
-                .replace(/ñ/g, 'n').replace(/í‘/g, 'N')
+                .replace(/Á/g, 'A').replace(/É/g, 'E').replace(/Í/g, 'I').replace(/Ó/g, 'O').replace(/Ú/g, 'U')
+                .replace(/ñ/g, 'n').replace(/Ñ/g, 'N')
                 .trim();
         }
 
@@ -1681,7 +1681,7 @@
         const fechaInput = document.getElementById('fechaDesvioSelector').value;
         
         if (!fechaInput) {
-            alert('âš ï¸ Debe seleccionar una fecha para continuar.');
+            alert('⚠️ Debe seleccionar una fecha para continuar.');
             return;
         }
         
@@ -1734,7 +1734,7 @@
     }
 
     // ============================================================
-    // FUNCIONES DEL FORMULARIO DE DESVíO
+    // FUNCIONES DEL FORMULARIO DE DESVÍO
     // ============================================================
     function abrirModalDesvio() {
         document.getElementById('modalDesvio').style.display = 'block';
@@ -1917,14 +1917,14 @@
         const descripcion = document.getElementById('desvio_descripcion').value;
 
         if (!establecimiento || !responsable || !descripcion) {
-            alert('âš ï¸ Complete los campos obligatorios:\n- Establecimiento\n- Responsable\n- Descripción del desvío');
+            alert('⚠️ Complete los campos obligatorios:\n- Establecimiento\n- Responsable\n- Descripción del desvío');
             return false;
         }
         return true;
     }
 
     // ============================================================
-    // FUNCIí“N PARA GENERAR GRíFICA TEMPORAL
+    // FUNCIÓN PARA GENERAR GRÁFICA TEMPORAL
     // ============================================================
     function generarGraficaTemporal(canvasId, feeds, field, titulo) {
         if (!feeds || feeds.length === 0) return null;
@@ -2447,7 +2447,7 @@
         yPos = Math.max(yCol1, yCol2);
         
         // ================================================================
-        // [3] CONTRACARíTULA
+        // [3] CONTRACARÁTULA
         // ================================================================
         doc.addPage();
         const contracaratulaBase64 = getBase64Image("imgContracaratula");
@@ -2500,7 +2500,7 @@
                     })
                 })
                 .then(() => {
-                    mostrarToast("Â¡Formulario de desvío guardado en Google Drive! âœ…", "#10b981");
+                    mostrarToast("Â¡Formulario de desvío guardado en Google Drive! ✅", "#10b981");
                 })
                 .catch(err => {
                     console.error("Error en Apps Script desvío:", err);
