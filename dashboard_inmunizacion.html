@@ -347,7 +347,7 @@
       <div id="alertaModalRango" style="text-align:center; font-size:0.8rem; color:#64748b; margin-bottom:12px;"></div>
       <ul class="pasos" id="alertaModalPasos"></ul>
       <div class="normativa">
-        ⚖️ Base normativa: Ley 27.491 · Resolución MSAL 1030/2021 · Resolución 1285/2022 Neuquén
+        ⚖️ Base normativa: Ley 27.491 · Ley 26.492 · Disp. ANMAT 2069/2018 · Resolución 1285/2022 Neuquén
       </div>
       <button class="btn-cerrar" onclick="cerrarGuiaAlerta()">Entendido ✓</button>
     </div>
@@ -376,24 +376,24 @@
       <div style="background:#f8fafc; border-left:4px solid #1d4ed8; padding:20px; border-radius:8px; margin-bottom:20px;">
         <h2 style="font-size:20px; margin-bottom:16px; color:#1d4ed8;">1. Normativa Nacional</h2>
         <div style="background:white; padding:16px; border-radius:8px; margin-bottom:16px; box-shadow:0 2px 4px rgba(0,0,0,0.05);">
-          <strong>Ley Nacional N° 27.491 (2018)</strong> – "Ley de Vacunas"
-          <p style="margin:8px 0;">Establece el Programa Nacional de Inmunizaciones (PNI) como política de Estado.</p>
+          <strong>Ley Nacional N° 27.491 (2019)</strong> – "Ley de Vacunas"
+          <p style="margin:8px 0;">Establece el control de enfermedades prevenibles por vacunación como política de Estado, garantizando la conservación y gratuidad de las vacunas.</p>
           <div style="text-align:right; margin-top:8px;">
             <button onclick="buscarNorma('Ley 27.491 boletinoficial.gob.ar')" style="background:#dbeafe; border:1px solid #cbd5e1; padding:4px 10px; border-radius:4px; font-size:12px; color:#1d4ed8;">Verificar</button>
           </div>
         </div>
         <div style="background:white; padding:16px; border-radius:8px; margin-bottom:16px; box-shadow:0 2px 4px rgba(0,0,0,0.05);">
-          <strong>Resolución MSAL N° 1030/2021</strong>
-          <p style="margin:8px 0;">Normas técnicas para la cadena de frío del PNI. Define rangos (+2 °C a +8 °C), prohibiciones y requisitos de monitoreo.</p>
+          <strong>Ley Nacional N° 26.492 (2009)</strong> – "Regulación de la Cadena de Frío"
+          <p style="margin:8px 0;">Regula la cadena de frío de medicamentos termolábiles (vacunas) desde su fabricación hasta su aplicación, exigiendo testigos de temperatura.</p>
           <div style="text-align:right; margin-top:8px;">
-            <button onclick="buscarNorma('Resolución 1030/2021 cadena de frío argentina.gob.ar')" style="background:#dbeafe; border:1px solid #cbd5e1; padding:4px 10px; border-radius:4px; font-size:12px; color:#1d4ed8;">Verificar</button>
+            <button onclick="buscarNorma('Ley 26.492 cadena de frío boletinoficial.gob.ar')" style="background:#dbeafe; border:1px solid #cbd5e1; padding:4px 10px; border-radius:4px; font-size:12px; color:#1d4ed8;">Verificar</button>
           </div>
         </div>
         <div style="background:white; padding:16px; border-radius:8px; margin-bottom:16px; box-shadow:0 2px 4px rgba(0,0,0,0.05);">
-          <strong>ANMAT – Disposición N° 10.872/2020</strong>
-          <p style="margin:8px 0;">Buenas Prácticas de Almacenamiento y Distribución de Productos Médicos (incluye vacunas).</p>
+          <strong>ANMAT – Disposición N° 2069/2018</strong>
+          <p style="margin:8px 0;">Buenas Prácticas de Distribución de Medicamentos. Establece directrices para el almacenamiento, transporte y monitoreo continuo de temperatura.</p>
           <div style="text-align:right; margin-top:8px;">
-            <button onclick="buscarNorma('Disposición 10872/2020 ANMAT productos biológicos argentina.gob.ar')" style="background:#dbeafe; border:1px solid #cbd5e1; padding:4px 10px; border-radius:4px; font-size:12px; color:#1d4ed8;">Verificar</button>
+            <button onclick="buscarNorma('Disposición 2069/2018 ANMAT medicamentos argentina.gob.ar')" style="background:#dbeafe; border:1px solid #cbd5e1; padding:4px 10px; border-radius:4px; font-size:12px; color:#1d4ed8;">Verificar</button>
           </div>
         </div>
       </div>
@@ -442,7 +442,7 @@
     <div class="protocolo-modal">
       <div style="text-align:right;"><button onclick="cerrarProtocolo()" style="border:none; background:none; font-size:1.5rem; cursor:pointer;">✕</button></div>
       <h2>📋 Protocolo de Cadena de Frío — Inmunización</h2>
-      <div class="subtitulo">Rango térmico exigido: 2°C a 8°C · Resolución MSAL 1030/2021</div>
+      <div class="subtitulo">Rango térmico exigido: 2°C a 8°C · Ley 26.492 · Res. 1285/2022 Neuquén</div>
 
       <!-- TEMPERATURA ALTA -->
       <div class="protocolo-seccion">
@@ -498,7 +498,7 @@
       </div>
 
       <div class="protocolo-normativa">
-        ⚖️ Base normativa: Ley 27.491 · Resolución MSAL 1030/2021 · Res. 1285/2022 Neuquén
+        ⚖️ Base normativa: Ley 27.491 · Ley 26.492 · Res. 1285/2022 Neuquén
       </div>
       <button class="btn-cerrar" onclick="cerrarProtocolo()" style="width:100%; margin-top:16px; padding:10px; background:#00384d; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:600; font-size:0.95rem; min-height:unset !important; min-width:unset !important;">Cerrar ✕</button>
     </div>
@@ -727,7 +727,7 @@ function abrirEstadistica() {
     function abrirStock() { window.open('stock_inmunizacion_zona1.html', '_blank'); }
     function buscarNorma(q) { window.open(`https://www.google.com/search?q=${encodeURIComponent(q)}`, '_blank'); }
     function buscarTodasNormas() {
-      const queries = ['Ley 27.491 boletinoficial.gob.ar', 'Resolución 1030/2021 cadena de frío', 'Resolución 1285/2022 Neuquén'];
+      const queries = ['Ley 27.491 boletinoficial.gob.ar', 'Ley 26.492 cadena de frío', 'Resolución 1285/2022 Neuquén'];
       queries.forEach((q, i) => setTimeout(() => buscarNorma(q), i * 600));
     }
     window.onclick = (e) => {
