@@ -217,7 +217,7 @@ function generarPDFOficial(sensor, fecha, rango, trazabilidad, analizada, conect
   t1.setFontSize(14).setBold(true).setForegroundColor("#00384d").setSpacingAfter(4);
 
   // --- NORMATIVA ---
-  body.appendParagraph("Según Disposición ANMAT 10.872/2020")
+  body.appendParagraph("Según Ley Nacional N° 26.492 y Disposición ANMAT N° 2069/2018")
     .setFontSize(9).setItalic(true).setSpacingAfter(10);
 
   // --- DATOS DEL DISPOSITIVO ---
