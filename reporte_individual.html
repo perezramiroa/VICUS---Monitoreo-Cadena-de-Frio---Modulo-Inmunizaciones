@@ -528,13 +528,13 @@
                 <button class="btn-day" onclick="run(7, this)">7 días</button>
                 <div style="display: flex; align-items: center; gap: 8px; margin: 0 10px;"><label style="font-weight:600;">Día:</label><input type="date" id="targetDay" onchange="applyDay()" /></div>
                 <div class="range-group"><label>Rango:</label><input type="date" id="dateStart" /><label>al</label><input type="date" id="dateEnd" /><button id="rangeBtn" onclick="applyRange()">Buscar</button></div>
-                <div style="margin-left: auto; display: flex; gap: 10px;"><button id="downloadBtn" onclick="downloadPDF()">📥 PDF</button><button id="desvioBtn" style="background:#dc2626; color:white; padding:6px 14px; border:none; border-radius:6px; cursor:pointer; font-weight:600;" onclick="iniciarReporteDesvio()">⚠️ Reportar Desvío</button><button id="backBtn" onclick="window.close()">← Volver</button></div>
+                <div style="margin-left: auto; display: flex; gap: 10px;"><button id="downloadBtn" onclick="downloadPDF()">ðŸ“¥ PDF</button><button id="desvioBtn" style="background:#dc2626; color:white; padding:6px 14px; border:none; border-radius:6px; cursor:pointer; font-weight:600;" onclick="iniciarReporteDesvio()">âš ï¸ Reportar Desvío</button><button id="backBtn" onclick="window.close()">â† Volver</button></div>
             </div>
 
             <div class="chart-container"><canvas id="chart"></canvas></div>
 
             <div class="section">
-                <h2>⚠️ Alertas y Recuperaciones (Fuera de rango)</h2>
+                <h2>âš ï¸ Alertas y Recuperaciones (Fuera de rango)</h2>
                 <div style="max-height:250px; overflow-y:auto; border:1px solid var(--border); border-radius:8px;">
                     <table id="alertTable">
                         <thead>
@@ -550,12 +550,12 @@
                         <tbody></tbody>
                     </table>
                 </div>
-                <div id="analisisAlertas" class="analisis-section" style="display:none;"><strong>ANÁLISIS TÉCNICO:</strong><div id="analisisAlertasContenido"></div></div>
+                <div id="analisisAlertas" class="analisis-section" style="display:none;"><strong>ANíLISIS Tí‰CNICO:</strong><div id="analisisAlertasContenido"></div></div>
                 <div id="recomendacionesAlertas" class="recomendaciones-section" style="display:none;"><strong>RECOMENDACIONES:</strong><div id="recomendacionesAlertasContenido"></div></div>
             </div>
 
             <div class="section" style="margin-top: 32px;">
-                <h2>📡 Eventos detectados (>10 min sin datos)</h2>
+                <h2>ðŸ“¡ Eventos detectados (>10 min sin datos)</h2>
                 <div style="max-height:250px; overflow-y:auto; border:1px solid var(--border); border-radius:8px;">
                     <table id="wifiTable">
                         <thead>
@@ -572,14 +572,14 @@
                         <tbody></tbody>
                     </table>
                 </div>
-                <div id="analisisWifi" class="analisis-section" style="display:none;"><strong>ANÁLISIS TÉCNICO (CONECTIVIDAD):</strong><div id="analisisWifiContenido"></div></div>
+                <div id="analisisWifi" class="analisis-section" style="display:none;"><strong>ANíLISIS Tí‰CNICO (CONECTIVIDAD):</strong><div id="analisisWifiContenido"></div></div>
                 <div id="recomendacionesWifi" class="recomendaciones-section" style="display:none;"><strong>RECOMENDACIONES DE CONECTIVIDAD:</strong><div id="recomendacionesWifiContenido"></div></div>
             </div>
         </div>
     </div>
 
 <!-- =========================================== -->
-<!-- MODAL PARA SELECCIONAR FECHA DEL DESVÍO -->
+<!-- MODAL PARA SELECCIONAR FECHA DEL DESVíO -->
 <!-- =========================================== -->
 <div id="modalFechaDesvio" class="modal-desvio" style="display: none;">
     <div class="modal-desvio-content" style="max-width: 500px;">
@@ -599,7 +599,7 @@
 </div>
 
 <!-- =========================================== -->
-<!-- BOTÓN Y FORMULARIO DE DESVÍO -->
+<!-- BOTí“N Y FORMULARIO DE DESVíO -->
 <!-- =========================================== -->
 <!-- Modal del Formulario de Desvío -->
 <div id="modalDesvio" class="modal-desvio">
@@ -633,9 +633,9 @@
                 <p style="margin-top: 15px; font-style: italic; color: #475569;">Documento autogenerado por sistema digital de monitoreo continuo</p>
             </div>
             
-            <!-- SECCIÓN 1: IDENTIFICACIÓN -->
+            <!-- SECCIí“N 1: IDENTIFICACIí“N -->
             <div class="form-desvio-section">
-                <h3 class="form-desvio-title">1. IDENTIFICACIÓN DEL DESVÍO</h3>
+                <h3 class="form-desvio-title">1. IDENTIFICACIí“N DEL DESVíO</h3>
                 
                 <div class="form-desvio-grid">
                     <div class="form-desvio-group">
@@ -677,20 +677,20 @@
                 </div>
             </div>
 
-            <!-- SECCIÓN 2: EQUIPOS FRIGORÍFICOS (MÚLTIPLES) -->
+            <!-- SECCIí“N 2: EQUIPOS FRIGORíFICOS (MíšLTIPLES) -->
             <div class="form-desvio-section">
-                <h3 class="form-desvio-title">2. EQUIPOS FRIGORÍFICOS</h3>
+                <h3 class="form-desvio-title">2. EQUIPOS FRIGORíFICOS</h3>
                 
                 <div id="equipos-container">
                     <!-- Los equipos se agregarán dinámicamente aquí -->
                 </div>
                 
                 <button type="button" onclick="agregarEquipo()" class="btn-agregar">
-                    ➕ Agregar Equipo Frigorífico
+                    âž• Agregar Equipo Frigorífico
                 </button>
             </div>
 
-            <!-- SECCIÓN 3: DATOS DE TEMPERATURA (MÚLTIPLES HELADERAS) -->
+            <!-- SECCIí“N 3: DATOS DE TEMPERATURA (MíšLTIPLES HELADERAS) -->
             <div class="form-desvio-section">
                 <h3 class="form-desvio-title">3. DATOS DE TEMPERATURA</h3>
                 <p style="color: #64748b; font-size: 14px; margin-bottom: 20px;">Registre los datos de temperatura por cada heladera/equipo afectado</p>
@@ -700,20 +700,20 @@
                 </div>
                 
                 <button type="button" onclick="agregarHeladera()" class="btn-agregar">
-                    ➕ Agregar Heladera/Equipo
+                    âž• Agregar Heladera/Equipo
                 </button>
             </div>
 
-            <!-- SECCIÓN 4: INSPECCIÓN VISUAL -->
+            <!-- SECCIí“N 4: INSPECCIí“N VISUAL -->
             <div class="form-desvio-section">
-                <h3 class="form-desvio-title">4. INSPECCIÓN VISUAL AL MOMENTO DEL DESVÍO</h3>
+                <h3 class="form-desvio-title">4. INSPECCIí“N VISUAL AL MOMENTO DEL DESVíO</h3>
                 
                 <div class="form-desvio-radio-group">
                     <label class="form-desvio-radio-label">
-                        <input type="radio" name="inspeccion_visual" value="congelada"> ❄️ Vacuna Congelada
+                        <input type="radio" name="inspeccion_visual" value="congelada"> â„ï¸ Vacuna Congelada
                     </label>
                     <label class="form-desvio-radio-label">
-                        <input type="radio" name="inspeccion_visual" value="descongelada"> 💧 Vacuna Descongelada
+                        <input type="radio" name="inspeccion_visual" value="descongelada"> ðŸ’§ Vacuna Descongelada
                     </label>
                 </div>
 
@@ -723,7 +723,7 @@
                 </div>
             </div>
 
-            <!-- SECCIÓN 5: MODALIDAD DE MONITOREO -->
+            <!-- SECCIí“N 5: MODALIDAD DE MONITOREO -->
             <div class="form-desvio-section">
                 <h3 class="form-desvio-title">5. MODALIDAD DE MONITOREO</h3>
                 
@@ -750,7 +750,7 @@
                 </div>
             </div>
 
-            <!-- SECCIÓN 6: FRECUENCIA DEL MONITOREO (TEXTO FIJO) -->
+            <!-- SECCIí“N 6: FRECUENCIA DEL MONITOREO (TEXTO FIJO) -->
             <div class="form-desvio-section">
                 <h3 class="form-desvio-title">6. FRECUENCIA DEL MONITOREO</h3>
                 <div style="background: #f1f5f9; padding: 20px; border-radius: 12px; border-left: 4px solid #3b82f6;">
@@ -763,9 +763,9 @@
                 <input type="hidden" id="frecuencia_monitoreo" value="automática cada 1 minuto">
             </div>
 
-            <!-- SECCIÓN 7: CAUSA DEL DESVÍO -->
+            <!-- SECCIí“N 7: CAUSA DEL DESVíO -->
             <div class="form-desvio-section">
-                <h3 class="form-desvio-title">7. CAUSA DEL DESVÍO</h3>
+                <h3 class="form-desvio-title">7. CAUSA DEL DESVíO</h3>
                 
                 <div class="form-desvio-checkbox-group">
                     <label class="form-desvio-checkbox-label">
@@ -795,7 +795,7 @@
                 </div>
             </div>
 
-            <!-- SECCIÓN 8: ACCIONES TOMADAS -->
+            <!-- SECCIí“N 8: ACCIONES TOMADAS -->
             <div class="form-desvio-section">
                 <h3 class="form-desvio-title">8. ACCIONES TOMADAS</h3>
                 
@@ -826,7 +826,7 @@
                 </div>
             </div>
 
-            <!-- SECCIÓN 9: ACCIONES CORRECTIVAS Y PREVENTIVAS -->
+            <!-- SECCIí“N 9: ACCIONES CORRECTIVAS Y PREVENTIVAS -->
             <div class="form-desvio-section">
                 <h3 class="form-desvio-title">9. ACCIONES CORRECTIVAS Y/O PREVENTIVAS PLANIFICADAS</h3>
                 
@@ -854,7 +854,7 @@
                 </div>
             </div>
 
-            <!-- SECCIÓN 10: DOSIS AFECTADAS POR EQUIPO -->
+            <!-- SECCIí“N 10: DOSIS AFECTADAS POR EQUIPO -->
             <div class="form-desvio-section">
                 <h3 class="form-desvio-title">10. DOSIS AFECTADAS POR EQUIPO</h3>
                 
@@ -863,13 +863,13 @@
                 </div>
                 
                 <button type="button" onclick="agregarDosisPorEquipo()" class="btn-agregar">
-                    ➕ Agregar Dosis por Equipo
+                    âž• Agregar Dosis por Equipo
                 </button>
             </div>
 
-            <!-- SECCIÓN 11: FIRMA -->
+            <!-- SECCIí“N 11: FIRMA -->
             <div class="form-desvio-section">
-                <h3 class="form-desvio-title">11. COMPLETÓ EL FORMULARIO</h3>
+                <h3 class="form-desvio-title">11. COMPLETí“ EL FORMULARIO</h3>
                 
                 <div class="form-desvio-grid">
                     <div class="form-desvio-group">
@@ -883,7 +883,7 @@
                 </div>
             </div>
 
-            <!-- SECCIÓN 12: DICEI -->
+            <!-- SECCIí“N 12: DICEI -->
             <div class="form-desvio-dicei">
                 <h3 style="margin: 0 0 20px 0; color: #92400e; font-size: 20px;">A COMPLETAR POR LA DICEI</h3>
                 
@@ -922,7 +922,7 @@
         <!-- Footer del Modal -->
         <div class="modal-desvio-footer">
             <button onclick="cerrarModalDesvio()" class="btn-desvio-secondary">Cancelar</button>
-            <button onclick="generarPDFDesvioProfesional()" class="btn-desvio-primary">📥 Descargar Formulario (PDF)</button>
+            <button onclick="generarPDFDesvioProfesional()" class="btn-desvio-primary">ðŸ“¥ Descargar Formulario (PDF)</button>
         </div>
     </div>
 </div>
@@ -932,6 +932,21 @@
             <script>document.getElementById('webFooter').src = 'logos/footer.jpg?t=' + new Date().getTime();</script>
         </div>
     </div>
+    <!-- Imágenes ocultas para el PDF -->
+    <img id="imgCaratula" style="display:none;" />
+    <img id="imgContracaratula" style="display:none;" />
+    <script>
+        document.getElementById('imgCaratula').src = 'logos/Caratula.png?t=' + new Date().getTime();
+        document.getElementById('imgContracaratula').src = 'logos/Contracaratula.png?t=' + new Date().getTime();
+    </script>
+    
+    <!-- Imágenes ocultas para el PDF -->
+    <img id="imgCaratula" style="display:none;" />
+    <img id="imgContracaratula" style="display:none;" />
+    <script>
+        document.getElementById('imgCaratula').src = 'logos/Caratula.png?t=' + new Date().getTime();
+        document.getElementById('imgContracaratula').src = 'logos/Contracaratula.png?t=' + new Date().getTime();
+    </script>
 
     <script>
 
@@ -981,10 +996,10 @@
         function cleanText(t) {
             if (!t) return "";
             return t.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F900}-\u{1F9FF}\u{1F1E6}-\u{1F1FF}]/gu, '')
-                .replace(/[💉💊⚠️❄️🔥✅⚡📶📡]/gu, '')
+                .replace(/[ðŸ’‰ðŸ’Šâš ï¸â„ï¸ðŸ”¥âœ…âš¡ðŸ“¶ðŸ“¡]/gu, '')
                 .replace(/á/g, 'a').replace(/é/g, 'e').replace(/í/g, 'i').replace(/ó/g, 'o').replace(/ú/g, 'u')
-                .replace(/Á/g, 'A').replace(/É/g, 'E').replace(/Í/g, 'I').replace(/Ó/g, 'O').replace(/Ú/g, 'U')
-                .replace(/ñ/g, 'n').replace(/Ñ/g, 'N')
+                .replace(/í/g, 'A').replace(/í‰/g, 'E').replace(/í/g, 'I').replace(/í“/g, 'O').replace(/íš/g, 'U')
+                .replace(/ñ/g, 'n').replace(/í‘/g, 'N')
                 .trim();
         }
 
@@ -1159,7 +1174,7 @@
                         startTime = f.created_at;
                         picoValor = val;
                         picoHora = f.created_at;
-                        const label = state === 'high' ? '🔥 Alta (Calor)' : '❄️ Baja (Frío / Riesgo Congelación)';
+                        const label = state === 'high' ? 'ðŸ”¥ Alta (Calor)' : 'â„ï¸ Baja (Frío / Riesgo Congelación)';
                         const obsId = `alerta_${f.created_at}`;
                         const valorGuardado = observaciones[obsId] || '';
                         const inputHtml = `<td><input type="text" style="width:100%; border:1px solid #ddd; border-radius:4px; padding:2px 4px;" value="${valorGuardado.replace(/"/g, '&quot;')}" placeholder="Nota..." onchange="guardarObservacion(this, '${obsId}')"></td>`;
@@ -1170,7 +1185,7 @@
                         const valorGuardado = observaciones[obsId] || '';
                         const inputHtml = `<td><input type="text" style="width:100%; border:1px solid #ddd; border-radius:4px; padding:2px 4px;" value="${valorGuardado.replace(/"/g, '&quot;')}" placeholder="Nota..." onchange="guardarObservacion(this, '${obsId}')"></td>`;
                         const picoStr = picoValor !== null ? `${picoValor.toFixed(1)}°C (${formatDateTime(picoHora)})` : '--';
-                        rows += `<tr><td>${formatDateTime(f.created_at)}</td><td>${val.toFixed(1)}°C</td><td>✅ Recuperación</td><td>${formatDurationFull(dur)}</td><td>${picoStr}</td>${inputHtml}</tr>`;
+                        rows += `<tr><td>${formatDateTime(f.created_at)}</td><td>${val.toFixed(1)}°C</td><td>âœ… Recuperación</td><td>${formatDurationFull(dur)}</td><td>${picoStr}</td>${inputHtml}</tr>`;
                         alertData.push({ estado: lastState, duracion: dur });
                         picoValor = null;
                         picoHora = null;
@@ -1179,7 +1194,7 @@
                 }
             });
 
-            tbody.innerHTML = rows || '<tr><td colspan="6" class="empty">✅ Sin eventos de alerta en este rango.</td></tr>';
+            tbody.innerHTML = rows || '<tr><td colspan="6" class="empty">âœ… Sin eventos de alerta en este rango.</td></tr>';
             
             const an = document.getElementById('analisisAlertasContenido'), re = document.getElementById('recomendacionesAlertasContenido');
             if (alertData.length > 0) {
@@ -1189,7 +1204,7 @@
                 document.getElementById('recomendacionesAlertas').style.display = 'block';
             } else {
                 an.innerText = "No se registraron desvíos de temperatura en el período analizado. El equipo se mantuvo dentro del rango térmico de seguridad programado.";
-                re.innerText = "• Continuar con el monitoreo automático y rutinario.\n• Verificar el correcto cierre hermético de puertas.\n• Mantener actualizados los inventarios de vacunas.";
+                re.innerText = "â€¢ Continuar con el monitoreo automático y rutinario.\nâ€¢ Verificar el correcto cierre hermético de puertas.\nâ€¢ Mantener actualizados los inventarios de vacunas.";
                 document.getElementById('analisisAlertas').style.display = 'block';
                 document.getElementById('recomendacionesAlertas').style.display = 'block';
             }
@@ -1205,7 +1220,7 @@
                     const tempAntes = parseFloat(feeds[i-1][field]);
                     const tempDespues = parseFloat(feeds[i][field]);
                     // Clasificación del corte
-                    const type = (!isNaN(tempDespues) && (tempDespues > MAX || tempDespues < MIN)) ? '⚡ Corte de Energía' : '📶 Corte de WiFi';
+                    const type = (!isNaN(tempDespues) && (tempDespues > MAX || tempDespues < MIN)) ? 'âš¡ Corte de Energía' : 'ðŸ“¶ Corte de WiFi';
                     
                     const obsId = `wifi_${feeds[i].created_at}`;
                     const valorGuardado = observaciones[obsId] || '';
@@ -1219,7 +1234,7 @@
                 }
             }
 
-            tbody.innerHTML = rows || '<tr><td colspan="7" class="empty">✅ Sin cortes ni interrupciones detectadas.</td></tr>';
+            tbody.innerHTML = rows || '<tr><td colspan="7" class="empty">âœ… Sin cortes ni interrupciones detectadas.</td></tr>';
             
             const an = document.getElementById('analisisWifiContenido'), re = document.getElementById('recomendacionesWifiContenido');
             if (wifiData.length > 0) {
@@ -1229,14 +1244,14 @@
                 document.getElementById('recomendacionesWifi').style.display = 'block';
             } else {
                 an.innerText = "Transmisión continua de datos WiFi confirmada. No se registraron brechas de trazabilidad digital en el período.";
-                re.innerText = "• Mantener los equipos de comunicación de red WiFi conectados de manera ininterrumpida.\n• Revisar periódicamente la señal (RSSI) del dispositivo datalogger.";
+                re.innerText = "â€¢ Mantener los equipos de comunicación de red WiFi conectados de manera ininterrumpida.\nâ€¢ Revisar periódicamente la señal (RSSI) del dispositivo datalogger.";
                 document.getElementById('analisisWifi').style.display = 'block';
                 document.getElementById('recomendacionesWifi').style.display = 'block';
             }
         }
 
         // ============================================================
-        // MOTOR CLÍNICO-DIAGNÓSTICO PERSONALIZADO (INMUNIZACIONES)
+        // MOTOR CLíNICO-DIAGNí“STICO PERSONALIZADO (INMUNIZACIONES)
         // ============================================================
         function generarAnalisisAlertas(eventos) {
             if (!eventos || eventos.length === 0) return "";
@@ -1249,11 +1264,11 @@
             });
 
             let analisis = `Se registraron desvíos térmicos acumulados por un total de ${formatDurationFull(totalDuracion)}.\n`;
-            analisis += `• Incidentes de calor (>8°C o >Max): ${altas}\n`;
-            analisis += `• Incidentes de frío (<2°C o <Min): ${bajas}\n\n`;
+            analisis += `â€¢ Incidentes de calor (>8°C o >Max): ${altas}\n`;
+            analisis += `â€¢ Incidentes de frío (<2°C o <Min): ${bajas}\n\n`;
 
             if (bajas > 0) {
-                analisis += "⚠️ ADVERTENCIA CRÍTICA: Se detectó riesgo de CONGELACIÓN. La exposición a temperaturas inferiores a 2°C (o al límite del congelador) puede inactivar de forma irreversible la potencia de vacunas adyuvadas (Hepatitis B, Gripal, Neumococo, VPH, DPT). Esto compromete seriamente la efectividad de los esquemas vacunales y requiere especial atención.\n\n";
+                analisis += "âš ï¸ ADVERTENCIA CRíTICA: Se detectó riesgo de CONGELACIí“N. La exposición a temperaturas inferiores a 2°C (o al límite del congelador) puede inactivar de forma irreversible la potencia de vacunas adyuvadas (Hepatitis B, Gripal, Neumococo, VPH, DPT). Esto compromete seriamente la efectividad de los esquemas vacunales y requiere especial atención.\n\n";
             }
 
             if (totalDuracion < 15) {
@@ -1261,7 +1276,7 @@
             } else if (totalDuracion < 120) {
                 analisis += "Desvío térmico moderado. Se recomienda formalizar la novedad en el libro de incidencias y reportar al Referente de Vacunas para su supervisión.";
             } else {
-                analisis += "DESVÍO CRÍTICO Y PROLONGADO: Se sugiere apartar de manera temporal el lote involucrado colocándolo en un contenedor seguro rotulado 'NO UTILIZAR - BLOQUEADO', suspender temporalmente su colocación y realizar la consulta formal de estabilidad al Departamento de Inmunizaciones provincial.";
+                analisis += "DESVíO CRíTICO Y PROLONGADO: Se sugiere apartar de manera temporal el lote involucrado colocándolo en un contenedor seguro rotulado 'NO UTILIZAR - BLOQUEADO', suspender temporalmente su colocación y realizar la consulta formal de estabilidad al Departamento de Inmunizaciones provincial.";
             }
             return analisis;
         }
@@ -1273,15 +1288,15 @@
             let recom = [];
 
             if (tieneAltas) {
-                recom.push("• Calor excesivo: Comprobar el cierre magnético de las puertas y la limpieza del radiador externo del motor.");
-                recom.push("• Mantener la colocación de botellas de agua fría en la parte inferior para aumentar la inercia térmica.");
+                recom.push("â€¢ Calor excesivo: Comprobar el cierre magnético de las puertas y la limpieza del radiador externo del motor.");
+                recom.push("â€¢ Mantener la colocación de botellas de agua fría en la parte inferior para aumentar la inercia térmica.");
             }
             if (tieneBajas) {
-                recom.push("• Frío extremo: Comprobar que los empaques no estén en contacto con la pared fría trasera del refrigerador.");
-                recom.push("• Ejecutar el 'Test de Agitación' en vacunas combinadas adyuvadas en caso de sospechar cristalización.");
+                recom.push("â€¢ Frío extremo: Comprobar que los empaques no estén en contacto con la pared fría trasera del refrigerador.");
+                recom.push("â€¢ Ejecutar el 'Test de Agitación' en vacunas combinadas adyuvadas en caso de sospechar cristalización.");
             }
-            recom.push("• Registrar obligatoriamente el incidente clínico en el registro manual de novedades de la cadena de frío.");
-            recom.push("• Calibrar y constatar la lectura del datalogger con un termómetro patrón habilitado.");
+            recom.push("â€¢ Registrar obligatoriamente el incidente clínico en el registro manual de novedades de la cadena de frío.");
+            recom.push("â€¢ Calibrar y constatar la lectura del datalogger con un termómetro patrón habilitado.");
             return recom.join('\n');
         }
 
@@ -1290,7 +1305,7 @@
             let totalDuracion = 0;
             eventos.forEach(e => { totalDuracion += e.duracion; });
             let analisis = `Interrupciones de transmisión de datos detectadas: ${eventos.length}.\n`;
-            analisis += `• Duración acumulada sin datos: ${formatDurationFull(totalDuracion)}\n\n`;
+            analisis += `â€¢ Duración acumulada sin datos: ${formatDurationFull(totalDuracion)}\n\n`;
 
             if (totalDuracion < 60) {
                 analisis += "Los cortes de señal WiFi fueron breves y no comprometen la trazabilidad clínica global. Se asume estabilidad de la heladera.";
@@ -1302,14 +1317,14 @@
 
         function generarRecomendacionesEventos(eventos) {
             if (!eventos || eventos.length === 0) return "";
-            let recom = "• Verificar el suministro de alimentación eléctrica del router local (se aconseja usar UPS).\n";
-            recom += "• Asegurar la correcta orientación de la antena del datalogger y evitar barreras metálicas.\n";
-            recom += "• Ante cortes de señal recurrentes, asentar lecturas de temperatura de forma manual en planillas oficiales cada 4 horas.";
+            let recom = "â€¢ Verificar el suministro de alimentación eléctrica del router local (se aconseja usar UPS).\n";
+            recom += "â€¢ Asegurar la correcta orientación de la antena del datalogger y evitar barreras metálicas.\n";
+            recom += "â€¢ Ante cortes de señal recurrentes, asentar lecturas de temperatura de forma manual en planillas oficiales cada 4 horas.";
             return recom;
         }
 
         // ============================================================
-        // EXPORTACIÓN E INTERPRETACIÓN PDF DE ALTA CALIDAD (JSPDF)
+        // EXPORTACIí“N E INTERPRETACIí“N PDF DE ALTA CALIDAD (JSPDF)
         // ============================================================
         function checkPageBreak(doc, yPos, espacioNecesario, marginTop = 45, marginBottom = 30) {
             const pageHeight = doc.internal.pageSize.getHeight();
@@ -1322,7 +1337,7 @@
 
         async function downloadPDF() {
             try {
-                mostrarToast("Generando reporte PDF institucional... ⏳", "#3b82f6");
+                mostrarToast("Generando reporte PDF institucional... â³", "#3b82f6");
                 const trazabilidad = generarCodigoTrazabilidad();
                 const { jsPDF } = window.jspdf;
                 const pdf = new jsPDF('p', 'mm', 'a4');
@@ -1384,7 +1399,7 @@
                 const teamName = cleanText(document.getElementById('teamName').innerText);
 
                 pdf.setFontSize(14); pdf.setFont('helvetica', 'bold'); pdf.setTextColor(0, 56, 77);
-                const titleStr = "INFORME TÉCNICO OFICIAL DE CADENA DE FRÍO";
+                const titleStr = "INFORME Tí‰CNICO OFICIAL DE CADENA DE FRíO";
                 pdf.text(titleStr, margin, yPos);
                 
                 yPos += 8; pdf.setFontSize(10); pdf.setFont('helvetica', 'italic'); pdf.setTextColor(100);
@@ -1437,7 +1452,7 @@
 
                 yPos = checkPageBreak(pdf, yPos, 20);
                 pdf.setFont('helvetica', 'bold'); pdf.setFontSize(11); pdf.setTextColor(0, 56, 77);
-                pdf.text("⚠️ ALERTAS Y RECUPERACIONES:", margin, yPos);
+                pdf.text("âš ï¸ ALERTAS Y RECUPERACIONES:", margin, yPos);
                 yPos += 6;
 
                 if (alertRows.length > 0) {
@@ -1457,13 +1472,13 @@
                     yPos += 12;
                 }
 
-                // --- ANÁLISIS CLÍNICO VACUNAS ---
+                // --- ANíLISIS CLíNICO VACUNAS ---
                 yPos = checkPageBreak(pdf, yPos, 40);
                 pdf.setFont('helvetica', 'bold'); pdf.setFontSize(11); pdf.setTextColor(0, 56, 77);
-                pdf.text("ANÁLISIS TÉCNICO CLÍNICO:", margin, yPos);
+                pdf.text("ANíLISIS Tí‰CNICO CLíNICO:", margin, yPos);
                 yPos += 7;
                 pdf.setFont('helvetica', 'normal'); pdf.setFontSize(9); pdf.setTextColor(30, 41, 59);
-                const txtClinico = generarAnalisisAlertas(alertRows.map(r => ({ estado: r[2], duracion: parseDurationToMinutes(r[3]) }))) + "\n\nRECOMENDACIONES CLÍNICAS:\n" + generarRecomendacionesAlertas(alertRows.map(r => ({ estado: r[2], duracion: parseDurationToMinutes(r[3]) })));
+                const txtClinico = generarAnalisisAlertas(alertRows.map(r => ({ estado: r[2], duracion: parseDurationToMinutes(r[3]) }))) + "\n\nRECOMENDACIONES CLíNICAS:\n" + generarRecomendacionesAlertas(alertRows.map(r => ({ estado: r[2], duracion: parseDurationToMinutes(r[3]) })));
                 const splitClinico = pdf.splitTextToSize(txtClinico, pageWidth - (margin * 2));
                 pdf.text(splitClinico, margin, yPos);
                 yPos += (splitClinico.length * 5) + 10;
@@ -1477,7 +1492,7 @@
 
                 yPos = checkPageBreak(pdf, yPos, 20);
                 pdf.setFont('helvetica', 'bold'); pdf.setFontSize(11); pdf.setTextColor(0, 56, 77);
-                pdf.text("📡 EVENTOS DE CONECTIVIDAD DETECTADOS (>10 min):", margin, yPos);
+                pdf.text("ðŸ“¡ EVENTOS DE CONECTIVIDAD DETECTADOS (>10 min):", margin, yPos);
                 yPos += 6;
 
                 if (wifiRows.length > 0) {
@@ -1497,10 +1512,10 @@
                     yPos += 12;
                 }
 
-                // --- ANÁLISIS RED WIFI ---
+                // --- ANíLISIS RED WIFI ---
                 yPos = checkPageBreak(pdf, yPos, 35);
                 pdf.setFont('helvetica', 'bold'); pdf.setFontSize(11); pdf.setTextColor(0, 56, 77);
-                pdf.text("ANÁLISIS DE CONECTIVIDAD Y RED:", margin, yPos);
+                pdf.text("ANíLISIS DE CONECTIVIDAD Y RED:", margin, yPos);
                 yPos += 7;
                 pdf.setFont('helvetica', 'normal'); pdf.setFontSize(9); pdf.setTextColor(30, 41, 59);
                 const txtRed = generarAnalisisEventos(wifiRows.map(r => ({ tipo: r[2], duracion: parseDurationToMinutes(r[5]) }))) + "\n\nRECOMENDACIONES DE RED:\n" + generarRecomendacionesEventos(wifiRows.map(r => ({ tipo: r[2], duracion: parseDurationToMinutes(r[5]) })));
@@ -1508,31 +1523,32 @@
                 pdf.text(splitRed, margin, yPos);
                 yPos += (splitRed.length * 5) + 10;
 
-                // --- NOTA TÉCNICA Y GARANTÍA ---
+                // --- NOTA Tí‰CNICA Y GARANTíA ---
                 yPos = checkPageBreak(pdf, yPos, 25);
                 pdf.setFontSize(9); pdf.setFont('helvetica', 'bold'); pdf.setTextColor(71, 85, 105);
-                pdf.text('NOTA TÉCNICA:', margin, yPos);
+                pdf.text('NOTA Tí‰CNICA:', margin, yPos);
                 yPos += 5;
                 pdf.setFont('helvetica', 'italic'); pdf.setFontSize(7.5);
-                const notaTecnica = 'Toda calibración e intervención correctiva en el equipamiento de frío del vacunatorio debe ser realizada ' +
-                    'por personal técnico de mantenimiento calificado o electromedicina. Ante oscilaciones térmicas persistentes, ' +
-                    'debe notificarse de forma inmediata a la Jefatura Sanitaria correspondiente para la activación de planes de contingencia. ' +
-                    'Toda novedad operativa debe registrarse con firma del operador responsable, conforme a la Disposición ANMAT 10.872/2020 y ' +
-                    'las directivas del Departamento de Inmunizaciones provincial.';
+                const notaTecnica = 'Las calibraciones de los registradores continuos de temperatura deben realizarse al menos anualmente por ' +
+                    'laboratorios acreditados, según la Disposición ANMAT N° 2069/2018. Las intervenciones correctivas del equipamiento de frío ' +
+                    'serán ejecutadas por personal técnico de mantenimiento calificado. Ante oscilaciones térmicas persistentes, notificar de ' +
+                    'inmediato a la Jefatura Sanitaria para activar los planes de contingencia (que incluyen el uso de grupo electrógeno de ' +
+                    'respaldo o traslado a conservadoras). Toda novedad operativa debe registrarse de forma trazable en el libro de control ' +
+                    'firmado por el responsable, en cumplimiento de la Resolución N° 527/2005 (Neuquén) y la Ley Nacional de Vacunas N° 27.491.';
                 const splitNota = pdf.splitTextToSize(notaTecnica, pageWidth - (margin * 2));
                 pdf.text(splitNota, margin, yPos);
                 yPos += (splitNota.length * 4.5) + 6;
 
-                // --- CLÁUSULA DE RESPONSABILIDAD LEGAL DE VACUNAS (LEY N° 27.491) ---
+                // --- CLíUSULA DE RESPONSABILIDAD LEGAL DE VACUNAS (LEY N° 27.491) ---
                 yPos = checkPageBreak(pdf, yPos, 25);
                 pdf.setFontSize(9); pdf.setFont('helvetica', 'bold'); pdf.setTextColor(71, 85, 105);
                 pdf.text('RESPONSABILIDAD INSTITUCIONAL:', margin, yPos);
                 yPos += 5;
                 pdf.setFont('helvetica', 'italic'); pdf.setFontSize(7.5);
                 const notaResp = 'La preservación de la cadena de frío, potencia y custodia de los inmunobiológicos es responsabilidad directa ' +
-                    'e indelegable del personal a cargo de los vacunatorios y sus autoridades de jefatura, conforme a los términos ' +
-                    'del Marco Regulatorio establecido por la Ley Nacional de Vacunas N° 27.491 y las regulaciones complementarias de la autoridad ' +
-                    'sanitaria jurisdiccional. Ante cualquier incidente crítico, notificar de inmediato.';
+                    'e indelegable del personal a cargo de los vacunatorios y sus autoridades de jefatura, conforme a la Ley Nacional ' +
+                    'N° 27.491 (reglamentada por Decreto 439/2023) y la Resolución N° 527/2005 (Neuquén) de habilitación de vacunatorios. ' +
+                    'Ante cualquier incidente crítico, notificar de inmediato.';
                 const splitResp = pdf.splitTextToSize(notaResp, pageWidth - (margin * 2));
                 pdf.text(splitResp, margin, yPos);
                 yPos += (splitResp.length * 4.5) + 6;
@@ -1543,7 +1559,7 @@
 
                 // Guardar en Google Drive de forma asíncrona
                 if (FOLDER_ID && APPS_SCRIPT_INMUNIZACION) {
-                    mostrarToast("Subiendo reporte a la nube de Inmunizaciones... 📁", "#3b82f6");
+                    mostrarToast("Subiendo reporte a la nube de Inmunizaciones... ðŸ“", "#3b82f6");
                     try {
                         const pdfBase64 = pdf.output('datauristring').split(',')[1];
                         fetch(APPS_SCRIPT_INMUNIZACION, {
@@ -1561,7 +1577,7 @@
                             })
                         })
                         .then(() => {
-                            mostrarToast("¡Informe guardado con éxito en Google Drive! ✅", "#10b981");
+                            mostrarToast("Â¡Informe guardado con éxito en Google Drive! âœ…", "#10b981");
                         })
                         .catch(err => {
                             console.error("Error en Apps Script:", err);
@@ -1579,7 +1595,7 @@
 
 
     // ============================================================
-    // FUNCIÓN AUXILIAR PARA MAPEO DE CENTRO DE Drive
+    // FUNCIí“N AUXILIAR PARA MAPEO DE CENTRO DE Drive
     // ============================================================
     function obtenerCentroPorCanalId(channelId) {
         const id = parseInt(channelId);
@@ -1601,10 +1617,10 @@
         function cleanText(t) {
             if (!t) return "";
             return t.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F900}-\u{1F9FF}\u{1F1E6}-\u{1F1FF}]/gu, '')
-                .replace(/[💉💊⚠️❄️🔥✅⚡📶📡]/gu, '')
+                .replace(/[ðŸ’‰ðŸ’Šâš ï¸â„ï¸ðŸ”¥âœ…âš¡ðŸ“¶ðŸ“¡]/gu, '')
                 .replace(/á/g, 'a').replace(/é/g, 'e').replace(/í/g, 'i').replace(/ó/g, 'o').replace(/ú/g, 'u')
-                .replace(/Á/g, 'A').replace(/É/g, 'E').replace(/Í/g, 'I').replace(/Ó/g, 'O').replace(/Ú/g, 'U')
-                .replace(/ñ/g, 'n').replace(/Ñ/g, 'N')
+                .replace(/í/g, 'A').replace(/í‰/g, 'E').replace(/í/g, 'I').replace(/í“/g, 'O').replace(/íš/g, 'U')
+                .replace(/ñ/g, 'n').replace(/í‘/g, 'N')
                 .trim();
         }
 
@@ -1622,7 +1638,7 @@
     // ============================================================
     function generarCodigoUnico(prefijo = 'IT') {
         const ahora = new Date();
-        const año = ahora.getFullYear();
+        const anio = ahora.getFullYear();
         const mes = String(ahora.getMonth() + 1).padStart(2, '0');
         const dia = String(ahora.getDate()).padStart(2, '0');
         const hora = String(ahora.getHours()).padStart(2, '0');
@@ -1634,7 +1650,7 @@
         
         const randomHash = Math.random().toString(36).substring(2, 6).toUpperCase();
         
-        return `${prefijo}-${año}${mes}${dia}-${hora}${minuto}${segundo}-${sensorShort}-${randomHash}`;
+        return `${prefijo}-${anio}${mes}${dia}-${hora}${minuto}${segundo}-${sensorShort}-${randomHash}`;
     }
 
     function generarHashSimple(texto) {
@@ -1665,7 +1681,7 @@
         const fechaInput = document.getElementById('fechaDesvioSelector').value;
         
         if (!fechaInput) {
-            alert('⚠️ Debe seleccionar una fecha para continuar.');
+            alert('âš ï¸ Debe seleccionar una fecha para continuar.');
             return;
         }
         
@@ -1718,7 +1734,7 @@
     }
 
     // ============================================================
-    // FUNCIONES DEL FORMULARIO DE DESVÍO
+    // FUNCIONES DEL FORMULARIO DE DESVíO
     // ============================================================
     function abrirModalDesvio() {
         document.getElementById('modalDesvio').style.display = 'block';
@@ -1742,7 +1758,7 @@
         div.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <h4 class="form-desvio-subtitle">Equipo Frigorífico N° ${contadorEquipos}</h4>
-                <button type="button" onclick="eliminarEquipo(${contadorEquipos})" class="btn-eliminar">✖ Eliminar</button>
+                <button type="button" onclick="eliminarEquipo(${contadorEquipos})" class="btn-eliminar">âœ– Eliminar</button>
             </div>
             <div class="form-desvio-grid">
                 <div class="form-desvio-group">
@@ -1786,7 +1802,7 @@
         div.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <h4 class="form-desvio-subtitle">Heladera/Equipo N° ${contadorHeladeras}</h4>
-                <button type="button" onclick="eliminarHeladera(${contadorHeladeras})" class="btn-eliminar">✖ Eliminar</button>
+                <button type="button" onclick="eliminarHeladera(${contadorHeladeras})" class="btn-eliminar">âœ– Eliminar</button>
             </div>
             <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;">
                 <div>
@@ -1834,7 +1850,7 @@
         div.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <h4 class="form-desvio-subtitle">Dosis por Equipo N° ${contadorDosisPorEquipo}</h4>
-                <button type="button" onclick="eliminarDosisPorEquipo(${contadorDosisPorEquipo})" class="btn-eliminar">✖ Eliminar</button>
+                <button type="button" onclick="eliminarDosisPorEquipo(${contadorDosisPorEquipo})" class="btn-eliminar">âœ– Eliminar</button>
             </div>
             <div class="form-desvio-group">
                 <label class="form-desvio-label">Equipo/Heladera:</label>
@@ -1888,7 +1904,7 @@
         if (input.files && input.files[0]) {
             archivoRegistro = input.files[0];
             infoDiv.style.display = 'block';
-            infoDiv.innerHTML = `📎 Archivo seleccionado: ${archivoRegistro.name} (${(archivoRegistro.size / 1024).toFixed(2)} KB)`;
+            infoDiv.innerHTML = `ðŸ“Ž Archivo seleccionado: ${archivoRegistro.name} (${(archivoRegistro.size / 1024).toFixed(2)} KB)`;
         } else {
             archivoRegistro = null;
             infoDiv.style.display = 'none';
@@ -1901,14 +1917,14 @@
         const descripcion = document.getElementById('desvio_descripcion').value;
 
         if (!establecimiento || !responsable || !descripcion) {
-            alert('⚠️ Complete los campos obligatorios:\n- Establecimiento\n- Responsable\n- Descripción del desvío');
+            alert('âš ï¸ Complete los campos obligatorios:\n- Establecimiento\n- Responsable\n- Descripción del desvío');
             return false;
         }
         return true;
     }
 
     // ============================================================
-    // FUNCIÓN PARA GENERAR GRÁFICA TEMPORAL
+    // FUNCIí“N PARA GENERAR GRíFICA TEMPORAL
     // ============================================================
     function generarGraficaTemporal(canvasId, feeds, field, titulo) {
         if (!feeds || feeds.length === 0) return null;
@@ -2000,11 +2016,11 @@
         // ================================================================
         // [1] CARÁTULA
         // ================================================================
-        const caratulaRuta = "logos/Caratula.png"; // <--- REEMPLAZA AQUÍ
+        const caratulaBase64 = getBase64Image('imgCaratula');
         
-        if (caratulaRuta && caratulaRuta !== "RUTA_DE_TU_IMAGEN_CARATULA") {
+        if (caratulaBase64) {
             try {
-                doc.addImage(caratulaRuta, 'JPEG', 0, 0, 210, 297);
+                doc.addImage(caratulaBase64, 'PNG', 0, 0, 210, 297);
             } catch (e) {
                 console.warn("Error al cargar carátula, se usa página en blanco:", e);
                 doc.setFontSize(16);
@@ -2431,14 +2447,14 @@
         yPos = Math.max(yCol1, yCol2);
         
         // ================================================================
-        // [3] CONTRACARÁTULA
+        // [3] CONTRACARíTULA
         // ================================================================
         doc.addPage();
-        const contracaratulaRuta = "logos/Contracaratula.png"; // <--- REEMPLAZA AQUÍ
+        const contracaratulaBase64 = getBase64Image("imgContracaratula");
         
-        if (contracaratulaRuta && contracaratulaRuta !== "RUTA_DE_TU_IMAGEN_CONTRACARATULA") {
+        if (contracaratulaBase64) {
             try {
-                doc.addImage(contracaratulaRuta, 'JPEG', 0, 0, 210, 297);
+                doc.addImage(contracaratulaBase64, 'PNG', 0, 0, 210, 297);
             } catch (e) {
                 console.warn("Error al cargar contracaratula, se usa pagina en blanco:", e);
                 doc.setFontSize(16);
@@ -2465,7 +2481,7 @@
         
         // Guardar en Google Drive de forma asíncrona
         if (APPS_SCRIPT_INMUNIZACION) {
-            mostrarToast("Subiendo formulario de desvío a Google Drive... 📁", "#3b82f6");
+            mostrarToast("Subiendo formulario de desvío a Google Drive... ðŸ“", "#3b82f6");
             try {
                 const pdfBase64 = doc.output('datauristring').split(',')[1];
                 fetch(APPS_SCRIPT_INMUNIZACION, {
@@ -2484,7 +2500,7 @@
                     })
                 })
                 .then(() => {
-                    mostrarToast("¡Formulario de desvío guardado en Google Drive! ✅", "#10b981");
+                    mostrarToast("Â¡Formulario de desvío guardado en Google Drive! âœ…", "#10b981");
                 })
                 .catch(err => {
                     console.error("Error en Apps Script desvío:", err);
@@ -2514,3 +2530,6 @@
 </body>
 
 </html>
+
+
+
