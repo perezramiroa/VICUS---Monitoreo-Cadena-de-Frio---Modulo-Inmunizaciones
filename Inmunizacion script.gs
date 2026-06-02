@@ -177,7 +177,7 @@ function ejecutarReporteSemanal() {
         }
       });
 
-      if (feedsPorSensor.some(fs => fs.feeds.length > 0)) {
+      if (feedsPorSensor.length > 0) {
         generarSheetSemanal(feedsPorSensor, rangoTexto, hoy, configCentro.sheetFolder);
         console.log(`  -> Planilla consolidada creada para: ${nombreCentro}`);
       }
@@ -268,11 +268,11 @@ function generarPDFOficial(sensor, fecha, rango, trazabilidad, analizada, conect
   const maxRange = sensor.isFreezer ? "-18°C" : "8°C";
   body.appendParagraph("ALERTAS Y RECUPERACIONES (" + minRange + " - " + maxRange + ")")
     .setBold(true).setFontSize(10).setSpacingAfter(4);
-  const tablaAlertas = [["Fecha y Hora", "Valor", "Estado", "Duración"]];
+  const tablaAlertas = [["Fecha y Hora", "Valor", "Estado", "Duración", "Pico Registrado"]];
   if (analizada.alertasFilas.length > 0) {
-    analizada.alertasFilas.forEach(f => tablaAlertas.push([f.h, f.v, f.e, f.d]));
+    analizada.alertasFilas.forEach(f => tablaAlertas.push([f.h, f.v, f.e, f.d, f.p || "--"]));
   } else {
-    tablaAlertas.push(["-", "-", "Sin eventos fuera de rango", "-"]);
+    tablaAlertas.push(["-", "-", "Sin eventos fuera de rango", "-", "-"]);
   }
   estilizarTabla(body.appendTable(tablaAlertas));
 
@@ -395,7 +395,7 @@ function generarSheetSemanal(feedsPorSensor, rango, hoy, sheetFolderId) {
     feedsPorSensor.forEach((fs, idx) => {
       fs.feeds.forEach(f => {
         const val = parseFloat(f[fs.sensor.field]);
-        if (isNaN(val)) return;
+        if (isNaN(val) || val === -127) return;
         const clave = fmtFecha(new Date(f.created_at));
         if (!mapaTemp[clave]) mapaTemp[clave] = { valores: {} };
         if (mapaTemp[clave].valores[idx] !== undefined) {
@@ -556,47 +556,80 @@ function generarGraficoCurva(feeds, field, nombre) {
     .addColumn(Charts.ColumnType.STRING, "Tiempo")
     .addColumn(Charts.ColumnType.NUMBER, "°C");
 
-  let vals = feeds.map(f => parseFloat(f[field])).filter(v => !isNaN(v));
-  if (vals.length === 0) vals = [5];
-  let minVal = Math.min(...vals);
-  let maxVal = Math.max(...vals);
+  // Filtrar -127 y calcular min/max para el eje Y
+  const vals = feeds.map(f => parseFloat(f[field])).filter(v => !isNaN(v) && v !== -127);
+  if (vals.length === 0) {
+    // Sin datos válidos: gráfico vacío con punto dummy
+    dataTable.addRow(["Sin datos", 5]);
+    return Charts.newLineChart()
+      .setDataTable(dataTable)
+      .setDimensions(2200, 520)
+      .setColors(["#3b82f6"])
+      .setOption("backgroundColor", "white")
+      .build().getAs('image/png');
+  }
 
-  let yMin = minVal - 0.5;
-  let yMax = maxVal + 0.5;
+  const minVal = Math.min(...vals);
+  const maxVal = Math.max(...vals);
+  const yMin = minVal - 0.5;
+  const yMax = maxVal + 0.5;
 
+  const UMBRAL_GAP_MS = 10 * 60 * 1000; // 10 minutos en ms
   const numPuntos = 800;
   const step = Math.max(1, Math.floor(feeds.length / numPuntos));
-  
+
+  // Construir array de puntos respetando el muestreo
+  const puntosMuestreados = [];
   for (let i = 0; i < feeds.length; i += step) {
-    let f = feeds[i];
-    let val = parseFloat(f[field]);
-    let date = new Date(f.created_at);
-    
-    if (!isNaN(val) && !isNaN(date.getTime())) {
-      let label = fmtFecha(date).slice(0, 13); // "dd/MM HH:mm" (sin año ni segundos)
-      dataTable.addRow([label, val]);
+    puntosMuestreados.push(feeds[i]);
+  }
+
+  let ultimoTsValido = null;
+
+  for (let i = 0; i < puntosMuestreados.length; i++) {
+    const f = puntosMuestreados[i];
+    const val = parseFloat(f[field]);
+    const date = new Date(f.created_at);
+
+    if (isNaN(date.getTime())) continue;
+
+    const esInvalido = isNaN(val) || val === -127;
+
+    // Detectar gap temporal respecto al punto anterior válido
+    if (ultimoTsValido !== null && (date.getTime() - ultimoTsValido) > UMBRAL_GAP_MS) {
+      // Insertar punto nulo para romper la línea
+      dataTable.addRow([fmtFecha(date).slice(0, 13), null]);
+    }
+
+    if (esInvalido) {
+      // Punto inválido: insertar null para dejar espacio vacío
+      dataTable.addRow([fmtFecha(date).slice(0, 13), null]);
+      // No actualizamos ultimoTsValido para que el gap se siga calculando
+    } else {
+      dataTable.addRow([fmtFecha(date).slice(0, 13), val]);
+      ultimoTsValido = date.getTime();
     }
   }
 
   return Charts.newLineChart()
     .setDataTable(dataTable)
     .setDimensions(2200, 520)
-    .setColors(["#3b82f6"]) 
-    .setOption("areaOpacity", 0.1) 
-    .setOption("lineWidth", 1.5) 
-    .setOption("vAxis", { 
-      gridlines: { count: 8, color: '#cbd5e1' }, 
+    .setColors(["#3b82f6"])
+    .setOption("areaOpacity", 0.1)
+    .setOption("lineWidth", 1.5)
+    .setOption("vAxis", {
+      gridlines: { count: 8, color: '#cbd5e1' },
       viewWindow: { min: yMin, max: yMax },
       format: '#.0°C',
       textStyle: { fontSize: 14, color: '#000000', bold: true },
       textPosition: 'out'
     })
-    .setOption("hAxis", { 
-      slantedText: true, 
+    .setOption("hAxis", {
+      slantedText: true,
       slantedTextAngle: 45,
-      textStyle: { fontSize: 12, color: '#000000', bold: true }, 
+      textStyle: { fontSize: 12, color: '#000000', bold: true },
       gridlines: { color: 'none' },
-      showTextEvery: 60 
+      showTextEvery: 60
     })
     .setOption("chartArea", { width: '94%', height: '70%', left: '4%', right: '1%', top: '4%' })
     .setOption("legend", { position: 'none' })
@@ -617,12 +650,14 @@ function analizarDatos(feeds, field, sensor) {
   let inicioAlerta = null;
   let valorAlerta = null;
   let tipoAlerta = null;
+  let picoValor = null;
+  let picoTs = null;
 
   const valores = feeds
     .map(f => ({ ts: new Date(f.created_at), val: parseFloat(f[field]) }))
-    .filter(f => !isNaN(f.val));
+    .filter(f => !isNaN(f.val) && f.val !== -127);
 
-  valores.forEach((punto, i) => {
+  valores.forEach(punto => {
     const fuera = punto.val < minOk || punto.val > maxOk;
     const tipo = punto.val > maxOk ? "ALTA" : punto.val < minOk ? "BAJA" : null;
 
@@ -631,15 +666,25 @@ function analizarDatos(feeds, field, sensor) {
       inicioAlerta = punto.ts;
       valorAlerta = punto.val;
       tipoAlerta = tipo;
+      picoValor = punto.val;
+      picoTs = punto.ts;
+    } else if (fuera && enAlerta) {
+      // Actualizar pico: máximo si es ALTA, mínimo si es BAJA
+      if (tipoAlerta === "ALTA" && punto.val > picoValor) { picoValor = punto.val; picoTs = punto.ts; }
+      if (tipoAlerta === "BAJA" && punto.val < picoValor) { picoValor = punto.val; picoTs = punto.ts; }
     } else if (!fuera && enAlerta) {
       const durMin = (punto.ts - inicioAlerta) / 60000;
+      const picoStr = picoValor !== null ? picoValor.toFixed(1) + "°C (" + fmtFecha(picoTs) + ")" : "--";
       alertasFilas.push({
         h: fmtFecha(inicioAlerta),
         v: valorAlerta.toFixed(1) + "°C",
         e: tipoAlerta === "ALTA" ? "⚠ TEMP. ALTA" : "❄ TEMP. BAJA",
-        d: formatDur(durMin)
+        d: formatDur(durMin),
+        p: picoStr
       });
       enAlerta = false;
+      picoValor = null;
+      picoTs = null;
     }
   });
 
@@ -647,11 +692,13 @@ function analizarDatos(feeds, field, sensor) {
   if (enAlerta && inicioAlerta) {
     const ultimo = valores[valores.length - 1].ts;
     const durMin = (ultimo - inicioAlerta) / 60000;
+    const picoStr = picoValor !== null ? picoValor.toFixed(1) + "°C (" + fmtFecha(picoTs) + ")" : "--";
     alertasFilas.push({
       h: fmtFecha(inicioAlerta),
       v: valorAlerta.toFixed(1) + "°C",
       e: (tipoAlerta === "ALTA" ? "⚠ TEMP. ALTA" : "❄ TEMP. BAJA") + " (en curso)",
-      d: formatDur(durMin)
+      d: formatDur(durMin),
+      p: picoStr
     });
   }
 
@@ -659,9 +706,22 @@ function analizarDatos(feeds, field, sensor) {
   const vals = valores.map(f => f.val);
   const minVal = vals.length ? Math.min(...vals) : null;
   const maxVal = vals.length ? Math.max(...vals) : null;
-  const avg = vals.length ? (vals.reduce((a, b) => a + b, 0) / vals.length) : null;
+  const avg    = vals.length ? (vals.reduce((a, b) => a + b, 0) / vals.length) : null;
   const pctFuera = vals.length ? (vals.filter(v => v < minOk || v > maxOk).length / vals.length * 100) : 0;
   const pctFueraStr = pctFuera < 0.1 && pctFuera > 0 ? pctFuera.toFixed(2) : pctFuera.toFixed(1);
+
+  // Calcular duración total de eventos para el análisis clínico
+  const totalDurMin = alertasFilas.reduce((acc, f) => {
+    const parts = f.d.match(/(\d+)h\s*(\d+)m|(\d+)h|(\d+)m/);
+    if (!parts) return acc;
+    if (parts[1]) return acc + parseInt(parts[1]) * 60 + parseInt(parts[2] || 0);
+    if (parts[3]) return acc + parseInt(parts[3]) * 60;
+    if (parts[4]) return acc + parseInt(parts[4]);
+    return acc;
+  }, 0);
+
+  const tieneAltas = alertasFilas.some(f => f.e.includes("ALTA"));
+  const tieneBajas = alertasFilas.some(f => f.e.includes("BAJA"));
 
   let textoAnalisis = "";
   let textoRecom = "";
@@ -675,25 +735,49 @@ function analizarDatos(feeds, field, sensor) {
     notaResponsabilidad = "Ante la ausencia de registros automatizados, la viabilidad de las vacunas debe justificarse mediante registros manuales físicos.";
   } else {
     const rangoStr = isFreezer ? "-28°C a -18°C" : "2°C a 8°C";
-    textoAnalisis = `Período analizado: ${vals.length} lecturas. Rango óptimo: ${rangoStr}.\n` +
-      `Temperatura mínima: ${minVal.toFixed(1)}°C | Máxima: ${maxVal.toFixed(1)}°C | Promedio: ${avg.toFixed(1)}°C.\n` +
-      (alertasFilas.length === 0
-        ? "✅ Sin eventos fuera de rango durante el período. Cadena de frío mantenida correctamente."
-        : `⚠ Se detectaron ${alertasFilas.length} evento(s) fuera de rango (${pctFueraStr}% del tiempo).`);
 
     if (alertasFilas.length === 0) {
-      textoRecom = "• Continuar con el monitoreo habitual.\n• Mantener registros de temperatura actualizados.";
-      notaTecnica = "El equipo operó dentro de los parámetros establecidos durante todo el período.";
-      notaResponsabilidad = "Los registros automatizados confirman el mantenimiento de la cadena de frío durante el período analizado.";
+      textoAnalisis = "No se registraron desvíos de temperatura en el período analizado. El equipo se mantuvo dentro del rango térmico de seguridad programado.";
+      textoRecom = "• Continuar con el monitoreo automático y rutinario.\n• Verificar el correcto cierre hermético de puertas.\n• Mantener actualizados los inventarios de vacunas.";
     } else {
-      textoRecom = "• Revisar los eventos de temperatura fuera de rango detectados.\n" +
-        "• Evaluar el estado de las vacunas afectadas con el responsable del programa.\n" +
-        "• Verificar el funcionamiento del equipo de refrigeración.\n" +
-        "• Notificar al referente de cadena de frío según protocolo vigente.";
-      notaTecnica = `Se registraron ${alertasFilas.length} evento(s) con temperatura fuera del rango ${rangoStr}. ` +
-        `El ${pctFueraStr}% de las lecturas estuvieron fuera del rango óptimo.`;
-      notaResponsabilidad = "Los eventos detectados requieren evaluación de la viabilidad de las vacunas almacenadas durante los períodos de excursión térmica, conforme a los protocolos del Programa Nacional de Inmunizaciones.";
+      textoAnalisis = "Se registraron desvíos térmicos acumulados por un total de " + formatDur(totalDurMin) + ".\n";
+      textoAnalisis += "• Incidentes de calor (>" + maxOk + "°C): " + alertasFilas.filter(f => f.e.includes("ALTA")).length + "\n";
+      textoAnalisis += "• Incidentes de frío (<" + minOk + "°C): " + alertasFilas.filter(f => f.e.includes("BAJA")).length + "\n";
+      if (tieneBajas) {
+        textoAnalisis += "\n⚠ ADVERTENCIA CRÍTICA: Se detectó riesgo de CONGELACIÓN. La exposición a temperaturas inferiores a " + minOk + "°C puede inactivar de forma irreversible la potencia de vacunas adyuvadas (Hepatitis B, Gripal, Neumococo, VPH, DPT). Esto compromete seriamente la efectividad de los esquemas vacunales y requiere especial atención.\n";
+      }
+      if (totalDurMin < 15) {
+        textoAnalisis += "\nLos desvíos detectados fueron cortos. Se asume que no hay degradación de los antígenos, pero se sugiere supervisar hermeticidad y termostatos.";
+      } else if (totalDurMin < 120) {
+        textoAnalisis += "\nDesvío térmico moderado. Se recomienda formalizar la novedad en el libro de incidencias y reportar al Referente de Vacunas para su supervisión.";
+      } else {
+        textoAnalisis += "\nDESVÍO CRÍTICO Y PROLONGADO: Se sugiere apartar de manera temporal el lote involucrado colocándolo en un contenedor seguro rotulado 'NO UTILIZAR - BLOQUEADO', suspender temporalmente su colocación y realizar la consulta formal de estabilidad al Departamento de Inmunizaciones provincial.";
+      }
+
+      textoRecom = "";
+      if (tieneAltas) {
+        textoRecom += "• Calor excesivo: Comprobar el cierre magnético de las puertas y la limpieza del radiador externo del motor.\n";
+        textoRecom += "• Mantener la colocación de botellas de agua fría en la parte inferior para aumentar la inercia térmica.\n";
+      }
+      if (tieneBajas) {
+        textoRecom += "• Frío extremo: Comprobar que los empaques no estén en contacto con la pared fría trasera del refrigerador.\n";
+        textoRecom += "• Ejecutar el 'Test de Agitación' en vacunas combinadas adyuvadas en caso de sospechar cristalización.\n";
+      }
+      textoRecom += "• Registrar obligatoriamente el incidente clínico en el registro manual de novedades de la cadena de frío.\n";
+      textoRecom += "• Calibrar y constatar la lectura del datalogger con un termómetro patrón habilitado.";
     }
+
+    notaTecnica = "Las calibraciones de los registradores continuos de temperatura deben realizarse al menos anualmente por " +
+      "laboratorios acreditados, según la Disposición ANMAT N° 2069/2018. Las intervenciones correctivas del equipamiento de frío " +
+      "serán ejecutadas por personal técnico de mantenimiento calificado. Ante oscilaciones térmicas persistentes, notificar de " +
+      "inmediato a la Jefatura Sanitaria para activar los planes de contingencia (que incluyen el uso de grupo electrógeno de " +
+      "respaldo o traslado a conservadoras). Toda novedad operativa debe registrarse de forma trazable en el libro de control " +
+      "firmado por el responsable, en cumplimiento de la Resolución N° 527/2005 (Neuquén) y la Ley Nacional de Vacunas N° 27.491.";
+
+    notaResponsabilidad = "La preservación de la cadena de frío, potencia y custodia de los inmunobiológicos es responsabilidad directa " +
+      "e indelegable del personal a cargo de los vacunatorios y sus autoridades de jefatura, conforme a la Ley Nacional " +
+      "N° 27.491 (reglamentada por Decreto 439/2023) y la Resolución N° 527/2005 (Neuquén) de habilitación de vacunatorios. " +
+      "Ante cualquier incidente crítico, notificar de inmediato.";
   }
 
   return { alertasFilas, textoAnalisis, textoRecom, notaTecnica, notaResponsabilidad };
@@ -708,7 +792,7 @@ function analizarConectividad(feeds, field, sensor) {
 
   const puntos = feeds
     .map(f => ({ ts: new Date(f.created_at), val: parseFloat(f[field]) }))
-    .filter(f => !isNaN(f.ts.getTime()))
+    .filter(f => !isNaN(f.ts.getTime()) && f.val !== -127)
     .sort((a, b) => a.ts - b.ts);
 
   for (let i = 1; i < puntos.length; i++) {
@@ -736,12 +820,27 @@ function analizarConectividad(feeds, field, sensor) {
   let recom = "";
 
   if (filas.length === 0) {
-    analisis = "✅ Sin interrupciones de conectividad significativas (>10 min) durante el período.";
-    recom = "Conectividad estable. No se requieren acciones.";
+    analisis = "Transmisión continua de datos WiFi confirmada. No se registraron brechas de trazabilidad digital en el período.";
+    recom = "• Mantener los equipos de comunicación de red WiFi conectados de manera ininterrumpida.\n• Revisar periódicamente la señal (RSSI) del dispositivo datalogger.";
   } else {
-    analisis = `Se detectaron ${filas.length} interrupción(es) de conectividad de más de 10 minutos.`;
-    recom = "Verificar estabilidad de la red WiFi y alimentación eléctrica del sensor. " +
-      "Considerar el uso de UPS para garantizar continuidad del monitoreo.";
+    const totalDurMin = filas.reduce((acc, f) => {
+      const parts = f.duracion.match(/(\d+)h\s*(\d+)m|(\d+)h|(\d+)m/);
+      if (!parts) return acc;
+      if (parts[1]) return acc + parseInt(parts[1]) * 60 + parseInt(parts[2] || 0);
+      if (parts[3]) return acc + parseInt(parts[3]) * 60;
+      if (parts[4]) return acc + parseInt(parts[4]);
+      return acc;
+    }, 0);
+    analisis = "Interrupciones de transmisión de datos detectadas: " + filas.length + ".\n";
+    analisis += "• Duración acumulada sin datos: " + formatDur(totalDurMin) + "\n";
+    if (totalDurMin < 60) {
+      analisis += "\nLos cortes de señal WiFi fueron breves y no comprometen la trazabilidad clínica global. Se asume estabilidad de la heladera.";
+    } else {
+      analisis += "\nLas interrupciones prolongadas representan una brecha de trazabilidad. Es mandatorio constatar los registros de control manual en las planillas del Vacunatorio para el período afectado.";
+    }
+    recom = "• Verificar el suministro de alimentación eléctrica del router local (se aconseja usar UPS).\n";
+    recom += "• Asegurar la correcta orientación de la antena del datalogger y evitar barreras metálicas.\n";
+    recom += "• Ante cortes de señal recurrentes, asentar lecturas de temperatura de forma manual en planillas oficiales cada 4 horas.";
   }
 
   return { filas, analisis, recom };
