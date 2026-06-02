@@ -1101,19 +1101,29 @@
             
             for (let i = 0; i < feeds.length; i++) {
                 const f = feeds[i];
+                const val = parseFloat(f[field]);
                 const d = new Date(f.created_at);
                 const labelStr = `${d.getDate()}/${d.getMonth()+1} ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`;
                 
+                // Detectar gap temporal respecto al punto anterior
                 if (i > 0) {
                     const prevD = new Date(feeds[i-1].created_at);
                     const diffMins = (d - prevD) / 60000;
                     if (diffMins > WIFI_CUTOFF) {
+                        // Gap de conectividad: romper línea
                         temps.push(null);
                         labels.push('--- CORTE ---');
                     }
                 }
-                temps.push(parseFloat(f[field]));
-                labels.push(labelStr);
+
+                // -127 o NaN: tratar como dato inválido, romper línea
+                if (isNaN(val) || val === -127) {
+                    temps.push(null);
+                    labels.push(labelStr);
+                } else {
+                    temps.push(val);
+                    labels.push(labelStr);
+                }
             }
 
             chartInstance = new Chart(ctx, {
@@ -1403,7 +1413,7 @@
                 pdf.text(titleStr, margin, yPos);
                 
                 yPos += 8; pdf.setFontSize(10); pdf.setFont('helvetica', 'italic'); pdf.setTextColor(100);
-                pdf.text("Según Disposición ANMAT 10.872/2020", margin, yPos);
+                pdf.text("Segun Ley Nacional N° 26.492 y Disposicion ANMAT N° 2069/2018", margin, yPos);
                 
                 yPos += 12; pdf.setFontSize(12); pdf.setFont('helvetica', 'bold'); pdf.setTextColor(30, 41, 59);
                 pdf.text(`Dispositivo: ${sensorName}`, margin, yPos);
