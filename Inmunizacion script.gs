@@ -177,9 +177,11 @@ function ejecutarReporteSemanal() {
         }
       });
 
-      if (feedsPorSensor.length > 0) {
+      if (feedsPorSensor.length > 0 && feedsPorSensor.some(fs => fs.feeds.length > 0)) {
         generarSheetSemanal(feedsPorSensor, rangoTexto, hoy, configCentro.sheetFolder);
         console.log(`  -> Planilla consolidada creada para: ${nombreCentro}`);
+      } else {
+        console.log(`  -> Todos los sensores offline para ${nombreCentro}. Planilla no generada.`);
       }
     } catch (e) {
       console.error(`  Error generando planilla para ${nombreCentro}: ` + e.message);
@@ -792,7 +794,7 @@ function analizarConectividad(feeds, field, sensor) {
 
   const puntos = feeds
     .map(f => ({ ts: new Date(f.created_at), val: parseFloat(f[field]) }))
-    .filter(f => !isNaN(f.ts.getTime()) && f.val !== -127)
+    .filter(f => !isNaN(f.ts.getTime()))
     .sort((a, b) => a.ts - b.ts);
 
   for (let i = 1; i < puntos.length; i++) {
@@ -809,8 +811,8 @@ function analizarConectividad(feeds, field, sensor) {
         inicio: fmtFecha(puntos[i - 1].ts),
         fin:    fmtFecha(puntos[i].ts),
         tipo:   tipo,
-        antes:   isNaN(tempAntes) ? "--" : tempAntes.toFixed(1) + "°C",
-        despues: isNaN(tempDesp)  ? "--" : tempDesp.toFixed(1)  + "°C",
+        antes:   (isNaN(tempAntes) || tempAntes === -127) ? "--" : tempAntes.toFixed(1) + "°C",
+        despues: (isNaN(tempDesp)  || tempDesp  === -127) ? "--" : tempDesp.toFixed(1)  + "°C",
         duracion: formatDur(gapMin)
       });
     }
