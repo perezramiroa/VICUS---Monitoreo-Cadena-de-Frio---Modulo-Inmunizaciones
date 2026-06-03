@@ -589,25 +589,18 @@ function generarGraficoCurva(feeds, field, nombre) {
   let ultimoTsValido = null;
 
   for (let i = 0; i < puntosMuestreados.length; i++) {
-    const f = puntosMuestreados[i];
+    const f   = puntosMuestreados[i];
     const val = parseFloat(f[field]);
     const date = new Date(f.created_at);
-
     if (isNaN(date.getTime())) continue;
 
-    const esInvalido = isNaN(val) || val === -127;
-
-    // Detectar gap temporal respecto al punto anterior válido
+    // Detectar gap temporal — romper la línea solo por cortes reales de conectividad
     if (ultimoTsValido !== null && (date.getTime() - ultimoTsValido) > UMBRAL_GAP_MS) {
-      // Insertar punto nulo para romper la línea
       dataTable.addRow([fmtFecha(date).slice(0, 13), null]);
     }
 
-    if (esInvalido) {
-      // Punto inválido: insertar null para dejar espacio vacío
-      dataTable.addRow([fmtFecha(date).slice(0, 13), null]);
-      // No actualizamos ultimoTsValido para que el gap se siga calculando
-    } else {
+    // -127 o NaN: omitir el punto sin romper la línea
+    if (!isNaN(val) && val !== -127) {
       dataTable.addRow([fmtFecha(date).slice(0, 13), val]);
       ultimoTsValido = date.getTime();
     }
