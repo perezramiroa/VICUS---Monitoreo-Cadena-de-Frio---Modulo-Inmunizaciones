@@ -1041,6 +1041,43 @@
             return total;
         }
 
+        async function fetchThingSpeakCompleto(days, startDate, endDate) {
+            const ahora   = endDate   ? new Date(endDate + 'T23:59:59-03:00') : new Date();
+            const inicio  = startDate ? new Date(startDate + 'T00:00:00-03:00')
+                                      : new Date(ahora.getTime() - days * 24 * 60 * 60 * 1000);
+
+            let todosLosFeeds = [];
+            let fechaHasta    = new Date(ahora);
+            const MAX_PAGES   = 10;
+
+            for (let intento = 0; intento < MAX_PAGES; intento++) {
+                const startStr = inicio.toISOString().slice(0, 19);
+                const endStr   = fechaHasta.toISOString().slice(0, 19);
+                const url = `https://api.thingspeak.com/channels/${ID}/feeds.json?api_key=${KEY}&start=${startStr}-03:00&end=${endStr}-03:00&results=8000`;
+                const res  = await fetch(url);
+                const data = await res.json();
+
+                if (!data.feeds || data.feeds.length === 0) break;
+
+                const primerTs = todosLosFeeds.length > 0
+                    ? new Date(todosLosFeeds[0].created_at).getTime()
+                    : Infinity;
+                const nuevos = data.feeds.filter(f => new Date(f.created_at).getTime() < primerTs);
+                todosLosFeeds = [...nuevos, ...todosLosFeeds];
+
+                if (data.feeds.length < 8000) break;
+
+                fechaHasta = new Date(new Date(data.feeds[0].created_at).getTime() - 60000);
+                if (fechaHasta <= inicio) break;
+            }
+
+            const inicioMs = inicio.getTime();
+            return {
+                feeds: todosLosFeeds.filter(f => new Date(f.created_at).getTime() >= inicioMs),
+                channel: null // se obtiene aparte
+            };
+        }
+
         async function run(daysOrUrl, btnEl = null) {
             document.getElementById('loading').style.display = 'block';
             document.getElementById('content').style.display = 'none';
@@ -1049,19 +1086,36 @@
                 btnEl.classList.add('active');
             }
             try {
-                let url = typeof daysOrUrl === 'string' ? daysOrUrl : `https://api.thingspeak.com/channels/${ID}/feeds.json?api_key=${KEY}&minutes=${daysOrUrl * 1440}`;
-                const res = await fetch(url);
-                const data = await res.json();
-                if (!data.feeds || data.feeds.length === 0) {
-                    document.getElementById('loading').innerText = "Sin datos en este rango.";
-                    return;
+                let allFeeds;
+
+                if (typeof daysOrUrl === 'string') {
+                    // URL directa (día específico o rango) — una sola request
+                    const res  = await fetch(daysOrUrl);
+                    const data = await res.json();
+                    if (!data.feeds || data.feeds.length === 0) {
+                        document.getElementById('loading').innerText = "Sin datos en este rango.";
+                        return;
+                    }
+                    document.getElementById('sensorName').innerText = data.channel.name;
+                    document.getElementById('teamName').innerText = data.channel[FIELD] || 'Sensor';
+                    allFeeds = data.feeds;
+                } else {
+                    // N días — paginación completa
+                    const result = await fetchThingSpeakCompleto(daysOrUrl, null, null);
+                    allFeeds = result.feeds;
+                    if (!allFeeds || allFeeds.length === 0) {
+                        document.getElementById('loading').innerText = "Sin datos en este rango.";
+                        return;
+                    }
+                    // Obtener nombre del canal con request liviana
+                    const infoRes  = await fetch(`https://api.thingspeak.com/channels/${ID}/feeds.json?api_key=${KEY}&results=1`);
+                    const infoData = await infoRes.json();
+                    document.getElementById('sensorName').innerText = infoData.channel.name;
+                    document.getElementById('teamName').innerText = infoData.channel[FIELD] || 'Sensor';
                 }
-                
-                document.getElementById('sensorName').innerText = data.channel.name;
-                document.getElementById('teamName').innerText = data.channel[FIELD] || 'Sensor';
-                
+
                 // Filtrar lecturas corruptas de hardware (-127°C)
-                let currentFeeds = data.feeds.filter(f => {
+                let currentFeeds = allFeeds.filter(f => {
                     const val = parseFloat(f[FIELD]);
                     return !isNaN(val) && val !== -127;
                 });
@@ -1073,8 +1127,8 @@
 
                 renderChart(currentFeeds, FIELD);
                 fillAlerts(currentFeeds, FIELD);
-                fillWifi(data.feeds, FIELD); // Mantenemos todos para calcular cortes en red
-                
+                fillWifi(allFeeds, FIELD); // todos los feeds para detectar cortes
+
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('content').style.display = 'block';
             } catch (e) {
