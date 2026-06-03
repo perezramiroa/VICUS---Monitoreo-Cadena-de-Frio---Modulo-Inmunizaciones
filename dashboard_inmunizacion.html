@@ -326,6 +326,7 @@
     <button class="btn-control btn-stock" onclick="abrirStock()">📦 Stock</button>
     <button class="btn-control btn-norm" onclick="toggleNormativa()">📋 Normativa</button>
     <button class="btn-control btn-prot" onclick="toggleProtocolo()">📜 Protocolo</button>
+    <button class="btn-control" style="background:#7c3aed; color:white;" onclick="toggleDocumentos()">📁 Documentos</button>
   </div>
 
   <div id="app" class="device-list">
@@ -698,6 +699,7 @@
     function toggleNormativa() { const p = document.getElementById('normativaPanel'); p.style.display = p.style.display === 'none' ? 'block' : 'none'; }
     function toggleProtocolo() { document.getElementById('protocoloOverlay').classList.add('visible'); }
     function cerrarProtocolo() { document.getElementById('protocoloOverlay').classList.remove('visible'); }
+    function toggleDocumentos() { const p = document.getElementById('documentosPanel'); p.style.display = p.style.display === 'none' ? 'block' : 'none'; }
 function abrirEstadistica() {
     // Carga bajo demanda del modal de estadística
     const overlay = document.getElementById('estadisticaOverlay');
@@ -742,6 +744,133 @@ function abrirEstadistica() {
       if (e.target.classList.contains('protocolo-overlay')) cerrarProtocolo();
     };
   </script>
+
+  <!-- Panel de Documentos -->
+  <div id="documentosPanel" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:4000; overflow:auto; padding:20px; box-sizing:border-box;">
+    <div style="max-width:900px; margin:0 auto;">
+      <div style="text-align:right; margin-bottom:20px;">
+        <button onclick="toggleDocumentos()" style="padding:8px 16px; background:#ef4444; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:600;">Cerrar ✕</button>
+      </div>
+      <h1 style="color:#00384d; font-size:22px; margin-bottom:4px;">📁 Documentos del Programa de Inmunizaciones</h1>
+      <p style="color:#64748b; font-size:14px; margin-bottom:24px;">Hospital Natalio Burd — Documentación técnica y operativa</p>
+
+      <!-- MANUAL GENERAL -->
+      <div style="background:#f0fdf4; border-left:4px solid #10b981; padding:20px; border-radius:8px; margin-bottom:24px;">
+        <h2 style="color:#065f46; font-size:16px; margin:0 0 8px 0;">📖 Documentación General</h2>
+        <div style="background:white; padding:14px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+          <div>
+            <strong style="color:#1e293b;">Manual de Almacenamiento de Vacunas — Nivel Operativo</strong>
+            <p style="margin:4px 0 0; font-size:13px; color:#64748b;">Guía operativa para el almacenamiento correcto de vacunas. Aplicable a todos los establecimientos.</p>
+          </div>
+          <a href="https://drive.google.com/drive/folders/1T5jVTMbffyVQnNt9h8yqTkWiK-1k0SJM" target="_blank"
+            style="background:#10b981; color:white; padding:8px 16px; border-radius:6px; text-decoration:none; font-weight:600; font-size:13px; white-space:nowrap; margin-left:16px;">📂 Abrir</a>
+        </div>
+      </div>
+
+      <!-- DOCUMENTOS POR ESTABLECIMIENTO -->
+      <div style="background:#f8fafc; border-left:4px solid #3b82f6; padding:20px; border-radius:8px;">
+        <h2 style="color:#1e40af; font-size:16px; margin:0 0 16px 0;">🏥 Documentos por Establecimiento</h2>
+
+        <!-- 11 de Octubre -->
+        <div style="background:white; padding:14px; border-radius:8px; margin-bottom:12px; box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+          <strong style="color:#00384d; font-size:15px;">11 de Octubre</strong>
+          <div style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;">
+            <a href="https://drive.google.com/drive/folders/1ufSGBznt8VIcnbMXEgMcWj1QCk95j60i" target="_blank"
+              style="background:#3b82f6; color:white; padding:6px 14px; border-radius:6px; text-decoration:none; font-size:13px; font-weight:600;">🔧 Instalación Datalogger</a>
+            <a href="https://drive.google.com/drive/folders/1ufSGBznt8VIcnbMXEgMcWj1QCk95j60i" target="_blank"
+              style="background:#f59e0b; color:white; padding:6px 14px; border-radius:6px; text-decoration:none; font-size:13px; font-weight:600;">🚨 Plan de Contingencia</a>
+          </div>
+        </div>
+
+        <!-- VAS -->
+        <div style="background:white; padding:14px; border-radius:8px; margin-bottom:12px; box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+          <strong style="color:#00384d; font-size:15px;">VAS</strong>
+          <div style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;">
+            <a href="https://drive.google.com/drive/folders/1RnyzCfgRbWX3DyKprdflZh2GAQku63gS" target="_blank"
+              style="background:#3b82f6; color:white; padding:6px 14px; border-radius:6px; text-decoration:none; font-size:13px; font-weight:600;">🔧 Instalación Datalogger</a>
+          </div>
+        </div>
+
+        <!-- VAN -->
+        <div style="background:white; padding:14px; border-radius:8px; margin-bottom:12px; box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+          <strong style="color:#00384d; font-size:15px;">VAN</strong>
+          <div style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;">
+            <a href="https://drive.google.com/drive/folders/1byd_JApuTUGSGq-yA98WiWae3gsvBRaw" target="_blank"
+              style="background:#3b82f6; color:white; padding:6px 14px; border-radius:6px; text-decoration:none; font-size:13px; font-weight:600;">🔧 Instalación Datalogger</a>
+          </div>
+        </div>
+
+        <!-- Zona 1 -->
+        <div style="background:white; padding:14px; border-radius:8px; margin-bottom:12px; box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+          <strong style="color:#00384d; font-size:15px;">Zona 1</strong>
+          <div style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;">
+            <a href="https://drive.google.com/drive/folders/1GM02vxPUwwvNytA0q3c6CP8KAXnsPfEF" target="_blank"
+              style="background:#3b82f6; color:white; padding:6px 14px; border-radius:6px; text-decoration:none; font-size:13px; font-weight:600;">🔧 Instalación Datalogger</a>
+          </div>
+        </div>
+
+        <!-- Costa de Reyes -->
+        <div style="background:white; padding:14px; border-radius:8px; margin-bottom:12px; box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+          <strong style="color:#00384d; font-size:15px;">Costa de Reyes</strong>
+          <div style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;">
+            <a href="https://drive.google.com/drive/folders/1IBSL1_pDcBtsUzcALbOfQzfprCR1CMtj" target="_blank"
+              style="background:#3b82f6; color:white; padding:6px 14px; border-radius:6px; text-decoration:none; font-size:13px; font-weight:600;">🔧 Instalación Datalogger</a>
+          </div>
+        </div>
+
+        <!-- Villa Obrera -->
+        <div style="background:white; padding:14px; border-radius:8px; margin-bottom:12px; box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+          <strong style="color:#00384d; font-size:15px;">Villa Obrera</strong>
+          <div style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;">
+            <a href="https://drive.google.com/drive/folders/1uXCFjGBIyY2vdYEo7WkDPJhkmMNv1SMj" target="_blank"
+              style="background:#3b82f6; color:white; padding:6px 14px; border-radius:6px; text-decoration:none; font-size:13px; font-weight:600;">🔧 Instalación Datalogger</a>
+          </div>
+        </div>
+
+        <!-- Sarmiento 1 -->
+        <div style="background:white; padding:14px; border-radius:8px; margin-bottom:12px; box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+          <strong style="color:#00384d; font-size:15px;">Sarmiento 1</strong>
+          <div style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;">
+            <a href="https://drive.google.com/drive/folders/1N-rIW0mp6eigRpVENplMUaeHpYYlCBST" target="_blank"
+              style="background:#3b82f6; color:white; padding:6px 14px; border-radius:6px; text-decoration:none; font-size:13px; font-weight:600;">🔧 Instalación Datalogger</a>
+          </div>
+        </div>
+
+        <!-- Nueva España -->
+        <div style="background:white; padding:14px; border-radius:8px; margin-bottom:12px; box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+          <strong style="color:#00384d; font-size:15px;">Nueva España</strong>
+          <div style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;">
+            <a href="https://drive.google.com/drive/folders/1jPNKjWtxuFkc9v54MNz_eZLwD0LJXU9l" target="_blank"
+              style="background:#3b82f6; color:white; padding:6px 14px; border-radius:6px; text-decoration:none; font-size:13px; font-weight:600;">🔧 Instalación Datalogger</a>
+          </div>
+        </div>
+
+        <!-- Hospital Centenario -->
+        <div style="background:white; padding:14px; border-radius:8px; margin-bottom:12px; box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+          <strong style="color:#00384d; font-size:15px;">Hospital Centenario</strong>
+          <div style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;">
+            <a href="https://drive.google.com/drive/folders/1hTDF8PZqf2U_b97N7_Xyuuhv-VYhL46O" target="_blank"
+              style="background:#3b82f6; color:white; padding:6px 14px; border-radius:6px; text-decoration:none; font-size:13px; font-weight:600;">🔧 Instalación Datalogger</a>
+          </div>
+        </div>
+
+        <!-- Sarmiento 2 -->
+        <div style="background:white; padding:14px; border-radius:8px; margin-bottom:12px; box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+          <strong style="color:#00384d; font-size:15px;">Sarmiento 2</strong>
+          <div style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;">
+            <span style="background:#e2e8f0; color:#64748b; padding:6px 14px; border-radius:6px; font-size:13px;">🔧 Informe en proceso de elaboración</span>
+          </div>
+        </div>
+
+        <!-- Establecimientos sin documentos aún -->
+        <div style="background:#f1f5f9; padding:12px; border-radius:8px; font-size:13px; color:#64748b; margin-top:8px;">
+          <strong>Sin documentación cargada aún:</strong> Hospital Chañar
+        </div>
+
+      </div>
+    </div>
+  </div>
+
 </body>
 
 </html>
