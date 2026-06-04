@@ -57,7 +57,7 @@ const SENSORES = [
   { id: '3019919', k: 'BGIYFCS3AS3BBQC0', n: 'Heladera Briket BK2F1310', eq: '11 de Octubre', field: 'field1', centro: '11 de Octubre' },
 
   // --- VAN (1 sensor) ---
-  { id: '3060520', k: 'YBS2XVLA80RQ63J6', n: 'Heladera', eq: 'VAN', field: 'field1', centro: 'VAN' },
+  { id: '3060534', k: '3X1IJ2GK7WUKCNZ8', n: 'Heladera', eq: 'VAN', field: 'field1', centro: 'VAN' },
 
   // --- VAS (1 sensor) ---
   { id: '3079464', k: '18OTBS7ODP225VBW', n: 'Heladera Patrick 280', eq: 'VAS', field: 'field1', centro: 'VAS' },
@@ -177,11 +177,9 @@ function ejecutarReporteSemanal() {
         }
       });
 
-      if (feedsPorSensor.length > 0 && feedsPorSensor.some(fs => fs.feeds.length > 0)) {
+      if (feedsPorSensor.length > 0) {
         generarSheetSemanal(feedsPorSensor, rangoTexto, hoy, configCentro.sheetFolder);
         console.log(`  -> Planilla consolidada creada para: ${nombreCentro}`);
-      } else {
-        console.log(`  -> Todos los sensores offline para ${nombreCentro}. Planilla no generada.`);
       }
     } catch (e) {
       console.error(`  Error generando planilla para ${nombreCentro}: ` + e.message);
@@ -323,8 +321,28 @@ function generarPDFOficial(sensor, fecha, rango, trazabilidad, analizada, conect
   }
 
   doc.saveAndClose();
-  const pdfBlob = DriveApp.getFileById(doc.getId()).getBlob();
-  DriveApp.getFileById(doc.getId()).setTrashed(true);
+  
+  // Esperar a que Google Drive consolide el archivo antes de convertirlo a PDF
+  Utilities.sleep(2000);
+  
+  let pdfBlob = null;
+  const docId = doc.getId();
+  for (let i = 0; i < 3; i++) {
+    try {
+      pdfBlob = DriveApp.getFileById(docId).getAs('application/pdf');
+      break; // Éxito, salir del loop
+    } catch (e) {
+      console.warn("Intento " + (i+1) + " de generar PDF falló. Reintentando...");
+      Utilities.sleep(3000);
+    }
+  }
+  
+  DriveApp.getFileById(docId).setTrashed(true);
+  
+  if (!pdfBlob) {
+    throw new Error("No se pudo generar el PDF por error de servidor en Google Drive.");
+  }
+  
   return pdfBlob;
 }
 
@@ -558,8 +576,19 @@ function generarGraficoCurva(feeds, field, nombre) {
     .addColumn(Charts.ColumnType.STRING, "Tiempo")
     .addColumn(Charts.ColumnType.NUMBER, "°C");
 
+  // Filtrar -127 y calcular min/max para el eje Y
   const vals = feeds.map(f => parseFloat(f[field])).filter(v => !isNaN(v) && v !== -127);
-  if (vals.length === 0) vals.push(5);
+  if (vals.length === 0) {
+    // Sin datos válidos: gráfico vacío con punto dummy
+    dataTable.addRow(["Sin datos", 5]);
+    return Charts.newLineChart()
+      .setDataTable(dataTable)
+      .setDimensions(2200, 520)
+      .setColors(["#3b82f6"])
+      .setOption("backgroundColor", "white")
+      .build().getAs('image/png');
+  }
+
   const minVal = Math.min(...vals);
   const maxVal = Math.max(...vals);
   const yMin = minVal - 0.5;
@@ -568,12 +597,51 @@ function generarGraficoCurva(feeds, field, nombre) {
   const numPuntos = 800;
   const step = Math.max(1, Math.floor(feeds.length / numPuntos));
 
+  // PASO 1: Detectar gaps REALES en los datos CRUDOS (>10 min sin lecturas)
+  // Esto se hace ANTES del muestreo para no perder precisión.
+  const UMBRAL_GAP_MS = 10 * 60 * 1000; // 10 minutos
+  const gapsReales = []; // Array de { desde: ms, hasta: ms }
+  for (let i = 1; i < feeds.length; i++) {
+    const t1 = new Date(feeds[i - 1].created_at).getTime();
+    const t2 = new Date(feeds[i].created_at).getTime();
+    if ((t2 - t1) > UMBRAL_GAP_MS) {
+      gapsReales.push({ desde: t1, hasta: t2 });
+    }
+  }
+
+  // PASO 2: Muestrear para el gráfico
+  const puntosMuestreados = [];
   for (let i = 0; i < feeds.length; i += step) {
-    const f   = feeds[i];
+    puntosMuestreados.push(feeds[i]);
+  }
+
+  // PASO 3: Construir la tabla del gráfico, insertando null donde haya un gap real
+  let ultimoTsValido = null;
+
+  for (let i = 0; i < puntosMuestreados.length; i++) {
+    const f = puntosMuestreados[i];
     const val = parseFloat(f[field]);
     const date = new Date(f.created_at);
-    if (!isNaN(val) && val !== -127 && !isNaN(date.getTime())) {
+
+    if (isNaN(date.getTime())) continue;
+
+    const esInvalido = isNaN(val) || val === -127;
+
+    // ¿Hay algún gap real entre el último punto válido y este?
+    if (ultimoTsValido !== null) {
+      const hayGap = gapsReales.some(g => g.desde >= ultimoTsValido && g.hasta <= date.getTime());
+      if (hayGap) {
+        dataTable.addRow([fmtFecha(date).slice(0, 13), null]);
+      }
+    }
+
+    if (esInvalido) {
+      // Punto inválido: insertar null para dejar espacio vacío
+      dataTable.addRow([fmtFecha(date).slice(0, 13), null]);
+      // No actualizamos ultimoTsValido para que el gap se siga calculando
+    } else {
       dataTable.addRow([fmtFecha(date).slice(0, 13), val]);
+      ultimoTsValido = date.getTime();
     }
   }
 
@@ -758,7 +826,7 @@ function analizarConectividad(feeds, field, sensor) {
 
   const puntos = feeds
     .map(f => ({ ts: new Date(f.created_at), val: parseFloat(f[field]) }))
-    .filter(f => !isNaN(f.ts.getTime()))
+    .filter(f => !isNaN(f.ts.getTime()) && f.val !== -127)
     .sort((a, b) => a.ts - b.ts);
 
   for (let i = 1; i < puntos.length; i++) {
@@ -775,8 +843,8 @@ function analizarConectividad(feeds, field, sensor) {
         inicio: fmtFecha(puntos[i - 1].ts),
         fin:    fmtFecha(puntos[i].ts),
         tipo:   tipo,
-        antes:   (isNaN(tempAntes) || tempAntes === -127) ? "--" : tempAntes.toFixed(1) + "°C",
-        despues: (isNaN(tempDesp)  || tempDesp  === -127) ? "--" : tempDesp.toFixed(1)  + "°C",
+        antes:   isNaN(tempAntes) ? "--" : tempAntes.toFixed(1) + "°C",
+        despues: isNaN(tempDesp)  ? "--" : tempDesp.toFixed(1)  + "°C",
         duracion: formatDur(gapMin)
       });
     }
