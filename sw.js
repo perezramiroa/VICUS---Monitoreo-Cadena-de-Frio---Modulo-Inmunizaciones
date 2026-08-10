@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vicus-inmunizacion-v1.1.0';
+const CACHE_NAME = 'vicus-inmunizacion-v1.2.0';
 const urlsToCache = [
   './',
   './index.html',
@@ -18,7 +18,7 @@ const urlsToCache = [
 
 // Instalación del Service Worker
 self.addEventListener('install', event => {
-  console.log('[SW] Instalando Vicus Inmunización v1.1.0...');
+  console.log('[SW] Instalando Vicus Inmunización v1.2.0...');
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
