@@ -411,7 +411,7 @@
   </div>
 
   <script>
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxwsOyyRPK1c5cAFqM0TOKuGiQzdaIk8DKlm0NLCs-DRzAHKmaOLgwfv-hWSgkHaljV/exec';
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzG3ASPm7oAFlAD6DXs6mP08249uiDyRbufM88I9-CmDF7Iw8KCq0AN8Y37EJdVMxPg/exec';
 
     const VACUNAS_LABORATORIOS = {
       "Antigripal Adulto": ["Viraflu", "Fluxvir"],
@@ -517,6 +517,7 @@
       if (region) url += '&region=' + encodeURIComponent(region);
       if (localidad) url += '&localidad=' + encodeURIComponent(localidad);
       if (establecimiento) url += '&establecimiento=' + encodeURIComponent(establecimiento);
+      url += '&_t=' + new Date().getTime();
       var xhr = new XMLHttpRequest();
       xhr.open('GET', url, true);
       xhr.onload = function() {
@@ -725,7 +726,7 @@
 
       if (tipo === 'Egreso') {
         // Refrescar stock antes de abrir para que los lotes estén actualizados
-        var url = APPS_SCRIPT_URL + '?action=getDatosAgregados';
+        var url = APPS_SCRIPT_URL + '?action=getDatosAgregados&_t=' + new Date().getTime();
         var xhr = new XMLHttpRequest();
         xhr.open('GET', url, true);
         xhr.onload = function() {
@@ -1184,6 +1185,7 @@
         var item = todosItems[index];
         var url = APPS_SCRIPT_URL +
           '?action=registrarMovimiento' +
+          '&_t=' + new Date().getTime() +
           '&tipo=' + encodeURIComponent(modoMovimiento) +
           '&tipo_egreso=' + encodeURIComponent(tipoEgreso || '') +
           '&vacuna=' + encodeURIComponent(item.vacuna) +
