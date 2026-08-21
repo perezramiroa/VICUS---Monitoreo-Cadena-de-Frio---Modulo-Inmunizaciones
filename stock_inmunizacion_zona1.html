@@ -183,6 +183,7 @@
             <select id="tipoEgreso" class="form-control" onchange="toggleCamposTraslado()">
               <option value="">Seleccionar tipo</option>
               <option value="Vacunación">Vacunación</option>
+              <option value="Politica de Frasco abierto">Politica de Frasco abierto</option>
               <option value="Pérdida de cadena de frío">Pérdida de cadena de frío</option>
               <option value="Rotura de ampollas">Rotura de ampollas</option>
               <option value="Traslado">Traslado</option>
@@ -193,7 +194,7 @@
             <select id="vacuna" class="form-control" onchange="actualizarLaboratorios()"></select>
           </div>
           <div class="form-group">
-            <label class="form-label">Laboratorio *</label>
+            <label class="form-label">Laboratorio (Opcional)</label>
             <select id="laboratorio" class="form-control" onchange="actualizarLotes()"></select>
           </div>
           <div id="camposEgreso" style="display:none;">
@@ -411,26 +412,41 @@
   </div>
 
   <script>
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxwsOyyRPK1c5cAFqM0TOKuGiQzdaIk8DKlm0NLCs-DRzAHKmaOLgwfv-hWSgkHaljV/exec';
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzG3ASPm7oAFlAD6DXs6mP08249uiDyRbufM88I9-CmDF7Iw8KCq0AN8Y37EJdVMxPg/exec';
 
     const VACUNAS_LABORATORIOS = {
-      "Antigripal Adulto": ["Viraflu", "Fluxvir"],
-      "Antigripal Pediátrica": ["Viraflu Ped", "Istivac Ped"],
-      "Prevenar 13": ["Pfizer"],
-      "Neumo 23": ["MSD"],
-      "Quíntuple": ["Sinergium", "GSK"],
-      "Triple Viral": ["MSD", "SKB"],
-      "Hepatitis B Adulto": ["Sinergium", "Bernabo"],
-      "Hepatitis B Pediátrica": ["Sinergium"],
-      "DPT (Triple Bacteriana)": ["Sinergium"],
-      "dpaT (Triple Acelular)": ["GSK", "Sanofi"],
-      "IPV (Salk)": ["Sanofi"],
-      "Rotavirus": ["GSK", "MSD"],
-      "Varicela": ["MSD", "SKB"],
-      "VPH": ["MSD", "GSK"],
-      "Menveo / Menactra": ["GSK", "Sanofi"],
-      "Fiebre Amarilla": ["Sanofi"],
-      "Hepatitis A": ["MSD", "GSK"]
+      "Antigripal Adulto": ["Viraflu", "Fluxvir", "Agrippal", "Otro"],
+      "Antigripal Pediátrica": ["Viraflu Ped", "Istivac Ped", "Otro"],
+      "Prevenar 13": ["Pfizer", "Otro"],
+      "Neumo 23": ["MSD", "Otro"],
+      "Quíntuple": ["Sinergium", "GSK", "Otro"],
+      "Triple Viral": ["MSD", "SKB", "Otro"],
+      "Hepatitis B Adulto": ["Sinergium", "Bernabo", "Otro"],
+      "Hepatitis B Pediátrica": ["Sinergium", "Otro"],
+      "DPT (Triple Bacteriana)": ["Sinergium", "Otro"],
+      "dpaT (Triple Acelular)": ["GSK", "Sanofi", "Otro"],
+      "IPV (Salk)": ["Sanofi", "Panacea Biotec (Picovax)", "Otro"],
+      "Rotavirus": ["GSK", "MSD", "Otro"],
+      "Varicela": ["MSD", "SKB", "Sinovac", "Otro"],
+      "VPH": ["MSD", "GSK", "Otro"],
+      "Menveo / Menactra": ["GSK", "Sanofi", "Otro"],
+      "Fiebre Amarilla": ["Sanofi", "Otro"],
+      "Hepatitis A Pediátrica": ["MSD", "GSK", "Sinergium (Vaxipat)", "Otro"],
+      "Hepatitis A Adulto": ["MSD", "GSK", "Sinergium", "Otro"],
+      "Prevenar 20": ["Pfizer", "Otro"],
+      "Antigripal Adyuvantada": ["Fluxvir", "Seqirus", "Sinergium", "Otro"],
+      "BCG": ["Biol", "ANLIS-Malbrán", "Otro"],
+      "Doble Bacteriana (dT)": ["Biol", "Sinergium", "Sanofi", "Otro"],
+      "Doble Viral (SR)": ["Serum Institute", "MSD", "Otro"],
+      "Fiebre Hemorrágica (Candid #1)": ["Instituto Maiztegui", "Otro"],
+      "COVID-19": ["Pfizer", "Moderna", "Cassará", "Otro"],
+      "Meningococo B (Bexsero/Trumenba)": ["GSK", "Pfizer", "Otro"],
+      "VSR (Sincicial Respiratorio)": ["Pfizer (Abrysvo)", "Otro"],
+      "Antirrábica Humana": ["Sanofi", "Otro"],
+      "Haemophilus Influenzae tipo B (Hib)": ["Sanofi", "Otro"],
+      "Herpes Zoster": ["GSK (Shingrix)", "MSD (Zostavax)", "Otro"],
+      "Fiebre Tifoidea": ["Sanofi (Typhim Vi)", "Otro"],
+      "Dengue": ["Takeda (Qdenga)", "Sanofi (Dengvaxia)", "Otro"]
     };
 
     const ESTRUCTURA_GEOGRAFICA = {
@@ -797,7 +813,7 @@
       var sel = document.getElementById('loteSelect');
       sel.innerHTML = '<option value="">Seleccionar lote</option>';
       (DATOS_GLOBALES.stock || []).filter(function(s) {
-        return s.vacuna === vacuna && s.laboratorio === lab && parseInt(s.stock) > 0;
+        return s.vacuna === vacuna && (!lab || s.laboratorio === lab) && parseInt(s.stock) > 0;
       }).forEach(function(s) {
         sel.innerHTML += '<option value="' + s.lote + '">' + s.lote + ' (Disponible: ' + s.stock + ' - Vence: ' + new Date(s.vencimiento).toLocaleDateString('es-AR') + ')</option>';
       });
@@ -812,7 +828,7 @@
       sel.innerHTML = '<option value="">Seleccionar región</option>';
       var regiones = [];
       (DATOS_GLOBALES.stock || []).filter(function(s) {
-        return s.vacuna === vacuna && s.laboratorio === lab && s.lote === lote && parseInt(s.stock) > 0;
+        return s.vacuna === vacuna && (!lab || s.laboratorio === lab) && s.lote === lote && parseInt(s.stock) > 0;
       }).forEach(function(s) {
         if (regiones.indexOf(s.region) === -1) regiones.push(s.region);
       });
@@ -831,7 +847,7 @@
       sel.innerHTML = '<option value="">Seleccionar localidad</option>';
       var localidades = [];
       (DATOS_GLOBALES.stock || []).filter(function(s) {
-        return s.vacuna === vacuna && s.laboratorio === lab && s.lote === lote && s.region === region && parseInt(s.stock) > 0;
+        return s.vacuna === vacuna && (!lab || s.laboratorio === lab) && s.lote === lote && s.region === region && parseInt(s.stock) > 0;
       }).forEach(function(s) {
         if (localidades.indexOf(s.localidad) === -1) localidades.push(s.localidad);
       });
@@ -850,7 +866,7 @@
       sel.innerHTML = '<option value="">Seleccionar establecimiento</option>';
       var ests = [];
       (DATOS_GLOBALES.stock || []).filter(function(s) {
-        return s.vacuna === vacuna && s.laboratorio === lab && s.lote === lote && s.region === region && s.localidad === localidad && parseInt(s.stock) > 0;
+        return s.vacuna === vacuna && (!lab || s.laboratorio === lab) && s.lote === lote && s.region === region && s.localidad === localidad && parseInt(s.stock) > 0;
       }).forEach(function(s) {
         if (ests.indexOf(s.establecimiento) === -1) ests.push(s.establecimiento);
       });
@@ -866,7 +882,7 @@
       var localidad = document.getElementById('localidadMov').value;
       var establecimiento = document.getElementById('establecimientoMov').value;
       var stockItem = (DATOS_GLOBALES.stock || []).find(function(s) {
-        return s.vacuna === vacuna && s.laboratorio === lab && s.lote === lote && s.region === region && s.localidad === localidad && s.establecimiento === establecimiento;
+        return s.vacuna === vacuna && (!lab || s.laboratorio === lab) && s.lote === lote && s.region === region && s.localidad === localidad && s.establecimiento === establecimiento;
       });
       var max = stockItem ? parseInt(stockItem.stock) : 0;
       var cantInput = document.getElementById('cantidad');
@@ -884,7 +900,7 @@
         lote = document.getElementById('loteSelect').value;
         cantidad = document.getElementById('cantidad').value;
         var si = (DATOS_GLOBALES.stock || []).find(function(s) {
-          return s.vacuna === vacuna && s.laboratorio === lab && s.lote === lote;
+          return s.vacuna === vacuna && (!lab || s.laboratorio === lab) && s.lote === lote;
         });
         if (si) {
           var vd = new Date(si.vencimiento);
@@ -896,8 +912,8 @@
         vencimiento = document.getElementById('vencimiento').value;
       }
 
-      if (!vacuna || !lab || !lote || !cantidad || parseInt(cantidad) < 1) {
-        alert('Completá vacuna, laboratorio, lote y cantidad antes de agregar.'); return;
+      if (!vacuna || !lote || !cantidad || parseInt(cantidad) < 1) {
+        alert('Completá vacuna, lote y cantidad antes de agregar.'); return;
       }
       console.log('Agregando item:', vacuna, lab, lote, cantidad);
 
@@ -1089,7 +1105,7 @@
         lote = document.getElementById('loteSelect').value;
         cantidad = document.getElementById('cantidad').value;
         var stockItem = (DATOS_GLOBALES.stock || []).find(function(s) {
-          return s.vacuna === vacuna && s.laboratorio === lab && s.lote === lote;
+          return s.vacuna === vacuna && s.lote === lote;
         });
         vencimiento = stockItem ? stockItem.vencimiento : '';
         if (typeof vencimiento === 'string' && vencimiento) {
@@ -1103,7 +1119,7 @@
       }
 
       // Agregar ítem actual a la lista solo si tiene datos
-      if (vacuna && lab && lote && cantidad && parseInt(cantidad) >= 1) {
+      if (vacuna && lote && cantidad && parseInt(cantidad) >= 1) {
         itemsMovimiento.push({ vacuna: vacuna, laboratorio: lab, lote: lote, cantidad: cantidad, vencimiento: vencimiento });
       }
       var todosItems = itemsMovimiento.filter(function(i){ return i !== null; });
