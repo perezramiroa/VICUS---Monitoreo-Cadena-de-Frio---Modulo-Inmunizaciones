@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vicus-inmunizacion-v2.0.0';
+const CACHE_NAME = 'vicus-inmunizacion-v2.1.0';
 const urlsToCache = [
   './',
   './index.html',
@@ -18,7 +18,7 @@ const urlsToCache = [
 
 // Instalación del Service Worker
 self.addEventListener('install', event => {
-  console.log('[SW] Instalando Vicus Inmunización v2.0.0...');
+  console.log('[SW] Instalando Vicus Inmunización v2.1.0...');
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
@@ -53,11 +53,12 @@ self.addEventListener('fetch', event => {
 
   const url = new URL(event.request.url);
 
-  // Network First para HTML, archivos JS de lógica y JSON para asegurar actualizaciones inmediatas al subir a GitHub
+  // Network First para HTML, archivos JS de lógica, JSON y llamadas al backend (Apps Script)
   if (
     event.request.url.includes('.html') || 
     event.request.url.includes('.js') || 
     event.request.url.includes('.json') || 
+    event.request.url.includes('script.google.com') || 
     url.pathname === '/'
   ) {
     event.respondWith(
