@@ -209,11 +209,11 @@
 
       // Buscar si la contraseña existe en el mapeo de accesos
       if (CONFIG_INMUNO.accesos[passIngresada]) {
-        // Guardar configuración en sessionStorage
+        // Guardar configuración en localStorage
         const idsCanales = CONFIG_INMUNO.accesos[passIngresada];
         const canalesDetalle = idsCanales.map(key => CONFIG_INMUNO.canales[key]);
         
-        sessionStorage.setItem('vicus_inmuno_config', JSON.stringify({
+        localStorage.setItem('vicus_inmuno_config', JSON.stringify({
             nombre: passIngresada,
             canales: canalesDetalle
         }));
