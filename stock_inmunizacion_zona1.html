@@ -96,6 +96,7 @@
     <button class="btn btn-success" onclick="abrirModalMov('Egreso')">📤 Registrar Egreso</button>
     <button class="btn btn-primary" style="background:#8b5cf6;" onclick="abrirModalMov('Ingreso')">📥 Registrar Ingreso</button>
     <button class="btn btn-primary" style="background:#00384d;" onclick="mostrarVistaGeografica()">📍 Regiones/Localidades/Establecimientos</button>
+    <a href="https://drive.google.com/file/d/1hmZy84NNU7y9EQorJdxBBJFds2JTIyl6/view" target="_blank" class="btn btn-outline" style="background:#0ea5e9; color:white; text-decoration:none;">🗺️ Mapa Provincial</a>
     <button class="btn btn-outline" style="background:#64748b; color:white;" onclick="toggleNormativa()">📋 Normativa</button>
     <button class="btn btn-outline" onclick="window.close()">← Volver</button>
   </div>
@@ -139,21 +140,6 @@
       <div class="map-container">
         <img src="Regiones.png" usemap="#mapaRegiones" class="img-mapa" alt="Mapa de Neuquén">
         <map name="mapaRegiones" id="mapaRegiones">
-          <area shape="rect" coords="35,401,311,429" alt="Confluencia" onclick="navegarARegion('Confluencia')" style="cursor:pointer;">
-          <area shape="rect" coords="35,332,311,360" alt="Vaca Muerta" onclick="navegarARegion('Vaca Muerta')" style="cursor:pointer;">
-          <area shape="rect" coords="35,195,310,223" alt="Alto Neuquén" onclick="navegarARegion('Alto Neuquén')" style="cursor:pointer;">
-          <area shape="rect" coords="35,229,310,256" alt="Del Pehuén" onclick="navegarARegion('Del Pehuén')" style="cursor:pointer;">
-          <area shape="rect" coords="35,263,310,293" alt="Lagos del Sur" onclick="navegarARegion('Lagos del Sur')" style="cursor:pointer;">
-          <area shape="rect" coords="35,298,310,327" alt="Del Limay" onclick="navegarARegion('Del Limay')" style="cursor:pointer;">
-          <area shape="rect" coords="35,366,310,397" alt="De la Comarca" onclick="navegarARegion('De la Comarca')" style="cursor:pointer;">
-        </map>
-      </div>
-      <a href="https://drive.google.com/file/d/1hmZy84NNU7y9EQorJdxBBJFds2JTIyl6/view" target="_blank" class="btn btn-outline" style="margin-top:12px; display:inline-block;">🗺️ Mapa Provincial - Regiones - Establecimientos de Salud</a>
-      <div id="tablasNivel1Geografico" style="margin-top: 30px;"></div>
-    </div>
-
-    <!-- NIVEL REGIÓN -->
-    <div id="nivelRegion" class="container" style="display:none;">
       <h2 id="tituloRegion">Región Seleccionada</h2>
       <button class="btn btn-outline" onclick="volverANivelProvincia()" style="margin-bottom: 20px;">← Volver a Provincia</button>
       <div class="selection-grid" id="localidades-grid"></div>
@@ -1489,7 +1475,7 @@
     window.addEventListener('resize', resizeMap);
     window.onload = function() {
       if (contextoUsuario && contextoUsuario.rol !== 'admin') {
-        var btnMapa = document.querySelector('button[onclick="abrirNivelGeografico()"]');
+        var btnMapa = document.querySelector('button[onclick="mostrarVistaGeografica()"]');
         if (btnMapa) btnMapa.style.display = 'none';
         var titulo = document.querySelector('.title-section p');
         if (titulo) titulo.innerHTML = 'Stock: ' + contextoUsuario.establecimiento;
