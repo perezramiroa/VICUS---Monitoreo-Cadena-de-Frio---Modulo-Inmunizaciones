@@ -412,7 +412,7 @@
   </div>
 
   <script>
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzG3ASPm7oAFlAD6DXs6mP08249uiDyRbufM88I9-CmDF7Iw8KCq0AN8Y37EJdVMxPg/exec';
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxkTImcAuqU_4s2zsGhBiLtcGGuG8Tstyo0BktRhOwMSeY7-ZxEG_sUqWBcjdGsavk6/exec';
 
     const VACUNAS_LABORATORIOS = {
       "Antigripal Adulto": ["Viraflu", "Fluxvir", "Agrippal", "Otro"],
@@ -448,6 +448,30 @@
       "Fiebre Tifoidea": ["Sanofi (Typhim Vi)", "Otro"],
       "Dengue": ["Takeda (Qdenga)", "Sanofi (Dengvaxia)", "Otro"]
     };
+
+    
+    const MAPEO_USUARIOS = {
+      "Zona uno": { rol: "admin" },
+      "Hospital Centenario": { region: "Confluencia", localidad: "Centenario", establecimiento: "Hosp. Dr. Natalio Burd" },
+      "Sarmiento 1": { region: "Confluencia", localidad: "Centenario", establecimiento: "C.S. Sarmiento I" },
+      "Sarmiento 2": { region: "Confluencia", localidad: "Centenario", establecimiento: "C.S. Sarmiento II" },
+      "Villa Obrera": { region: "Confluencia", localidad: "Centenario", establecimiento: "C.S. Villa Obrera" },
+      "Nueva España": { region: "Confluencia", localidad: "Centenario", establecimiento: "C.S. Nueva España" },
+      "11 de Octubre": { region: "Confluencia", localidad: "Centenario", establecimiento: "C.S. 11 de Octubre" },
+      "VAS": { region: "Confluencia", localidad: "Vista Alegre", establecimiento: "C.S. Vista Alegre Sur" },
+      "VAN": { region: "Confluencia", localidad: "Vista Alegre", establecimiento: "C.S. Vista Alegre Norte" },
+      "Costa de Reyes": { region: "Confluencia", localidad: "Vista Alegre", establecimiento: "C.S. Costa de Reyes" },
+      "Hospital Chañar": { region: "Vaca Muerta", localidad: "San Patricio del Chañar", establecimiento: "Hosp. San Patricio del Chañar" }
+    };
+    let contextoUsuario = null;
+
+    // Se intenta leer el usuario en cuanto carga el script
+    try {
+      let config_actual = JSON.parse(sessionStorage.getItem('vicus_inmuno_config') || '{}');
+      if (config_actual && config_actual.nombre && MAPEO_USUARIOS[config_actual.nombre]) {
+        contextoUsuario = MAPEO_USUARIOS[config_actual.nombre];
+      }
+    } catch(e) {}
 
     const ESTRUCTURA_GEOGRAFICA = {
       "Confluencia": {
@@ -742,7 +766,11 @@
 
       if (tipo === 'Egreso') {
         // Refrescar stock antes de abrir para que los lotes estén actualizados
-        var url = APPS_SCRIPT_URL + '?action=getDatosAgregados&_t=' + new Date().getTime();
+        var url = APPS_SCRIPT_URL + '?action=getDatosAgregados';
+        if (contextoUsuario && contextoUsuario.rol !== 'admin') {
+           url += '&region=' + encodeURIComponent(contextoUsuario.region) + '&localidad=' + encodeURIComponent(contextoUsuario.localidad) + '&establecimiento=' + encodeURIComponent(contextoUsuario.establecimiento);
+        }
+        url += '&_t=' + new Date().getTime();
         var xhr = new XMLHttpRequest();
         xhr.open('GET', url, true);
         xhr.onload = function() {
@@ -1427,7 +1455,19 @@
 
     window.addEventListener('resize', resizeMap);
     window.onload = function() {
-      cargarDatos();
+      if (contextoUsuario && contextoUsuario.rol !== "admin") {
+         // Ocultar botón de mapa geográfico si no es admin
+         var btnMapa = document.querySelector('button[onclick="abrirNivelGeografico()"]');
+         if (btnMapa) btnMapa.style.display = 'none';
+         // Cambiar el título superior
+         var titulo = document.querySelector('.title-section p');
+         if (titulo) titulo.innerHTML = 'Stock: ' + contextoUsuario.establecimiento;
+         
+         // Cargar datos restringidos a su establecimiento
+         cargarDatos(contextoUsuario.region, contextoUsuario.localidad, contextoUsuario.establecimiento);
+      } else {
+         cargarDatos();
+      }
       var map = document.getElementById('mapaRegiones');
       if (map) {
         var areas = map.getElementsByTagName('area');
