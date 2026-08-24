@@ -515,16 +515,16 @@
     const MIN_GEN = 2.0, MAX_GEN = 8.0;
     const MIN_FREEZER = -28.0, MAX_FREEZER = -18.0;
 
-    let config_actual = JSON.parse(sessionStorage.getItem('vicus_inmuno_config') || '{}');
+    let config_actual = JSON.parse(localStorage.getItem('vicus_inmuno_config') || '{}');
     
-    // Si no hay config en sessionStorage, usar CONFIG_INMUNO de config-sensores.js
+    // Si no hay config en localStorage, usar CONFIG_INMUNO de config-sensores.js
     if (!config_actual.canales || config_actual.canales.length === 0) {
       if (typeof CONFIG_INMUNO !== 'undefined' && CONFIG_INMUNO.canales) {
         config_actual = {
           nombre: "Todos los sensores",
           canales: Object.values(CONFIG_INMUNO.canales)
         };
-        sessionStorage.setItem('vicus_inmuno_config', JSON.stringify(config_actual));
+        localStorage.setItem('vicus_inmuno_config', JSON.stringify(config_actual));
       } else {
         config_actual = {"nombre":"General","canales":[]};
       }
@@ -560,7 +560,7 @@
       const checkConfig = setInterval(() => {
         attempts++;
         
-        // Si ya tenemos una configuración válida en sessionStorage, inicializamos
+        // Si ya tenemos una configuración válida en localStorage, inicializamos
         if (config_actual && config_actual.canales && config_actual.canales.length > 0) {
           clearInterval(checkConfig);
           initApp();
@@ -572,7 +572,7 @@
             nombre: "Todos los sensores",
             canales: Object.values(CONFIG_INMUNO.canales)
           };
-          sessionStorage.setItem('vicus_inmuno_config', JSON.stringify(config_actual));
+          localStorage.setItem('vicus_inmuno_config', JSON.stringify(config_actual));
           initApp();
         } 
         else if (attempts >= maxAttempts) {
