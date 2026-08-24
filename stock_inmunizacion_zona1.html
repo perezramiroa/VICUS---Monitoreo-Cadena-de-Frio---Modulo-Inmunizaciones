@@ -562,6 +562,7 @@
       if (region) url += '&region=' + encodeURIComponent(region);
       if (localidad) url += '&localidad=' + encodeURIComponent(localidad);
       if (establecimiento) url += '&establecimiento=' + encodeURIComponent(establecimiento);
+      url += '&_t=' + new Date().getTime();
       var xhr = new XMLHttpRequest();
       xhr.open('GET', url, true);
       xhr.onload = function() {
