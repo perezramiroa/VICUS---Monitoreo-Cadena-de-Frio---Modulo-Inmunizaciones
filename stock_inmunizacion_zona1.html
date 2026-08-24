@@ -8,15 +8,15 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f8fafc; color: #1e293b; padding: 20px; }
-    .header { background: white; padding: 20px; border-radius: 12px; margin-bottom: 24°px; box-shadow: 0 4°px 12px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+    .header { background: white; padding: 20px; border-radius: 12px; margin-bottom: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
     .logo-bar { display: flex; gap: 20px; align-items: center; }
     .logo-item { height: 80px; }
     .logo-item img { max-height: 100%; object-fit: contain; }
     .title-section h1 { font-size: 1.6rem; color: #1e293b; }
-    .title-section p { color: #64°74°8b; }
+    .title-section p { color: #64748b; }
     .stats-bar { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
-    .stat-card { background: white; border-radius: 10px; padding: 15px 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); flex: 1; min-width: 150px; border-left: 4°px solid #3b82f6; }
-    .stat-card .label { font-size: 0.85rem; color: #64°74°8b; }
+    .stat-card { background: white; border-radius: 10px; padding: 15px 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); flex: 1; min-width: 150px; border-left: 4px solid #3b82f6; }
+    .stat-card .label { font-size: 0.85rem; color: #64748b; }
     .stat-card .value { font-size: 1.8rem; font-weight: 700; }
     .controls { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
     .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.2s; }
@@ -26,24 +26,24 @@
     .btn-success:hover { background: #059669; }
     .btn-outline { background: white; border: 1px solid #e2e8f0; color: #1e293b; }
     .btn-outline:hover { background: #f1f5f9; }
-    .container { background: white; border-radius: 12px; box-shadow: 0 4°px 20px rgba(0,0,0,0.08); padding: 24°px; margin-bottom: 24°px; }
+    .container { background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); padding: 24px; margin-bottom: 24px; }
     table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
     th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
     th { background: #f1f5f9; font-weight: 600; }
-    .badge { padding: 4°px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; display: inline-block; }
+    .badge { padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; display: inline-block; }
     .badge-success { background: rgba(16, 185, 129, 0.15); color: #10b981; }
-    .badge-warning { background: rgba(24°5, 158, 11, 0.15); color: #f59e0b; }
-    .badge-danger { background: rgba(239, 68, 68, 0.15); color: #ef4°4°4°4°; }
+    .badge-warning { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+    .badge-danger { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
     .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 10000; }
-    .modal-content { background: white; margin: 2% auto; padding: 0; border-radius: 24°px; width: 95%; max-width: 600px; max-height: 95vh; overflow-y: auto; }
-    .modal-header { background: #00384°d; color: white; padding: 20px 25px; border-radius: 24°px 24°px 0 0; display: flex; justify-content: space-between; align-items: center; }
+    .modal-content { background: white; margin: 2% auto; padding: 0; border-radius: 24px; width: 95%; max-width: 600px; max-height: 95vh; overflow-y: auto; }
+    .modal-header { background: #00384d; color: white; padding: 20px 25px; border-radius: 24px 24px 0 0; display: flex; justify-content: space-between; align-items: center; }
     .modal-close { background: none; border: none; color: white; font-size: 28px; cursor: pointer; }
     .modal-body { padding: 25px; }
     .form-group { margin-bottom: 15px; }
     .form-label { display: block; font-weight: 600; margin-bottom: 5px; font-size: 0.9rem; }
-    .form-control { width: 100%; padding: 10px 14°px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 0.95rem; }
-    .loading { text-align: center; padding: 4°0px; }
-    .spinner { width: 4°0px; height: 4°0px; border: 4°px solid #e2e8f0; border-top-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px; }
+    .form-control { width: 100%; padding: 10px 14px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 0.95rem; }
+    .loading { text-align: center; padding: 40px; }
+    .spinner { width: 40px; height: 40px; border: 4px solid #e2e8f0; border-top-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px; }
     @keyframes spin { to { transform: rotate(360deg); } }
     .view { display: none; }
     .view.active { display: block; }
@@ -55,18 +55,18 @@
     .selection-card { background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 10px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.2s; font-weight: 600; }
     .selection-card:hover { background: #3b82f6; color: white; transform: translateY(-2px); }
     .establecimientos-menu { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
-    .establecimiento-btn { padding: 8px 16px; background: #dbeafe; border: 1px solid #bfdbfe; color: #1d4°ed8; border-radius: 6px; cursor: pointer; font-weight: 600; }
+    .establecimiento-btn { padding: 8px 16px; background: #dbeafe; border: 1px solid #bfdbfe; color: #1d4ed8; border-radius: 6px; cursor: pointer; font-weight: 600; }
     .establecimiento-btn:hover { background: #bfdbfe; }
     .establecimiento-btn.active { background: #3b82f6; color: white; }
     .table-wrapper { overflow-x: auto; margin-bottom: 20px; }
     @media (max-width: 768px) { .controls { flex-direction: column; } .btn { width: 100%; } }
-    #pdf-template { padding: 4°0px; background: white; color: black; }
-    .pdf-header { border-bottom: 2px solid #00384°d; margin-bottom: 20px; padding-bottom: 10px; }
+    #pdf-template { padding: 40px; background: white; color: black; }
+    .pdf-header { border-bottom: 2px solid #00384d; margin-bottom: 20px; padding-bottom: 10px; }
     .pdf-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
     .pdf-table th, .pdf-table td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 10pt; }
     .pdf-table th { background-color: #f2f2f2; }
     .pdf-footer { margin-top: 30px; font-size: 9pt; color: #666; }
-    .footer { margin-top: 4°0px; text-align: center; padding: 20px; border-top: 1px solid #e2e8f0; }
+    .footer { margin-top: 40px; text-align: center; padding: 20px; border-top: 1px solid #e2e8f0; }
     .footer img { max-width: 900px; height: auto; border-radius: 8px; margin: 0 auto; display: block; }
   </style>
 </head>
@@ -83,11 +83,11 @@
     </div>
   </div>
 
-  <!-- STATS B°AR -->
+  <!-- STATS BAR -->
   <div class="stats-bar">
     <div class="stat-card"><div class="label">Total Dosis</div><div class="value" id="totalDosis">0</div></div>
-    <div class="stat-card" style="border-left-color: #f59e0b;"><div class="label">Próximos a Vencer</div><div class="value" id="proximosVencer">0</div><button class="btn btn-outline" onclick="abrirModalVencimientos()" style="margin-top:8px; font-size:0.8rem; padding:4°px 10px;">Ver detalle</button></div>
-    <div class="stat-card" style="border-left-color: #ef4°4°4°4°;"><div class="label">Vencidos</div><div class="value" id="vencidos">0</div></div>
+    <div class="stat-card" style="border-left-color: #f59e0b;"><div class="label">Próximos a Vencer</div><div class="value" id="proximosVencer">0</div><button class="btn btn-outline" onclick="abrirModalVencimientos()" style="margin-top:8px; font-size:0.8rem; padding:4px 10px;">Ver detalle</button></div>
+    <div class="stat-card" style="border-left-color: #ef4444;"><div class="label">Vencidos</div><div class="value" id="vencidos">0</div></div>
   </div>
 
   <!-- CONTROLS -->
@@ -95,8 +95,8 @@
     <button class="btn btn-primary" onclick="cargarDatos()">🔄 Actualizar</button>
     <button class="btn btn-success" onclick="abrirModalMov('Egreso')">📤 Registrar Egreso</button>
     <button class="btn btn-primary" style="background:#8b5cf6;" onclick="abrirModalMov('Ingreso')">📥 Registrar Ingreso</button>
-    <button class="btn btn-primary" style="background:#00384°d;" onclick="mostrarVistaGeografica()">📍 Regiones/Localidades/Establecimientos</button>
-    <button class="btn btn-outline" style="background:#64°74°8b; color:white;" onclick="toggleNormativa()">📋 Normativa</button>
+    <button class="btn btn-primary" style="background:#00384d;" onclick="mostrarVistaGeografica()">📍 Regiones/Localidades/Establecimientos</button>
+    <button class="btn btn-outline" style="background:#64748b; color:white;" onclick="toggleNormativa()">📋 Normativa</button>
     <button class="btn btn-outline" onclick="window.close()">← Volver</button>
   </div>
 
@@ -115,7 +115,7 @@
               <th>Vacuna</th><th>Laboratorio</th><th>Lote</th><th>Vencimiento</th><th>Stock</th><th>Región</th><th>Localidad</th><th>Establecimiento</th><th>Estado</th><th>Días para vencer</th>
             </tr>
           </thead>
-          <tbody id="stockB°odyInventario">
+          <tbody id="stockBodyInventario">
             <tr><td colspan="9" style="text-align:center;">Cargando datos...</td></tr>
           </tbody>
         </table>
@@ -139,7 +139,7 @@
       <div class="map-container">
         <img src="Regiones.png" usemap="#mapaRegiones" class="img-mapa" alt="Mapa de Neuquén">
         <map name="mapaRegiones" id="mapaRegiones">
-          <area shape="rect" coords="35,4°01,311,4°29" alt="Confluencia" onclick="navegarARegion('Confluencia')" style="cursor:pointer;">
+          <area shape="rect" coords="35,401,311,429" alt="Confluencia" onclick="navegarARegion('Confluencia')" style="cursor:pointer;">
           <area shape="rect" coords="35,332,311,360" alt="Vaca Muerta" onclick="navegarARegion('Vaca Muerta')" style="cursor:pointer;">
           <area shape="rect" coords="35,195,310,223" alt="Alto Neuquén" onclick="navegarARegion('Alto Neuquén')" style="cursor:pointer;">
           <area shape="rect" coords="35,229,310,256" alt="Del Pehuén" onclick="navegarARegion('Del Pehuén')" style="cursor:pointer;">
@@ -148,7 +148,7 @@
           <area shape="rect" coords="35,366,310,397" alt="De la Comarca" onclick="navegarARegion('De la Comarca')" style="cursor:pointer;">
         </map>
       </div>
-      <a href="https://drive.google.com/file/d/1hmZy84°NNU7y9EQorJdxB°B°JFds2JTIyl6/view" target="_blank" class="btn btn-outline" style="margin-top:12px; display:inline-block;">🗺️ Mapa Provincial - Regiones - Establecimientos de Salud</a>
+      <a href="https://drive.google.com/file/d/1hmZy84NNU7y9EQorJdxBBJFds2JTIyl6/view" target="_blank" class="btn btn-outline" style="margin-top:12px; display:inline-block;">🗺️ Mapa Provincial - Regiones - Establecimientos de Salud</a>
       <div id="tablasNivel1Geografico" style="margin-top: 30px;"></div>
     </div>
 
@@ -223,7 +223,7 @@
               </select>
             </div>
             <div class="form-group">
-              <label class="form-label">Cantidad * <span id="stockDisponibleLabel" style="color:#64°74°8b; font-weight:normal;"></span></label>
+              <label class="form-label">Cantidad * <span id="stockDisponibleLabel" style="color:#64748b; font-weight:normal;"></span></label>
               <input type="number" id="cantidad" class="form-control" min="1">
             </div>
             <!-- Campos destino para traslado -->
@@ -303,13 +303,13 @@
               </select>
             </div>
           </div>
-          <!-- TAB°LA DE ÍTEMS -->
+          <!-- TABLA DE ÍTEMS -->
           <div id="tablaItemsContainer" style="display:none; margin-bottom:10px; border:1px solid #e2e8f0; border-radius:8px; padding:10px; background:#f8fafc;">
             <p style="font-weight:600; font-size:0.85rem; margin-bottom:6px;">📋 Ítems agregados:</p>
             <div class="table-wrapper" style="margin-bottom:0;">
               <table style="font-size:0.82rem;">
                 <thead><tr><th>Vacuna</th><th>Lab.</th><th>Lote</th><th>Cant.</th><th></th></tr></thead>
-                <tbody id="tablaItemsB°ody"></tbody>
+                <tbody id="tablaItemsBody"></tbody>
               </table>
             </div>
           </div>
@@ -335,33 +335,33 @@
 
   <!-- MODAL CONFIRMACIÓN -->
   <div id="modalConfirmacion" class="modal">
-    <div class="modal-content" style="max-width:4°00px; text-align:center; padding:30px;">
+    <div class="modal-content" style="max-width:400px; text-align:center; padding:30px;">
       <div style="color:#10b981; font-size:50px; margin-bottom:15px;">✓</div>
       <h2 id="confirmacionMensaje">Registrado correctamente</h2>
-      <p style="color:#64°74°8b; margin:15px 0;">El movimiento ha sido guardado y el stock actualizado.</p>
+      <p style="color:#64748b; margin:15px 0;">El movimiento ha sido guardado y el stock actualizado.</p>
       <button class="btn btn-primary" onclick="cerrarModalConfirmacion()" style="width:100%;">Aceptar</button>
       <button class="btn btn-outline" onclick="descargarUltimoPDF()" style="width:100%; margin-top:10px;">⬇️ Descargar PDF</button>
     </div>
   </div>
 
   <!-- PANEL NORMATIVA -->
-  <div id="normativaPanel" class="container" style="display:none; margin-top:20px; border-left: 4°px solid #64°74°8b;">
+  <div id="normativaPanel" class="container" style="display:none; margin-top:20px; border-left: 4px solid #64748b;">
     <h3>📋 Normativa Vigente</h3>
     <ul style="font-size:0.9rem; margin-top:10px; line-height:2;">
       <li>
-      • <a href="https://www.boletinoficial.gob.ar/detalleAviso/primera/293177/20230831" target="_blank">Decreto Reglamentario 4°39/2023 - Reglamentación de la Ley 27.4°91</a><br>
+      • <a href="https://www.boletinoficial.gob.ar/detalleAviso/primera/293177/20230831" target="_blank">Decreto Reglamentario 439/2023 - Reglamentación de la Ley 27.491</a><br>
         — Control de Enfermedades Prevenibles por Vacunación. Establece el marco legal del Calendario Nacional de Vacunación y la obligatoriedad de las vacunas incluidas en él.
       </li>
       <li>
-        <a href="https://servicios.infoleg.gob.ar/infolegInternet/verNorma.do?id=390785" target="_blank">Decreto Reglamentario 4°39/2023</a>
-        — Reglamenta la Ley 27.4°91. Define responsabilidades de los efectores de salud, condiciones de almacenamiento, trazabilidad y registro de vacunas.
+        <a href="https://servicios.infoleg.gob.ar/infolegInternet/verNorma.do?id=390785" target="_blank">Decreto Reglamentario 439/2023</a>
+        — Reglamenta la Ley 27.491. Define responsabilidades de los efectores de salud, condiciones de almacenamiento, trazabilidad y registro de vacunas.
       </li>
       <li>
         <a href="https://salud.neuquen.gob.ar/campana-de-vacunacion/" target="_blank">Calendario Nacional de Vacunación (Neuquén)</a>
         — Información actualizada sobre las vacunas incluidas en el calendario oficial y las campañas vigentes en la provincia del Neuquén.
       </li>
       <li>
-        <a href="https://www.argentina.gob.ar/salud/inmunoprevenibles/recomendaciones-manuales-y-lineamientos" target="_blank">Manual de Vacunación 2024° (MSAL)</a>
+        <a href="https://www.argentina.gob.ar/salud/inmunoprevenibles/recomendaciones-manuales-y-lineamientos" target="_blank">Manual de Vacunación 2024 (MSAL)</a>
         — Lineamientos técnicos del Ministerio de Salud de la Nación sobre conservación, manipulación, aplicación y registro de vacunas.
       </li>
     </ul>
@@ -370,7 +370,7 @@
   <!-- TEMPLATE PARA PDF (OCULTO) -->
   <div id="pdf-template" style="display:none;">
     <div class="pdf-header">
-      <h1 style="color:#00384°d;">Reporte de Movimiento de Vacunas</h1>
+      <h1 style="color:#00384d;">Reporte de Movimiento de Vacunas</h1>
       <p>Sistema Vicus - Gestión de Inmunización</p>
     </div>
     <div id="pdf-content"></div>
@@ -385,13 +385,13 @@
     <div class="modal-content" style="max-width:900px;">
       <div class="modal-header">
         <h2>⚠️ Próximos a Vencer (15 días)</h2>
-        <button class="modal-close" onclick="document.getElementB°yId('modalVencimientos').style.display='none'">&times;</button>
+        <button class="modal-close" onclick="document.getElementById('modalVencimientos').style.display='none'">&times;</button>
       </div>
       <div class="modal-body">
         <div id="tablaVencimientos"></div>
         <div style="display:flex; gap:10px; margin-top:15px;">
           <button class="btn btn-primary" onclick="descargarPDFVencimientos()" style="flex:1;">⬇️ Descargar PDF</button>
-          <button class="btn btn-outline" onclick="document.getElementB°yId('modalVencimientos').style.display='none'" style="flex:1;">Cerrar</button>
+          <button class="btn btn-outline" onclick="document.getElementById('modalVencimientos').style.display='none'" style="flex:1;">Cerrar</button>
         </div>
       </div>
     </div>
@@ -401,10 +401,10 @@
   <div id="pdf-vencimientos-template" style="display:none; padding:8px; background:white; color:black; font-size:6pt; width:190mm;">
     <style>
       #pdf-vencimientos-template table { width:100%; border-collapse:collapse; }
-      #pdf-vencimientos-template th, #pdf-vencimientos-template td { border:1px solid #ddd; padding:3px 4°px; font-size:6pt; }
+      #pdf-vencimientos-template th, #pdf-vencimientos-template td { border:1px solid #ddd; padding:3px 4px; font-size:6pt; }
       #pdf-vencimientos-template th { background:#f2f2f2; }
     </style>
-    <div style="border-bottom:2px solid #f59e0b; margin-bottom:8px; padding-bottom:4°px;">
+    <div style="border-bottom:2px solid #f59e0b; margin-bottom:8px; padding-bottom:4px;">
       <h2 style="color:#f59e0b; font-size:10pt; margin:0;">Reporte de Próximos Vencimientos (15 días)</h2>
       <p style="margin:2px 0; font-size:7pt;">Sistema Vicus - Generado: <span id="pdf-venc-fecha"></span></p>
     </div>
@@ -412,22 +412,22 @@
   </div>
 
   <script>
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxkTImcAuqU_4°s2zsGhB°iLtcGGuG8Tstyo0B°ktRhOwMSeY7-ZxEG_sUqWB°cjdGsavk6/exec';
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxkTImcAuqU_4s2zsGhBiLtcGGuG8Tstyo0BktRhOwMSeY7-ZxEG_sUqWBcjdGsavk6/exec';
 
-    const VACUNAS_LAB°ORATORIOS = {
+    const VACUNAS_LABORATORIOS = {
       "Antigripal Adulto": ["Viraflu", "Fluxvir", "Agrippal", "Otro"],
       "Antigripal Pediátrica": ["Viraflu Ped", "Istivac Ped", "Otro"],
       "Prevenar 13": ["Pfizer", "Otro"],
       "Neumo 23": ["MSD", "Otro"],
       "Quíntuple": ["Sinergium", "GSK", "Otro"],
-      "Triple Viral": ["MSD", "SKB°", "Otro"],
-      "Hepatitis B° Adulto": ["Sinergium", "B°ernabo", "Otro"],
-      "Hepatitis B° Pediátrica": ["Sinergium", "Otro"],
-      "DPT (Triple B°acteriana)": ["Sinergium", "Otro"],
+      "Triple Viral": ["MSD", "SKB", "Otro"],
+      "Hepatitis B Adulto": ["Sinergium", "Bernabo", "Otro"],
+      "Hepatitis B Pediátrica": ["Sinergium", "Otro"],
+      "DPT (Triple Bacteriana)": ["Sinergium", "Otro"],
       "dpaT (Triple Acelular)": ["GSK", "Sanofi", "Otro"],
-      "IPV (Salk)": ["Sanofi", "Panacea B°iotec (Picovax)", "Otro"],
+      "IPV (Salk)": ["Sanofi", "Panacea Biotec (Picovax)", "Otro"],
       "Rotavirus": ["GSK", "MSD", "Otro"],
-      "Varicela": ["MSD", "SKB°", "Sinovac", "Otro"],
+      "Varicela": ["MSD", "SKB", "Sinovac", "Otro"],
       "VPH": ["MSD", "GSK", "Otro"],
       "Menveo / Menactra": ["GSK", "Sanofi", "Otro"],
       "Fiebre Amarilla": ["Sanofi", "Otro"],
@@ -435,48 +435,47 @@
       "Hepatitis A Adulto": ["MSD", "GSK", "Sinergium", "Otro"],
       "Prevenar 20": ["Pfizer", "Otro"],
       "Antigripal Adyuvantada": ["Fluxvir", "Seqirus", "Sinergium", "Otro"],
-      "B°CG": ["B°iol", "ANLIS-Malbrán", "Otro"],
-      "Doble B°acteriana (dT)": ["B°iol", "Sinergium", "Sanofi", "Otro"],
+      "BCG": ["Biol", "ANLIS-Malbrán", "Otro"],
+      "Doble Bacteriana (dT)": ["Biol", "Sinergium", "Sanofi", "Otro"],
       "Doble Viral (SR)": ["Serum Institute", "MSD", "Otro"],
       "Fiebre Hemorrágica (Candid #1)": ["Instituto Maiztegui", "Otro"],
       "COVID-19": ["Pfizer", "Moderna", "Cassará", "Otro"],
-      "Meningococo B° (B°exsero/Trumenba)": ["GSK", "Pfizer", "Otro"],
+      "Meningococo B (Bexsero/Trumenba)": ["GSK", "Pfizer", "Otro"],
       "VSR (Sincicial Respiratorio)": ["Pfizer (Abrysvo)", "Otro"],
       "Antirrábica Humana": ["Sanofi", "Otro"],
-      "Haemophilus Influenzae tipo B° (Hib)": ["Sanofi", "Otro"],
+      "Haemophilus Influenzae tipo B (Hib)": ["Sanofi", "Otro"],
       "Herpes Zoster": ["GSK (Shingrix)", "MSD (Zostavax)", "Otro"],
       "Fiebre Tifoidea": ["Sanofi (Typhim Vi)", "Otro"],
       "Dengue": ["Takeda (Qdenga)", "Sanofi (Dengvaxia)", "Otro"]
     };
 
-    
+    // MAPEO DE USUARIOS PARA RESTRICCION DE VISIBILIDAD
     const MAPEO_USUARIOS = {
       "Zona uno": { rol: "admin" },
-      "Hospital Centenario": { region: "Confluencia", localidad: "Centenario", establecimiento: "Hosp. Dr. Natalio B°urd" },
+      "Hospital Centenario": { region: "Confluencia", localidad: "Centenario", establecimiento: "Hosp. Dr. Natalio Burd" },
       "Sarmiento 1": { region: "Confluencia", localidad: "Centenario", establecimiento: "C.S. Sarmiento I" },
       "Sarmiento 2": { region: "Confluencia", localidad: "Centenario", establecimiento: "C.S. Sarmiento II" },
       "Villa Obrera": { region: "Confluencia", localidad: "Centenario", establecimiento: "C.S. Villa Obrera" },
-      "Nueva España": { region: "Confluencia", localidad: "Centenario", establecimiento: "C.S. Nueva España" },
+      "Nueva Espa\u00f1a": { region: "Confluencia", localidad: "Centenario", establecimiento: "C.S. Nueva Espa\u00f1a" },
       "11 de Octubre": { region: "Confluencia", localidad: "Centenario", establecimiento: "C.S. 11 de Octubre" },
       "VAS": { region: "Confluencia", localidad: "Vista Alegre", establecimiento: "C.S. Vista Alegre Sur" },
       "VAN": { region: "Confluencia", localidad: "Vista Alegre", establecimiento: "C.S. Vista Alegre Norte" },
       "Costa de Reyes": { region: "Confluencia", localidad: "Vista Alegre", establecimiento: "C.S. Costa de Reyes" },
-      "Hospital Chañar": { region: "Vaca Muerta", localidad: "San Patricio del Chañar", establecimiento: "Hosp. San Patricio del Chañar" }
+      "Vista Hermosa": { region: "Confluencia", localidad: "Centenario", establecimiento: "C.S. Vista Hermosa" },
+      "Hospital Cha\u00f1ar": { region: "Vaca Muerta", localidad: "San Patricio del Cha\u00f1ar", establecimiento: "Hosp. San Patricio del Cha\u00f1ar" }
     };
-    let contextoUsuario = null;
-
-    // Se intenta leer el usuario en cuanto carga el script
+    var contextoUsuario = null;
     try {
-      let config_actual = JSON.parse(localStorage.getItem('vicus_inmuno_config') || '{}');
-      if (config_actual && config_actual.nombre && MAPEO_USUARIOS[config_actual.nombre]) {
-        contextoUsuario = MAPEO_USUARIOS[config_actual.nombre];
+      var _cfg = JSON.parse(localStorage.getItem('vicus_inmuno_config') || '{}');
+      if (_cfg && _cfg.nombre && MAPEO_USUARIOS[_cfg.nombre]) {
+        contextoUsuario = MAPEO_USUARIOS[_cfg.nombre];
       }
-    } catch(e) {}
+    } catch(_e) {}
 
     const ESTRUCTURA_GEOGRAFICA = {
       "Confluencia": {
-        "Neuquén Capital": ["Hosp. Dr.Castro Rendón (HPN)", "Hosp. Dr. Horacio Heller", "Hosp. B°ouquet Roldán", "C.S. Sapere", "C.S. V. Farrel", "C.S. Don B°osco", "C.S. Confluencia", "C.S. San Lorenzo Sur", "C.S. Valentina Sur", "C.S. Parque Industrial", "C.S. San Lorenzo Norte", "C.S. Nueva Esperanza", "C.S. Progreso", "C.S. Villa Florencia", "C.S. Villa Maria", "C.S. Mariano Moreno", "C.S B°ouquet Roldan", "C.S Almafuerte", "C.S. Valentina Norte", "C.S. Valentina Norte Rural - Los Hornos", "C.S Colonia Rural Nueva Esperanza", "P.S 14° de Octubre", "P.S Rincon de Emilio", "Deposito Region Confluencia"],
-        "Centenario": ["Hosp. Dr. Natalio B°urd", "C.S. Sarmiento II", "C.S. Villa Obrera", "C.S. Sarmiento I", "C.S. Vista Hermosa", "C.S. 11 de Octubre", "C.S. Nueva España"],
+        "Neuquén Capital": ["Hosp. Dr.Castro Rendón (HPN)", "Hosp. Dr. Horacio Heller", "Hosp. Bouquet Roldán", "C.S. Sapere", "C.S. V. Farrel", "C.S. Don Bosco", "C.S. Confluencia", "C.S. San Lorenzo Sur", "C.S. Valentina Sur", "C.S. Parque Industrial", "C.S. San Lorenzo Norte", "C.S. Nueva Esperanza", "C.S. Progreso", "C.S. Villa Florencia", "C.S. Villa Maria", "C.S. Mariano Moreno", "C.S Bouquet Roldan", "C.S Almafuerte", "C.S. Valentina Norte", "C.S. Valentina Norte Rural - Los Hornos", "C.S Colonia Rural Nueva Esperanza", "P.S 14 de Octubre", "P.S Rincon de Emilio", "Deposito Region Confluencia"],
+        "Centenario": ["Hosp. Dr. Natalio Burd", "C.S. Sarmiento II", "C.S. Villa Obrera", "C.S. Sarmiento I", "C.S. Vista Hermosa", "C.S. 11 de Octubre", "C.S. Nueva España"],
         "Vista Alegre": ["C.S. Vista Alegre Norte", "C.S. Vista Alegre Sur", "C.S. Costa de Reyes"],
         "Plottier": ["Hosp. Plottier", "C.S. Los Aromos", "C.S. Soldado Aguila", "C.S. El Chacay", "C.S. La Esperanza", "C.S. Los Hornos", "C.S. Union", "C.S. Los Alamos"],
         "Senillosa": ["Hosp. Don Adolfo del Valle"],
@@ -487,22 +486,22 @@
         "Rincón de los Sauces": ["Hosp. Rincón de los Sauces", "C.S. La Costa", "C.S. La Falda"],
         "Octavio Pico": ["C.S. Octavio Pico"],
         "San Patricio del Chañar": ["Hosp. San Patricio del Chañar"],
-        "B°uta Ranquil": ["Hosp. B°uta Ranquil"],
-        "B°arrancas": ["C.S. B°arrancas"],
+        "Buta Ranquil": ["Hosp. Buta Ranquil"],
+        "Barrancas": ["C.S. Barrancas"],
         "Deposito": ["Deposito Region Vaca Muerta"]
       },
       "Del Pehuén": {
-        "Zapala": ["Hosp. Dr. Jorge Juan Pose", "C.S. Alborada", "C.S. Ampliación", "C.S. CGT", "C.S. 582 Viviendas", "C.S. C.I.C Caleuche", "C.S. Don B°osco", "C.S. Nueva Esperanza"],
-        "B°aja del Agrio": ["Hosp. B°ajada del Agrio"],
+        "Zapala": ["Hosp. Dr. Jorge Juan Pose", "C.S. Alborada", "C.S. Ampliación", "C.S. CGT", "C.S. 582 Viviendas", "C.S. C.I.C Caleuche", "C.S. Don Bosco", "C.S. Nueva Esperanza"],
+        "Baja del Agrio": ["Hosp. Bajada del Agrio"],
         "Aluminé": ["Hosp. Aluminé", "C.S. Las Latas", "C.S. Ruca Choroi - Raguiñ Ken"],
         "Villa Pehuenia": ["C.S. Villa Pehuenia"],
         "Las Lajas": ["Hosp. Dr. Jose Agustin Venier"],
         "Las Coloradas": ["Hosp. Dr. Carlos Potante"],
-        "Mariano Moreno": ["Hosp. Dr. Carlos B°urdes"],
+        "Mariano Moreno": ["Hosp. Dr. Carlos Burdes"],
         "Deposito": ["Deposito Region Del Pehuen"]
       },
       "Alto Neuquén": {
-        "Chos Malal": ["Hosp. Chos Malal", "C.S. Uriburu", "C.S. Tiro Federal", "C.S. Area Frontera", "C.S. Cordillera del Viento", "C.S. 4°° Division Enfermero Moya", "C.S. Seccion Chacras Enfermero Roca"],
+        "Chos Malal": ["Hosp. Chos Malal", "C.S. Uriburu", "C.S. Tiro Federal", "C.S. Area Frontera", "C.S. Cordillera del Viento", "C.S. 4° Division Enfermero Moya", "C.S. Seccion Chacras Enfermero Roca"],
         "Andacollo": ["Hosp. Dr. Antonio M. Gorgni"],
         "Tricao Malal": ["Hosp. Tricao Malal"],
         "Huinganco": ["C.S. Huinganco"],
@@ -518,14 +517,14 @@
         "Deposito": ["Deposito Region Alto Neuquen"]
       },
       "Lagos del Sur": {
-        "S. M. de los Andes": ["Hosp. Dr. Ramón Carrillo", "C.S. El Arena", "C.S. Chacra 30", "C.S. Los Radales", "C.S. Cordones del Chapelco", "C.S El Portal", "C.S. Vamep 4°8", "C.S. Las Rosas", "C.S Cantera", "C.S. Covisal"],
+        "S. M. de los Andes": ["Hosp. Dr. Ramón Carrillo", "C.S. El Arena", "C.S. Chacra 30", "C.S. Los Radales", "C.S. Cordones del Chapelco", "C.S El Portal", "C.S. Vamep 48", "C.S. Las Rosas", "C.S Cantera", "C.S. Covisal"],
         "Junín de los Andes": ["Hosp. Junín de los Andes", "C.S. Lanin", "C.S. Lonquimay", "C.S. 15 de febrero", "C.S. Primeros Pobladores", "C.S. Lanín, Primeros Pobladores"],
-        "V. La Angostura": ["Hosp. Dr. Oscar Arraiz", "C.S. B°° Norte", "C.S. Margaritas", "C.S. Las Piedritas"],
+        "V. La Angostura": ["Hosp. Dr. Oscar Arraiz", "C.S. B° Norte", "C.S. Margaritas", "C.S. Las Piedritas"],
         "Villa Traful": ["C.S. Enfermera Olga Viyares"],
         "Deposito": ["Deposito Region Lagos del Sur"]
       },
       "De la Comarca": {
-        "Cutral Co / Plaza Huincul": ["Hosp. Dr. Aldo V. Maulú", "C.S. Aeroparque", "C.S. B°° B°elgrano", "C.S. B°° San Martín", "C.S. B°rentana", "C.S. Parque Oeste", "C.S. Pampa", "C.S. Otaño", "C.S. Centenario", "C.S. Campamento Central", "C.S. Peñi Trapun", "C.S. Union"],
+        "Cutral Co / Plaza Huincul": ["Hosp. Dr. Aldo V. Maulú", "C.S. Aeroparque", "C.S. B° Belgrano", "C.S. B° San Martín", "C.S. Brentana", "C.S. Parque Oeste", "C.S. Pampa", "C.S. Otaño", "C.S. Centenario", "C.S. Campamento Central", "C.S. Peñi Trapun", "C.S. Union"],
         "Deposito": ["Deposito Region De la Comarca"]
       },
       "Del Limay": {
@@ -536,18 +535,18 @@
       }
     };
 
-    let DATOS_GLOB°ALES = { stock: [], ingresos: [], egresos: [] };
+    let DATOS_GLOBALES = { stock: [], ingresos: [], egresos: [] };
     let modoMovimiento = 'Egreso';
     let ultimoPDFUrl = '';
-    let ultimoPDFB°lob = '';
+    let ultimoPDFBlob = '';
     let ultimoPDFNombre = '';
-    let ultimoPDFB°lobIngreso = '';
+    let ultimoPDFBlobIngreso = '';
     let ultimoPDFNombreIngreso = '';
     let itemsMovimiento = [];
     let contextoMovimiento = {};
 
     function mostrarLoading(show) {
-      document.getElementB°yId('loading').style.display = show ? 'block' : 'none';
+      document.getElementById('loading').style.display = show ? 'block' : 'none';
     }
 
     function cargarDatos(region, localidad, establecimiento) {
@@ -557,16 +556,15 @@
       if (region) url += '&region=' + encodeURIComponent(region);
       if (localidad) url += '&localidad=' + encodeURIComponent(localidad);
       if (establecimiento) url += '&establecimiento=' + encodeURIComponent(establecimiento);
-      url += '&_t=' + new Date().getTime();
       var xhr = new XMLHttpRequest();
       xhr.open('GET', url, true);
       xhr.onload = function() {
         mostrarLoading(false);
         if (xhr.status === 200) {
           try {
-            DATOS_GLOB°ALES = JSON.parse(xhr.responseText);
-            renderizarTablas(DATOS_GLOB°ALES, region, localidad, establecimiento);
-            actualizarEstadisticas(DATOS_GLOB°ALES.stock);
+            DATOS_GLOBALES = JSON.parse(xhr.responseText);
+            renderizarTablas(DATOS_GLOBALES, region, localidad, establecimiento);
+            actualizarEstadisticas(DATOS_GLOBALES.stock);
           } catch(e) { console.error("Error parseando JSON", e); }
         }
       };
@@ -575,7 +573,7 @@
     }
 
     function renderizarTablas(data, currentRegion, currentLocalidad, currentEstablecimiento) {
-      var tbodyStockInventario = document.getElementB°yId('stockB°odyInventario');
+      var tbodyStockInventario = document.getElementById('stockBodyInventario');
       if (tbodyStockInventario) {
         if (!data.stock || !data.stock.length) {
           tbodyStockInventario.innerHTML = '<tr><td colspan="9" style="text-align:center;">No hay datos de stock disponibles</td></tr>';
@@ -586,36 +584,36 @@
             if (parseInt(it.stock) <= 0) continue;
             var venc = new Date(it.vencimiento), estado = 'Disponible', badge = 'badge-success';
             if (venc < hoy) { estado = 'Vencido'; badge = 'badge-danger'; }
-            else if ((venc - hoy) / 864°00000 <= 30) { estado = 'Próximo a Vencer'; badge = 'badge-warning'; }
-            var diasVenc = Math.ceil((venc - hoy) / 864°00000);
+            else if ((venc - hoy) / 86400000 <= 30) { estado = 'Próximo a Vencer'; badge = 'badge-warning'; }
+            var diasVenc = Math.ceil((venc - hoy) / 86400000);
             htmlStock += '<tr><td>' + (it.vacuna||'-') + '</td><td>' + (it.laboratorio||'-') + '</td><td>' + (it.lote||'-') + '</td><td>' + venc.toLocaleDateString('es-AR') + '</td><td>' + (it.stock||0) + '</td><td>' + (it.region||'-') + '</td><td>' + (it.localidad||'-') + '</td><td>' + (it.establecimiento||'-') + '</td><td><span class="badge ' + badge + '">' + estado + '</span></td><td><span class="badge ' + badge + '">' + (venc < hoy ? 'Vencido' : diasVenc + ' días') + '</span></td></tr>';
           }
           tbodyStockInventario.innerHTML = htmlStock;
         }
       }
       if (!currentRegion && !currentLocalidad && !currentEstablecimiento) {
-        document.getElementB°yId('tablasNivel1').innerHTML = '';
-        document.getElementB°yId('tablasNivel1Geografico').innerHTML =
+        document.getElementById('tablasNivel1').innerHTML = '';
+        document.getElementById('tablasNivel1Geografico').innerHTML =
           buildTablasDetalle(data.stock, 'Stock General', ['Vacuna','Laboratorio','Lote','Vencimiento','Stock','Region','Localidad','Establecimiento']) +
           buildTablasDetalle(data.ingresos, 'Ingresos Recientes', ['Fecha','Vacuna','Laboratorio','Lote','Cantidad','Responsable','Region','Localidad','Establecimiento','Vencimiento','Observaciones','Trazabilidad']) +
           buildTablasDetalle(data.egresos, 'Egresos Recientes', ['Fecha','Vacuna','Laboratorio','Lote','Cantidad','Responsable','Region','Localidad','Establecimiento','Observacion','Trazabilidad']);
-        document.getElementB°yId('tablasNivel2').innerHTML = '';
-        document.getElementB°yId('tablasNivel3').innerHTML = '';
+        document.getElementById('tablasNivel2').innerHTML = '';
+        document.getElementById('tablasNivel3').innerHTML = '';
       } else if (currentRegion && !currentLocalidad && !currentEstablecimiento) {
-        document.getElementB°yId('tablasNivel1Geografico').innerHTML = '';
-        document.getElementB°yId('tablasNivel2').innerHTML =
+        document.getElementById('tablasNivel1Geografico').innerHTML = '';
+        document.getElementById('tablasNivel2').innerHTML =
           buildTablasDetalle(data.stock, 'Stock en ' + currentRegion, ['Vacuna','Laboratorio','Lote','Vencimiento','Stock','Localidad','Establecimiento']) +
           buildTablasDetalle(data.ingresos, 'Ingresos en ' + currentRegion, ['Fecha','Vacuna','Laboratorio','Lote','Cantidad','Responsable','Localidad','Establecimiento','Vencimiento','Observaciones','Trazabilidad']) +
           buildTablasDetalle(data.egresos, 'Egresos en ' + currentRegion, ['Fecha','Vacuna','Laboratorio','Lote','Cantidad','Responsable','Localidad','Establecimiento','Observacion','Trazabilidad']);
-        document.getElementB°yId('tablasNivel3').innerHTML = '';
+        document.getElementById('tablasNivel3').innerHTML = '';
       } else if (currentRegion && currentLocalidad && !currentEstablecimiento) {
-        document.getElementB°yId('tablasNivel2').innerHTML = '';
-        document.getElementB°yId('tablasNivel3').innerHTML =
+        document.getElementById('tablasNivel2').innerHTML = '';
+        document.getElementById('tablasNivel3').innerHTML =
           buildTablasDetalle(data.stock, 'Stock en ' + currentLocalidad, ['Vacuna','Laboratorio','Lote','Vencimiento','Stock','Establecimiento']) +
           buildTablasDetalle(data.ingresos, 'Ingresos en ' + currentLocalidad, ['Fecha','Vacuna','Laboratorio','Lote','Cantidad','Responsable','Establecimiento','Vencimiento','Observaciones','Trazabilidad']) +
           buildTablasDetalle(data.egresos, 'Egresos en ' + currentLocalidad, ['Fecha','Vacuna','Laboratorio','Lote','Cantidad','Responsable','Establecimiento','Observacion','Trazabilidad']);
       } else if (currentRegion && currentLocalidad && currentEstablecimiento) {
-        document.getElementB°yId('tablasNivel3').innerHTML =
+        document.getElementById('tablasNivel3').innerHTML =
           buildTablasDetalle(data.stock, 'Stock en ' + currentEstablecimiento, ['Vacuna','Laboratorio','Lote','Vencimiento','Stock']) +
           buildTablasDetalle(data.ingresos, 'Ingresos en ' + currentEstablecimiento, ['Fecha','Vacuna','Laboratorio','Lote','Cantidad','Responsable','Vencimiento','Observaciones','Trazabilidad']) +
           buildTablasDetalle(data.egresos, 'Egresos en ' + currentEstablecimiento, ['Fecha','Vacuna','Laboratorio','Lote','Cantidad','Responsable','Observacion','Trazabilidad']);
@@ -647,7 +645,7 @@
           }
           if (esStock) {
             var venc = new Date(data[i].vencimiento);
-            var dias = Math.ceil((venc - hoy) / 864°00000);
+            var dias = Math.ceil((venc - hoy) / 86400000);
             var estado = 'Disponible', badge = 'badge-success';
             if (venc < hoy) { estado = 'Vencido'; badge = 'badge-danger'; }
             else if (dias <= 30) { estado = 'Próximo a Vencer'; badge = 'badge-warning'; }
@@ -667,50 +665,50 @@
         var s = parseInt(stock[i].stock) || 0; total += s;
         var v = new Date(stock[i].vencimiento);
         if (v < hoy) vencidos += s;
-        else if ((v - hoy) / 864°00000 <= 30) proximos += s;
+        else if ((v - hoy) / 86400000 <= 30) proximos += s;
       }
-      document.getElementB°yId('totalDosis').textContent = total;
-      document.getElementB°yId('proximosVencer').textContent = proximos;
-      document.getElementB°yId('vencidos').textContent = vencidos;
+      document.getElementById('totalDosis').textContent = total;
+      document.getElementById('proximosVencer').textContent = proximos;
+      document.getElementById('vencidos').textContent = vencidos;
     }
 
     function mostrarVistaGeografica() {
-      document.getElementB°yId('vistaInventario').classList.remove('active');
-      document.getElementB°yId('vistaGeografica').classList.add('active');
+      document.getElementById('vistaInventario').classList.remove('active');
+      document.getElementById('vistaGeografica').classList.add('active');
       volverANivelProvincia();
     }
 
     function volverVistaInventario() {
-      document.getElementB°yId('vistaGeografica').classList.remove('active');
-      document.getElementB°yId('vistaInventario').classList.add('active');
+      document.getElementById('vistaGeografica').classList.remove('active');
+      document.getElementById('vistaInventario').classList.add('active');
       cargarDatos();
     }
 
     function volverANivelProvincia() {
-      document.getElementB°yId('nivelRegion').style.display = 'none';
-      document.getElementB°yId('nivelLocalidad').style.display = 'none';
-      document.getElementB°yId('nivelProvincia').style.display = 'block';
-      document.getElementB°yId('breadcrumbRegion').style.display = 'none';
-      document.getElementB°yId('breadcrumbLocalidad').style.display = 'none';
+      document.getElementById('nivelRegion').style.display = 'none';
+      document.getElementById('nivelLocalidad').style.display = 'none';
+      document.getElementById('nivelProvincia').style.display = 'block';
+      document.getElementById('breadcrumbRegion').style.display = 'none';
+      document.getElementById('breadcrumbLocalidad').style.display = 'none';
       cargarDatos();
       resizeMap();
     }
 
     function volverANivelRegion() {
-      document.getElementB°yId('nivelLocalidad').style.display = 'none';
-      document.getElementB°yId('nivelRegion').style.display = 'block';
-      document.getElementB°yId('breadcrumbLocalidad').style.display = 'none';
-      var currentRegion = document.getElementB°yId('breadcrumbRegion').textContent;
+      document.getElementById('nivelLocalidad').style.display = 'none';
+      document.getElementById('nivelRegion').style.display = 'block';
+      document.getElementById('breadcrumbLocalidad').style.display = 'none';
+      var currentRegion = document.getElementById('breadcrumbRegion').textContent;
       cargarDatos(currentRegion);
     }
 
     function navegarARegion(region) {
-      document.getElementB°yId('nivelProvincia').style.display = 'none';
-      document.getElementB°yId('nivelRegion').style.display = 'block';
-      document.getElementB°yId('tituloRegion').textContent = 'Región: ' + region;
-      document.getElementB°yId('breadcrumbRegion').style.display = 'inline-block';
-      document.getElementB°yId('breadcrumbRegion').textContent = region;
-      var grid = document.getElementB°yId('localidades-grid');
+      document.getElementById('nivelProvincia').style.display = 'none';
+      document.getElementById('nivelRegion').style.display = 'block';
+      document.getElementById('tituloRegion').textContent = 'Región: ' + region;
+      document.getElementById('breadcrumbRegion').style.display = 'inline-block';
+      document.getElementById('breadcrumbRegion').textContent = region;
+      var grid = document.getElementById('localidades-grid');
       grid.innerHTML = '';
       var locs = Object.keys(ESTRUCTURA_GEOGRAFICA[region] || {});
       for (var i = 0; i < locs.length; i++) {
@@ -724,12 +722,12 @@
     }
 
     function navegarALocalidad(region, localidad) {
-      document.getElementB°yId('nivelRegion').style.display = 'none';
-      document.getElementB°yId('nivelLocalidad').style.display = 'block';
-      document.getElementB°yId('tituloLocalidad').textContent = 'Localidad: ' + localidad;
-      document.getElementB°yId('breadcrumbLocalidad').style.display = 'inline-block';
-      document.getElementB°yId('breadcrumbLocalidad').textContent = localidad;
-      var menu = document.getElementB°yId('establecimientos-menu');
+      document.getElementById('nivelRegion').style.display = 'none';
+      document.getElementById('nivelLocalidad').style.display = 'block';
+      document.getElementById('tituloLocalidad').textContent = 'Localidad: ' + localidad;
+      document.getElementById('breadcrumbLocalidad').style.display = 'inline-block';
+      document.getElementById('breadcrumbLocalidad').textContent = localidad;
+      var menu = document.getElementById('establecimientos-menu');
       menu.innerHTML = '';
       var ests = (ESTRUCTURA_GEOGRAFICA[region] || {})[localidad] || [];
       for (var i = 0; i < ests.length; i++) {
@@ -745,126 +743,132 @@
     // ── MODAL MOVIMIENTO ──────────────────────────────────────────────────────
     function abrirModalMov(tipo) {
       modoMovimiento = tipo;
-      document.getElementB°yId('modalTitulo').textContent = tipo === 'Ingreso' ? '📥 Registrar Ingreso' : '📤 Registrar Egreso';
-      document.getElementB°yId('camposEgreso').style.display = tipo === 'Egreso' ? 'block' : 'none';
-      document.getElementB°yId('camposIngreso').style.display = tipo === 'Ingreso' ? 'block' : 'none';
-      document.getElementB°yId('vencimientoRow').style.display = tipo === 'Ingreso' ? 'block' : 'none';
-      document.getElementB°yId('tipoEgresoRow').style.display = tipo === 'Egreso' ? 'block' : 'none';
-      document.getElementB°yId('formMov').reset();
+      document.getElementById('modalTitulo').textContent = tipo === 'Ingreso' ? '📥 Registrar Ingreso' : '📤 Registrar Egreso';
+      document.getElementById('camposEgreso').style.display = tipo === 'Egreso' ? 'block' : 'none';
+      document.getElementById('camposIngreso').style.display = tipo === 'Ingreso' ? 'block' : 'none';
+      document.getElementById('vencimientoRow').style.display = tipo === 'Ingreso' ? 'block' : 'none';
+      document.getElementById('tipoEgresoRow').style.display = tipo === 'Egreso' ? 'block' : 'none';
+      document.getElementById('formMov').reset();
       itemsMovimiento = [];
       contextoMovimiento = {};
-      document.getElementB°yId('tablaItemsContainer').style.display = 'none';
-      document.getElementB°yId('tablaItemsB°ody').innerHTML = '';
-      document.getElementB°yId('seccionUbicacion').style.display = 'block';
+      document.getElementById('tablaItemsContainer').style.display = 'none';
+      document.getElementById('tablaItemsBody').innerHTML = '';
+      document.getElementById('seccionUbicacion').style.display = 'block';
       var rg = document.querySelector('#camposEgreso > div[style*="grid"]'); if (rg) rg.style.display = '';
       var ed = document.querySelector('#camposEgreso > .form-group:nth-child(3)'); if (ed) ed.style.display = '';
       var rgi = document.querySelector('#camposIngreso > div[style*="grid"]'); if (rgi) rgi.style.display = '';
-
       var edi = document.querySelector('#camposIngreso > .form-group:last-child'); if (edi) edi.style.display = '';
-      var td = document.getElementB°yId('camposTraslado'); if (td) td.style.display = 'none';
-      ultimoPDFB°lob = ''; ultimoPDFNombre = ''; ultimoPDFUrl = '';
-      ultimoPDFB°lobIngreso = ''; ultimoPDFNombreIngreso = '';
+      var td = document.getElementById('camposTraslado'); if (td) td.style.display = 'none';
+      ultimoPDFBlob = ''; ultimoPDFNombre = ''; ultimoPDFUrl = '';
+      ultimoPDFBlobIngreso = ''; ultimoPDFNombreIngreso = '';
 
+      // Bloquear/desbloquear dropdowns segun usuario
       if (contextoUsuario && contextoUsuario.rol !== 'admin') {
         if (tipo === 'Egreso') {
-            document.getElementB°yId('regionMov').disabled = true;
-            document.getElementB°yId('localidadMov').disabled = true;
-            document.getElementB°yId('establecimientoMov').disabled = true;
+          document.getElementById('regionMov').disabled = true;
+          document.getElementById('localidadMov').disabled = true;
+          document.getElementById('establecimientoMov').disabled = true;
         } else {
-            document.getElementB°yId('regionMovIngreso').disabled = true;
-            document.getElementB°yId('localidadMovIngreso').disabled = true;
-            document.getElementB°yId('establecimientoMovIngreso').disabled = true;
+          document.getElementById('regionMovIngreso').disabled = true;
+          document.getElementById('localidadMovIngreso').disabled = true;
+          document.getElementById('establecimientoMovIngreso').disabled = true;
         }
       } else {
-         if (tipo === 'Egreso') {
-            document.getElementB°yId('regionMov').disabled = false;
-            document.getElementB°yId('localidadMov').disabled = false;
-            document.getElementB°yId('establecimientoMov').disabled = false;
-         } else {
-            document.getElementB°yId('regionMovIngreso').disabled = false;
-            document.getElementB°yId('localidadMovIngreso').disabled = false;
-            document.getElementB°yId('establecimientoMovIngreso').disabled = false;
-         }
+        if (tipo === 'Egreso') {
+          document.getElementById('regionMov').disabled = false;
+          document.getElementById('localidadMov').disabled = false;
+          document.getElementById('establecimientoMov').disabled = false;
+        } else {
+          document.getElementById('regionMovIngreso').disabled = false;
+          document.getElementById('localidadMovIngreso').disabled = false;
+          document.getElementById('establecimientoMovIngreso').disabled = false;
+        }
+      }
+
+      // Auto-llenar dropdowns de ingreso si usuario restringido
+      if (contextoUsuario && contextoUsuario.rol !== 'admin' && tipo === 'Ingreso') {
+        document.getElementById('regionMovIngreso').innerHTML = '<option value="'+contextoUsuario.region+'">'+contextoUsuario.region+'</option>';
+        document.getElementById('localidadMovIngreso').innerHTML = '<option value="'+contextoUsuario.localidad+'">'+contextoUsuario.localidad+'</option>';
+        document.getElementById('establecimientoMovIngreso').innerHTML = '<option value="'+contextoUsuario.establecimiento+'">'+contextoUsuario.establecimiento+'</option>';
       }
 
       if (tipo === 'Egreso') {
         // Refrescar stock antes de abrir para que los lotes estén actualizados
         var url = APPS_SCRIPT_URL + '?action=getDatosAgregados';
         if (contextoUsuario && contextoUsuario.rol !== 'admin') {
-           url += '&region=' + encodeURIComponent(contextoUsuario.region) + '&localidad=' + encodeURIComponent(contextoUsuario.localidad) + '&establecimiento=' + encodeURIComponent(contextoUsuario.establecimiento);
+          url += '&region=' + encodeURIComponent(contextoUsuario.region) + '&localidad=' + encodeURIComponent(contextoUsuario.localidad) + '&establecimiento=' + encodeURIComponent(contextoUsuario.establecimiento);
         }
-        url += '&_t=' + new Date().getTime();
         var xhr = new XMLHttpRequest();
         xhr.open('GET', url, true);
         xhr.onload = function() {
           try {
-            DATOS_GLOB°ALES = JSON.parse(xhr.responseText);
+            DATOS_GLOBALES = JSON.parse(xhr.responseText);
           } catch(e) {}
           actualizarVacunas();
-          document.getElementB°yId('modalMov').style.display = 'block';
+          document.getElementById('modalMov').style.display = 'block';
         };
         xhr.onerror = function() {
           actualizarVacunas();
-          document.getElementB°yId('modalMov').style.display = 'block';
+          document.getElementById('modalMov').style.display = 'block';
         };
         xhr.send();
       } else {
         actualizarVacunas();
-        document.getElementB°yId('modalMov').style.display = 'block';
+        document.getElementById('modalMov').style.display = 'block';
       }
     }
 
     function cerrarModalMov() {
-      document.getElementB°yId('modalMov').style.display = 'none';
+      document.getElementById('modalMov').style.display = 'none';
     }
 
     function actualizarVacunas() {
-      var sel = document.getElementB°yId('vacuna');
+      var sel = document.getElementById('vacuna');
       sel.innerHTML = '<option value="">Seleccionar vacuna</option>';
       if (modoMovimiento === 'Egreso') {
         // Solo vacunas con stock > 0
         var vacunas = [];
-        (DATOS_GLOB°ALES.stock || []).forEach(function(s) {
+        (DATOS_GLOBALES.stock || []).forEach(function(s) {
           if (parseInt(s.stock) > 0 && vacunas.indexOf(s.vacuna) === -1) vacunas.push(s.vacuna);
         });
         vacunas.forEach(function(v) { sel.innerHTML += '<option value="' + v + '">' + v + '</option>'; });
       } else {
-        Object.keys(VACUNAS_LAB°ORATORIOS).forEach(function(v) {
+        Object.keys(VACUNAS_LABORATORIOS).forEach(function(v) {
           sel.innerHTML += '<option value="' + v + '">' + v + '</option>';
         });
       }
-      document.getElementB°yId('laboratorio').innerHTML = '<option value="">Primero selecciona vacuna</option>';
-      document.getElementB°yId('loteSelect').innerHTML = '<option value="">Primero selecciona laboratorio</option>';
+      document.getElementById('laboratorio').innerHTML = '<option value="">Primero selecciona vacuna</option>';
+      document.getElementById('loteSelect').innerHTML = '<option value="">Primero selecciona laboratorio</option>';
     }
 
     function actualizarLaboratorios() {
-      var vacuna = document.getElementB°yId('vacuna').value;
-      var sel = document.getElementB°yId('laboratorio');
+      var vacuna = document.getElementById('vacuna').value;
+      var sel = document.getElementById('laboratorio');
       sel.innerHTML = '<option value="">Seleccionar laboratorio</option>';
       if (modoMovimiento === 'Egreso') {
         var labs = [];
-        (DATOS_GLOB°ALES.stock || []).filter(function(s) {
+        (DATOS_GLOBALES.stock || []).filter(function(s) {
           return s.vacuna === vacuna && parseInt(s.stock) > 0;
         }).forEach(function(s) {
           if (labs.indexOf(s.laboratorio) === -1) labs.push(s.laboratorio);
         });
         labs.forEach(function(l) { sel.innerHTML += '<option value="' + l + '">' + l + '</option>'; });
       } else {
-        (VACUNAS_LAB°ORATORIOS[vacuna] || []).forEach(function(l) {
+        (VACUNAS_LABORATORIOS[vacuna] || []).forEach(function(l) {
           sel.innerHTML += '<option value="' + l + '">' + l + '</option>';
         });
       }
-      document.getElementB°yId('loteSelect').innerHTML = '<option value="">Primero selecciona laboratorio</option>';
+      document.getElementById('loteSelect').innerHTML = '<option value="">Primero selecciona laboratorio</option>';
     }
 
     function actualizarLotes() {
       if (modoMovimiento !== 'Egreso') return;
-      var vacuna = document.getElementB°yId('vacuna').value;
-      var lab = document.getElementB°yId('laboratorio').value;
-      var sel = document.getElementB°yId('loteSelect');
+      var vacuna = document.getElementById('vacuna').value;
+      var lab = document.getElementById('laboratorio').value;
+      var sel = document.getElementById('loteSelect');
       sel.innerHTML = '<option value="">Seleccionar lote</option>';
-      (DATOS_GLOB°ALES.stock || []).filter(function(s) {
-        return s.vacuna === vacuna && (!lab || s.laboratorio === lab) && parseInt(s.stock) > 0;
+      (DATOS_GLOBALES.stock || []).filter(function(s) {
+        return s.vacuna === vacuna && s.laboratorio === lab && parseInt(s.stock) > 0;
       }).forEach(function(s) {
         sel.innerHTML += '<option value="' + s.lote + '">' + s.lote + ' (Disponible: ' + s.stock + ' - Vence: ' + new Date(s.vencimiento).toLocaleDateString('es-AR') + ')</option>';
       });
@@ -872,128 +876,128 @@
     }
 
     function actualizarRegionesEgreso() {
-      var vacuna = document.getElementB°yId('vacuna').value;
-      var lab = document.getElementB°yId('laboratorio').value;
-      var lote = document.getElementB°yId('loteSelect').value;
-      var sel = document.getElementB°yId('regionMov');
+      var vacuna = document.getElementById('vacuna').value;
+      var lab = document.getElementById('laboratorio').value;
+      var lote = document.getElementById('loteSelect').value;
+      var sel = document.getElementById('regionMov');
       sel.innerHTML = '<option value="">Seleccionar región</option>';
       var regiones = [];
-      (DATOS_GLOB°ALES.stock || []).filter(function(s) {
-        return s.vacuna === vacuna && (!lab || s.laboratorio === lab) && s.lote === lote && parseInt(s.stock) > 0;
+      (DATOS_GLOBALES.stock || []).filter(function(s) {
+        return s.vacuna === vacuna && s.laboratorio === lab && s.lote === lote && parseInt(s.stock) > 0;
       }).forEach(function(s) {
         if (regiones.indexOf(s.region) === -1) regiones.push(s.region);
       });
       regiones.forEach(function(r) { sel.innerHTML += '<option value="' + r + '">' + r + '</option>'; });
-      document.getElementB°yId('localidadMov').innerHTML = '<option value="">Seleccionar región primero</option>';
-      document.getElementB°yId('establecimientoMov').innerHTML = '<option value="">Seleccionar localidad primero</option>';
-      document.getElementB°yId('stockDisponibleLabel').textContent = '';
+      document.getElementById('localidadMov').innerHTML = '<option value="">Seleccionar región primero</option>';
+      document.getElementById('establecimientoMov').innerHTML = '<option value="">Seleccionar localidad primero</option>';
+      document.getElementById('stockDisponibleLabel').textContent = '';
     }
 
     function actualizarLocalidadesEgreso() {
-      var vacuna = document.getElementB°yId('vacuna').value;
-      var lab = document.getElementB°yId('laboratorio').value;
-      var lote = document.getElementB°yId('loteSelect').value;
-      var region = document.getElementB°yId('regionMov').value;
-      var sel = document.getElementB°yId('localidadMov');
+      var vacuna = document.getElementById('vacuna').value;
+      var lab = document.getElementById('laboratorio').value;
+      var lote = document.getElementById('loteSelect').value;
+      var region = document.getElementById('regionMov').value;
+      var sel = document.getElementById('localidadMov');
       sel.innerHTML = '<option value="">Seleccionar localidad</option>';
       var localidades = [];
-      (DATOS_GLOB°ALES.stock || []).filter(function(s) {
-        return s.vacuna === vacuna && (!lab || s.laboratorio === lab) && s.lote === lote && s.region === region && parseInt(s.stock) > 0;
+      (DATOS_GLOBALES.stock || []).filter(function(s) {
+        return s.vacuna === vacuna && s.laboratorio === lab && s.lote === lote && s.region === region && parseInt(s.stock) > 0;
       }).forEach(function(s) {
         if (localidades.indexOf(s.localidad) === -1) localidades.push(s.localidad);
       });
       localidades.forEach(function(l) { sel.innerHTML += '<option value="' + l + '">' + l + '</option>'; });
-      document.getElementB°yId('establecimientoMov').innerHTML = '<option value="">Seleccionar localidad primero</option>';
-      document.getElementB°yId('stockDisponibleLabel').textContent = '';
+      document.getElementById('establecimientoMov').innerHTML = '<option value="">Seleccionar localidad primero</option>';
+      document.getElementById('stockDisponibleLabel').textContent = '';
     }
 
     function actualizarEstablecimientosEgreso() {
-      var vacuna = document.getElementB°yId('vacuna').value;
-      var lab = document.getElementB°yId('laboratorio').value;
-      var lote = document.getElementB°yId('loteSelect').value;
-      var region = document.getElementB°yId('regionMov').value;
-      var localidad = document.getElementB°yId('localidadMov').value;
-      var sel = document.getElementB°yId('establecimientoMov');
+      var vacuna = document.getElementById('vacuna').value;
+      var lab = document.getElementById('laboratorio').value;
+      var lote = document.getElementById('loteSelect').value;
+      var region = document.getElementById('regionMov').value;
+      var localidad = document.getElementById('localidadMov').value;
+      var sel = document.getElementById('establecimientoMov');
       sel.innerHTML = '<option value="">Seleccionar establecimiento</option>';
       var ests = [];
-      (DATOS_GLOB°ALES.stock || []).filter(function(s) {
-        return s.vacuna === vacuna && (!lab || s.laboratorio === lab) && s.lote === lote && s.region === region && s.localidad === localidad && parseInt(s.stock) > 0;
+      (DATOS_GLOBALES.stock || []).filter(function(s) {
+        return s.vacuna === vacuna && s.laboratorio === lab && s.lote === lote && s.region === region && s.localidad === localidad && parseInt(s.stock) > 0;
       }).forEach(function(s) {
         if (ests.indexOf(s.establecimiento) === -1) ests.push(s.establecimiento);
       });
       ests.forEach(function(e) { sel.innerHTML += '<option value="' + e + '">' + e + '</option>'; });
-      document.getElementB°yId('stockDisponibleLabel').textContent = '';
+      document.getElementById('stockDisponibleLabel').textContent = '';
     }
 
     function actualizarStockDisponible() {
-      var vacuna = document.getElementB°yId('vacuna').value;
-      var lab = document.getElementB°yId('laboratorio').value;
-      var lote = document.getElementB°yId('loteSelect').value;
-      var region = document.getElementB°yId('regionMov').value;
-      var localidad = document.getElementB°yId('localidadMov').value;
-      var establecimiento = document.getElementB°yId('establecimientoMov').value;
-      var stockItem = (DATOS_GLOB°ALES.stock || []).find(function(s) {
-        return s.vacuna === vacuna && (!lab || s.laboratorio === lab) && s.lote === lote && s.region === region && s.localidad === localidad && s.establecimiento === establecimiento;
+      var vacuna = document.getElementById('vacuna').value;
+      var lab = document.getElementById('laboratorio').value;
+      var lote = document.getElementById('loteSelect').value;
+      var region = document.getElementById('regionMov').value;
+      var localidad = document.getElementById('localidadMov').value;
+      var establecimiento = document.getElementById('establecimientoMov').value;
+      var stockItem = (DATOS_GLOBALES.stock || []).find(function(s) {
+        return s.vacuna === vacuna && s.laboratorio === lab && s.lote === lote && s.region === region && s.localidad === localidad && s.establecimiento === establecimiento;
       });
       var max = stockItem ? parseInt(stockItem.stock) : 0;
-      var cantInput = document.getElementB°yId('cantidad');
+      var cantInput = document.getElementById('cantidad');
       cantInput.max = max;
       cantInput.placeholder = 'Máx: ' + max;
-      document.getElementB°yId('stockDisponibleLabel').textContent = '(Disponible: ' + max + ')';
+      document.getElementById('stockDisponibleLabel').textContent = '(Disponible: ' + max + ')';
     }
 
     function agregarItemYLimpiar() {
-      var vacuna = document.getElementB°yId('vacuna').value;
-      var lab = document.getElementB°yId('laboratorio').value;
+      var vacuna = document.getElementById('vacuna').value;
+      var lab = document.getElementById('laboratorio').value;
       var lote = '', cantidad = '', vencimiento = '';
 
       if (modoMovimiento === 'Egreso') {
-        lote = document.getElementB°yId('loteSelect').value;
-        cantidad = document.getElementB°yId('cantidad').value;
-        var si = (DATOS_GLOB°ALES.stock || []).find(function(s) {
-          return s.vacuna === vacuna && (!lab || s.laboratorio === lab) && s.lote === lote;
+        lote = document.getElementById('loteSelect').value;
+        cantidad = document.getElementById('cantidad').value;
+        var si = (DATOS_GLOBALES.stock || []).find(function(s) {
+          return s.vacuna === vacuna && s.laboratorio === lab && s.lote === lote;
         });
         if (si) {
           var vd = new Date(si.vencimiento);
           vencimiento = !isNaN(vd) ? vd.getFullYear() + '-' + String(vd.getMonth()+1).padStart(2,'0') + '-' + String(vd.getDate()).padStart(2,'0') : si.vencimiento;
         }
       } else {
-        lote = document.getElementB°yId('loteInput').value;
-        cantidad = document.getElementB°yId('cantidadIngreso').value;
-        vencimiento = document.getElementB°yId('vencimiento').value;
+        lote = document.getElementById('loteInput').value;
+        cantidad = document.getElementById('cantidadIngreso').value;
+        vencimiento = document.getElementById('vencimiento').value;
       }
 
-      if (!vacuna || !lote || !cantidad || parseInt(cantidad) < 1) {
-        alert('Completá vacuna, lote y cantidad antes de agregar.'); return;
+      if (!vacuna || !lab || !lote || !cantidad || parseInt(cantidad) < 1) {
+        alert('Completá vacuna, laboratorio, lote y cantidad antes de agregar.'); return;
       }
       console.log('Agregando item:', vacuna, lab, lote, cantidad);
 
       // Guardar contexto la primera vez (ubicación/responsable)
       if (Object.keys(contextoMovimiento).length === 0) {
-        var resp = document.getElementB°yId('responsable').value;
-        var obs = document.getElementB°yId('observaciones').value;
-        var te = modoMovimiento === 'Egreso' ? document.getElementB°yId('tipoEgreso').value : '';
+        var resp = document.getElementById('responsable').value;
+        var obs = document.getElementById('observaciones').value;
+        var te = modoMovimiento === 'Egreso' ? document.getElementById('tipoEgreso').value : '';
         if (modoMovimiento === 'Ingreso') {
           contextoMovimiento = {
             responsable: resp, observaciones: obs, tipoEgreso: '',
-            region: document.getElementB°yId('regionMovIngreso').value,
-            localidad: document.getElementB°yId('localidadMovIngreso').value,
-            establecimiento: document.getElementB°yId('establecimientoMovIngreso').value,
+            region: document.getElementById('regionMovIngreso').value,
+            localidad: document.getElementById('localidadMovIngreso').value,
+            establecimiento: document.getElementById('establecimientoMovIngreso').value,
             regionDest: '', localidadDest: '', establecimientoDest: '', responsableDest: ''
           };
         } else {
           var rD='', lD='', eD='', rspD='';
           if (te === 'Traslado') {
-            rD = document.getElementB°yId('regionDest').value;
-            lD = document.getElementB°yId('localidadDest').value;
-            eD = document.getElementB°yId('establecimientoDest').value;
-            rspD = document.getElementB°yId('responsableDest').value;
+            rD = document.getElementById('regionDest').value;
+            lD = document.getElementById('localidadDest').value;
+            eD = document.getElementById('establecimientoDest').value;
+            rspD = document.getElementById('responsableDest').value;
           }
           contextoMovimiento = {
             responsable: resp, observaciones: obs, tipoEgreso: te,
-            region: document.getElementB°yId('regionMov').value,
-            localidad: document.getElementB°yId('localidadMov').value,
-            establecimiento: document.getElementB°yId('establecimientoMov').value,
+            region: document.getElementById('regionMov').value,
+            localidad: document.getElementById('localidadMov').value,
+            establecimiento: document.getElementById('establecimientoMov').value,
             regionDest: rD, localidadDest: lD, establecimientoDest: eD, responsableDest: rspD
           };
         }
@@ -1002,11 +1006,11 @@
           contextoMovimiento = {}; return;
         }
         // Ocultar ubicación permanentemente para el resto del movimiento
-        document.getElementB°yId('seccionUbicacion').style.display = 'none';
-        document.getElementB°yId('tipoEgresoRow').style.display = 'none';
+        document.getElementById('seccionUbicacion').style.display = 'none';
+        document.getElementById('tipoEgresoRow').style.display = 'none';
         var regionGrid = document.querySelector('#camposEgreso > div[style*="grid"]');
         var estDiv = document.querySelector('#camposEgreso > .form-group:nth-child(3)');
-        var trasladoDiv = document.getElementB°yId('camposTraslado');
+        var trasladoDiv = document.getElementById('camposTraslado');
         if (regionGrid) regionGrid.style.display = 'none';
         if (estDiv) estDiv.style.display = 'none';
         if (trasladoDiv) trasladoDiv.style.display = 'none';
@@ -1016,56 +1020,56 @@
         if (estDivIng) estDivIng.style.display = 'none';
       }
 
-      var tbody = document.getElementB°yId('tablaItemsB°ody');
+      var tbody = document.getElementById('tablaItemsBody');
       var idx = itemsMovimiento.length - 1;
       var tr = document.createElement('tr');
       tr.id = 'item-row-' + idx;
       tr.setAttribute('data-vencimiento', vencimiento);
       tr.innerHTML = '<td>' + vacuna + '</td><td>' + lab + '</td><td>' + lote + '</td><td>' + cantidad + '</td>' +
-        '<td><button type="button" onclick="quitarItem(' + idx + ')" style="background:none;border:none;color:#ef4°4°4°4°;cursor:pointer;">✕</button></td>';
+        '<td><button type="button" onclick="quitarItem(' + idx + ')" style="background:none;border:none;color:#ef4444;cursor:pointer;">✕</button></td>';
       tbody.appendChild(tr);
-      document.getElementB°yId('tablaItemsContainer').style.display = 'block';
+      document.getElementById('tablaItemsContainer').style.display = 'block';
 
       // Limpiar solo campos del ítem
-      document.getElementB°yId('vacuna').value = '';
-      document.getElementB°yId('laboratorio').innerHTML = '<option value="">Primero selecciona vacuna</option>';
-      document.getElementB°yId('loteSelect').innerHTML = '<option value="">Primero selecciona laboratorio</option>';
-      document.getElementB°yId('cantidad').value = '';
-      document.getElementB°yId('loteInput').value = '';
-      document.getElementB°yId('cantidadIngreso').value = '';
-      document.getElementB°yId('vencimiento').value = '';
-      document.getElementB°yId('stockDisponibleLabel').textContent = '';
+      document.getElementById('vacuna').value = '';
+      document.getElementById('laboratorio').innerHTML = '<option value="">Primero selecciona vacuna</option>';
+      document.getElementById('loteSelect').innerHTML = '<option value="">Primero selecciona laboratorio</option>';
+      document.getElementById('cantidad').value = '';
+      document.getElementById('loteInput').value = '';
+      document.getElementById('cantidadIngreso').value = '';
+      document.getElementById('vencimiento').value = '';
+      document.getElementById('stockDisponibleLabel').textContent = '';
       actualizarVacunas();
     }
 
     function quitarItem(idx) {
       itemsMovimiento[idx] = null;
-      var tr = document.getElementB°yId('item-row-' + idx);
+      var tr = document.getElementById('item-row-' + idx);
       if (tr) tr.remove();
       if (itemsMovimiento.filter(function(i){ return i !== null; }).length === 0) {
-        document.getElementB°yId('tablaItemsContainer').style.display = 'none';
+        document.getElementById('tablaItemsContainer').style.display = 'none';
       }
     }
 
     function toggleCamposTraslado() {
-      var tipo = document.getElementB°yId('tipoEgreso').value;
-      document.getElementB°yId('camposTraslado').style.display = tipo === 'Traslado' ? 'block' : 'none';
+      var tipo = document.getElementById('tipoEgreso').value;
+      document.getElementById('camposTraslado').style.display = tipo === 'Traslado' ? 'block' : 'none';
     }
 
     function actualizarLocalidadesDest() {
-      var region = document.getElementB°yId('regionDest').value;
-      var sel = document.getElementB°yId('localidadDest');
+      var region = document.getElementById('regionDest').value;
+      var sel = document.getElementById('localidadDest');
       sel.innerHTML = '<option value="">Seleccionar localidad</option>';
       Object.keys(ESTRUCTURA_GEOGRAFICA[region] || {}).forEach(function(l) {
         sel.innerHTML += '<option value="' + l + '">' + l + '</option>';
       });
-      document.getElementB°yId('establecimientoDest').innerHTML = '<option value="">Seleccionar localidad primero</option>';
+      document.getElementById('establecimientoDest').innerHTML = '<option value="">Seleccionar localidad primero</option>';
     }
 
     function actualizarEstablecimientosDest() {
-      var region = document.getElementB°yId('regionDest').value;
-      var localidad = document.getElementB°yId('localidadDest').value;
-      var sel = document.getElementB°yId('establecimientoDest');
+      var region = document.getElementById('regionDest').value;
+      var localidad = document.getElementById('localidadDest').value;
+      var sel = document.getElementById('establecimientoDest');
       sel.innerHTML = '<option value="">Seleccionar establecimiento</option>';
       ((ESTRUCTURA_GEOGRAFICA[region] || {})[localidad] || []).forEach(function(e) {
         sel.innerHTML += '<option value="' + e + '">' + e + '</option>';
@@ -1073,19 +1077,19 @@
     }
 
     function actualizarLocalidadesMov() {
-      var region = document.getElementB°yId('regionMovIngreso').value;
-      var sel = document.getElementB°yId('localidadMovIngreso');
+      var region = document.getElementById('regionMovIngreso').value;
+      var sel = document.getElementById('localidadMovIngreso');
       sel.innerHTML = '<option value="">Seleccionar localidad</option>';
       Object.keys(ESTRUCTURA_GEOGRAFICA[region] || {}).forEach(function(l) {
         sel.innerHTML += '<option value="' + l + '">' + l + '</option>';
       });
-      document.getElementB°yId('establecimientoMovIngreso').innerHTML = '<option value="">Primero selecciona localidad</option>';
+      document.getElementById('establecimientoMovIngreso').innerHTML = '<option value="">Primero selecciona localidad</option>';
     }
 
     function actualizarEstablecimientosMov() {
-      var region = document.getElementB°yId('regionMovIngreso').value;
-      var localidad = document.getElementB°yId('localidadMovIngreso').value;
-      var sel = document.getElementB°yId('establecimientoMovIngreso');
+      var region = document.getElementById('regionMovIngreso').value;
+      var localidad = document.getElementById('localidadMovIngreso').value;
+      var sel = document.getElementById('establecimientoMovIngreso');
       sel.innerHTML = '<option value="">Seleccionar establecimiento</option>';
       ((ESTRUCTURA_GEOGRAFICA[region] || {})[localidad] || []).forEach(function(e) {
         sel.innerHTML += '<option value="' + e + '">' + e + '</option>';
@@ -1094,8 +1098,8 @@
     function registrarMovimiento(event) {
       event.preventDefault();
 
-      var vacuna = document.getElementB°yId('vacuna').value;
-      var lab = document.getElementB°yId('laboratorio').value;
+      var vacuna = document.getElementById('vacuna').value;
+      var lab = document.getElementById('laboratorio').value;
       var lote = '', vencimiento = '', cantidad = '', region = '', localidad = '', establecimiento = '';
       var responsable = '', observaciones = '', tipoEgreso = '', regionDest = '', localidadDest = '', establecimientoDest = '', responsableDest = '';
 
@@ -1113,34 +1117,34 @@
         responsableDest = contextoMovimiento.responsableDest || '';
       } else {
         // Sin contexto: leer del DOM normalmente
-        document.getElementB°yId('seccionUbicacion').style.display = 'block';
-        document.getElementB°yId('tipoEgresoRow').style.display = modoMovimiento === 'Egreso' ? 'block' : 'none';
+        document.getElementById('seccionUbicacion').style.display = 'block';
+        document.getElementById('tipoEgresoRow').style.display = modoMovimiento === 'Egreso' ? 'block' : 'none';
         var regionGrid = document.querySelector('#camposEgreso > div[style*="grid"]');
         var estDiv = document.querySelector('#camposEgreso > .form-group:nth-child(3)');
         if (regionGrid) regionGrid.style.display = '';
         if (estDiv) estDiv.style.display = '';
-        var tipoEgresoVal = modoMovimiento === 'Egreso' ? document.getElementB°yId('tipoEgreso').value : '';
-        if (tipoEgresoVal === 'Traslado') document.getElementB°yId('camposTraslado').style.display = 'block';
+        var tipoEgresoVal = modoMovimiento === 'Egreso' ? document.getElementById('tipoEgreso').value : '';
+        if (tipoEgresoVal === 'Traslado') document.getElementById('camposTraslado').style.display = 'block';
         var regionGridIng = document.querySelector('#camposIngreso > div[style*="grid"]');
         var estDivIng = document.querySelector('#camposIngreso > .form-group:last-child');
         if (regionGridIng) regionGridIng.style.display = '';
         if (estDivIng) estDivIng.style.display = '';
-        responsable = document.getElementB°yId('responsable').value;
-        observaciones = document.getElementB°yId('observaciones').value;
-        tipoEgreso = modoMovimiento === 'Egreso' ? document.getElementB°yId('tipoEgreso').value : '';
+        responsable = document.getElementById('responsable').value;
+        observaciones = document.getElementById('observaciones').value;
+        tipoEgreso = modoMovimiento === 'Egreso' ? document.getElementById('tipoEgreso').value : '';
         if (modoMovimiento === 'Ingreso') {
-          region = document.getElementB°yId('regionMovIngreso').value;
-          localidad = document.getElementB°yId('localidadMovIngreso').value;
-          establecimiento = document.getElementB°yId('establecimientoMovIngreso').value;
+          region = document.getElementById('regionMovIngreso').value;
+          localidad = document.getElementById('localidadMovIngreso').value;
+          establecimiento = document.getElementById('establecimientoMovIngreso').value;
         } else {
-          region = document.getElementB°yId('regionMov').value;
-          localidad = document.getElementB°yId('localidadMov').value;
-          establecimiento = document.getElementB°yId('establecimientoMov').value;
+          region = document.getElementById('regionMov').value;
+          localidad = document.getElementById('localidadMov').value;
+          establecimiento = document.getElementById('establecimientoMov').value;
           if (tipoEgreso === 'Traslado') {
-            regionDest = document.getElementB°yId('regionDest').value;
-            localidadDest = document.getElementB°yId('localidadDest').value;
-            establecimientoDest = document.getElementB°yId('establecimientoDest').value;
-            responsableDest = document.getElementB°yId('responsableDest').value;
+            regionDest = document.getElementById('regionDest').value;
+            localidadDest = document.getElementById('localidadDest').value;
+            establecimientoDest = document.getElementById('establecimientoDest').value;
+            responsableDest = document.getElementById('responsableDest').value;
             if (!regionDest || !localidadDest || !establecimientoDest || !responsableDest) {
               alert('Por favor completa todos los campos de destino del traslado'); return;
             }
@@ -1149,14 +1153,14 @@
       }
 
       if (modoMovimiento === 'Ingreso') {
-        lote = document.getElementB°yId('loteInput').value;
-        vencimiento = document.getElementB°yId('vencimiento').value;
-        cantidad = document.getElementB°yId('cantidadIngreso').value;
+        lote = document.getElementById('loteInput').value;
+        vencimiento = document.getElementById('vencimiento').value;
+        cantidad = document.getElementById('cantidadIngreso').value;
       } else {
-        lote = document.getElementB°yId('loteSelect').value;
-        cantidad = document.getElementB°yId('cantidad').value;
-        var stockItem = (DATOS_GLOB°ALES.stock || []).find(function(s) {
-          return s.vacuna === vacuna && s.lote === lote;
+        lote = document.getElementById('loteSelect').value;
+        cantidad = document.getElementById('cantidad').value;
+        var stockItem = (DATOS_GLOBALES.stock || []).find(function(s) {
+          return s.vacuna === vacuna && s.laboratorio === lab && s.lote === lote;
         });
         vencimiento = stockItem ? stockItem.vencimiento : '';
         if (typeof vencimiento === 'string' && vencimiento) {
@@ -1170,16 +1174,16 @@
       }
 
       // Agregar ítem actual a la lista solo si tiene datos
-      if (vacuna && lote && cantidad && parseInt(cantidad) >= 1) {
+      if (vacuna && lab && lote && cantidad && parseInt(cantidad) >= 1) {
         itemsMovimiento.push({ vacuna: vacuna, laboratorio: lab, lote: lote, cantidad: cantidad, vencimiento: vencimiento });
       }
       var todosItems = itemsMovimiento.filter(function(i){ return i !== null; });
       // Si itemsMovimiento está vacío pero hay filas en la tabla, reconstruirlo
       if (todosItems.length === 0) {
-        var filas = document.querySelectorAll('#tablaItemsB°ody tr');
+        var filas = document.querySelectorAll('#tablaItemsBody tr');
         filas.forEach(function(fila) {
           var celdas = fila.querySelectorAll('td');
-          if (celdas.length >= 4°) {
+          if (celdas.length >= 4) {
             var venc = fila.getAttribute('data-vencimiento') || '';
             console.log('Reconstruyendo item:', celdas[0].textContent, 'vencimiento:', venc);
             todosItems.push({
@@ -1194,7 +1198,7 @@
       }
       if (todosItems.length === 0) { alert('Agregá al menos un ítem.'); return; }
 
-      var btnSubmit = document.getElementB°yId('btnSubmit');
+      var btnSubmit = document.getElementById('btnSubmit');
       btnSubmit.disabled = true;
       btnSubmit.textContent = 'Registrando...';
       mostrarLoading(true);
@@ -1220,14 +1224,14 @@
           mostrarLoading(false);
           btnSubmit.disabled = false;
           btnSubmit.textContent = 'Confirmar Registro';
-          ultimoPDFB°lob = ''; ultimoPDFNombre = ''; ultimoPDFB°lobIngreso = ''; ultimoPDFNombreIngreso = '';
+          ultimoPDFBlob = ''; ultimoPDFNombre = ''; ultimoPDFBlobIngreso = ''; ultimoPDFNombreIngreso = '';
           if (errores.length > 0) alert('Errores:\n' + errores.join('\n'));
           if (trazabilidades.length > 0) {
             cerrarModalMov();
             var msg = '<b>Registrado correctamente.</b><br><small>' + trazabilidades.length + ' ítem(s) procesado(s).</small>';
             if (tipoEgreso === 'Traslado') msg += '<br><small>Ingresos en destino registrados automáticamente.</small>';
-            document.getElementB°yId('confirmacionMensaje').innerHTML = msg;
-            document.getElementB°yId('modalConfirmacion').style.display = 'block';
+            document.getElementById('confirmacionMensaje').innerHTML = msg;
+            document.getElementById('modalConfirmacion').style.display = 'block';
             var pdfItems = trazabilidades.map(function(t){ return t.item; });
             var pdfTrazs = trazabilidades.map(function(t){ return t.traz; });
             generarYGuardarPDFMultiple({
@@ -1252,7 +1256,6 @@
         var item = todosItems[index];
         var url = APPS_SCRIPT_URL +
           '?action=registrarMovimiento' +
-          '&_t=' + new Date().getTime() +
           '&tipo=' + encodeURIComponent(modoMovimiento) +
           '&tipo_egreso=' + encodeURIComponent(tipoEgreso || '') +
           '&vacuna=' + encodeURIComponent(item.vacuna) +
@@ -1295,13 +1298,13 @@
       var html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>' +
         'body{margin:0;padding:0;font-family:"Segoe UI",sans-serif;color:#1e293b;}' +
         '' +
-        'h2{color:#00384°d;margin:0 0 5px 0;font-size:18pt;}' +
-        'p.sub{color:#64°74°8b;margin:0 0 15px 0;font-size:10pt;}' +
-        'hr{border:none;border-top:2px solid #00384°d;margin-bottom:20px;}' +
+        'h2{color:#00384d;margin:0 0 5px 0;font-size:18pt;}' +
+        'p.sub{color:#64748b;margin:0 0 15px 0;font-size:10pt;}' +
+        'hr{border:none;border-top:2px solid #00384d;margin-bottom:20px;}' +
         'table{width:100%;border-collapse:collapse;margin-bottom:20px;}' +
         'th,td{padding:10px;border:1px solid #e2e8f0;font-size:10pt;text-align:left;}' +
         'th{background:#f1f5f9;font-weight:bold;}' +
-        '.footer{margin-top:30px;font-size:9pt;color:#64°74°8b;border-top:1px solid #eee;padding-top:10px;}' +
+        '.footer{margin-top:30px;font-size:9pt;color:#64748b;border-top:1px solid #eee;padding-top:10px;}' +
         '</style></head><body>' +
         '<h2>Reporte de Movimiento de Vacunas</h2>' +
         '<p class="sub">Sistema Vicus - Gestion de Inmunizacion</p><hr>' +
@@ -1319,14 +1322,14 @@
         '<p>Fecha: ' + new Date().toLocaleString('es-AR') + '</p>' +
         '</div></body></html>';
 
-      var opt = { margin: 15, filename: 'Reporte_' + datos.trazabilidad + '.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 1, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4°', orientation: 'portrait' } };
+      var opt = { margin: 15, filename: 'Reporte_' + datos.trazabilidad + '.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 1, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
 
-      html2pdf().set(opt).from(html, 'string').outputPdf('datauristring').then(function(pdfB°ase64°) {
+      html2pdf().set(opt).from(html, 'string').outputPdf('datauristring').then(function(pdfBase64) {
         if (datos.tipo === 'Ingreso') {
-          ultimoPDFB°lobIngreso = pdfB°ase64°;
+          ultimoPDFBlobIngreso = pdfBase64;
           ultimoPDFNombreIngreso = opt.filename;
         } else {
-          ultimoPDFB°lob = pdfB°ase64°;
+          ultimoPDFBlob = pdfBase64;
           ultimoPDFNombre = opt.filename;
         }
         var xhr = new XMLHttpRequest();
@@ -1340,7 +1343,7 @@
           if (callback) callback();
         };
         xhr.onerror = function() { if (callback) callback(); };
-        xhr.send(JSON.stringify({ action: 'guardarPDF', pdfData: pdfB°ase64°, filename: opt.filename, tipo: datos.tipo, tipoEgreso: datos.tipoEgreso || '' }));
+        xhr.send(JSON.stringify({ action: 'guardarPDF', pdfData: pdfBase64, filename: opt.filename, tipo: datos.tipo, tipoEgreso: datos.tipoEgreso || '' }));
       });
     }
 
@@ -1348,11 +1351,11 @@
       var filas = datos.items.map(function(it, i) {
         return '<tr><td>' + it.vacuna + '</td><td>' + it.laboratorio + '</td><td>' + it.lote + '</td><td>' + it.cantidad + '</td><td style="font-size:7pt;">' + (datos.trazabilidades[i] || '-') + '</td></tr>';
       }).join('');
-      var html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{margin:0;padding:0;font-family:Segoe UI,sans-serif;color:#1e293b;}h2{color:#00384°d;margin:0 0 5px 0;font-size:18pt;}p.sub{color:#64°74°8b;margin:0 0 15px 0;font-size:10pt;}hr{border:none;border-top:2px solid #00384°d;margin-bottom:20px;}table{width:100%;border-collapse:collapse;margin-bottom:16px;}th,td{padding:8px;border:1px solid #e2e8f0;font-size:9pt;text-align:left;}th{background:#f1f5f9;font-weight:bold;}.info td{border:none;padding:3px 0;font-size:9pt;}.footer{margin-top:20px;font-size:8pt;color:#64°74°8b;border-top:1px solid #eee;padding-top:8px;}</style></head><body><h2>Reporte de Movimiento de Vacunas</h2><p class="sub">Sistema Vicus - Gestion de Inmunizacion</p><hr><table class="info"><tr><td><b>Tipo:</b> ' + datos.tipo + (datos.tipoEgreso ? ' - ' + datos.tipoEgreso : '') + '</td><td><b>Responsable:</b> ' + datos.responsable + '</td></tr><tr><td colspan="2"><b>Ubicacion:</b> ' + datos.region + ' - ' + datos.localidad + ' - ' + datos.establecimiento + '</td></tr><tr><td colspan="2"><b>Observaciones:</b> ' + (datos.observaciones || '-') + '</td></tr></table><table><thead><tr><th>Vacuna</th><th>Laboratorio</th><th>Lote</th><th>Cantidad</th><th>Trazabilidad</th></tr></thead><tbody>' + filas + '</tbody></table><div class="footer"><p>Fecha: ' + new Date().toLocaleString('es-AR') + '</p></div></body></html>';
-            var opt = { margin: 15, filename: 'Reporte_' + datos.trazabilidad + '.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 1, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4°', orientation: 'portrait' } };
-      html2pdf().set(opt).from(html, 'string').outputPdf('datauristring').then(function(pdfB°ase64°) {
-        if (datos.tipo === 'Ingreso') { ultimoPDFB°lobIngreso = pdfB°ase64°; ultimoPDFNombreIngreso = opt.filename; }
-        else { ultimoPDFB°lob = pdfB°ase64°; ultimoPDFNombre = opt.filename; }
+      var html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{margin:0;padding:0;font-family:Segoe UI,sans-serif;color:#1e293b;}h2{color:#00384d;margin:0 0 5px 0;font-size:18pt;}p.sub{color:#64748b;margin:0 0 15px 0;font-size:10pt;}hr{border:none;border-top:2px solid #00384d;margin-bottom:20px;}table{width:100%;border-collapse:collapse;margin-bottom:16px;}th,td{padding:8px;border:1px solid #e2e8f0;font-size:9pt;text-align:left;}th{background:#f1f5f9;font-weight:bold;}.info td{border:none;padding:3px 0;font-size:9pt;}.footer{margin-top:20px;font-size:8pt;color:#64748b;border-top:1px solid #eee;padding-top:8px;}</style></head><body><h2>Reporte de Movimiento de Vacunas</h2><p class="sub">Sistema Vicus - Gestion de Inmunizacion</p><hr><table class="info"><tr><td><b>Tipo:</b> ' + datos.tipo + (datos.tipoEgreso ? ' - ' + datos.tipoEgreso : '') + '</td><td><b>Responsable:</b> ' + datos.responsable + '</td></tr><tr><td colspan="2"><b>Ubicacion:</b> ' + datos.region + ' - ' + datos.localidad + ' - ' + datos.establecimiento + '</td></tr><tr><td colspan="2"><b>Observaciones:</b> ' + (datos.observaciones || '-') + '</td></tr></table><table><thead><tr><th>Vacuna</th><th>Laboratorio</th><th>Lote</th><th>Cantidad</th><th>Trazabilidad</th></tr></thead><tbody>' + filas + '</tbody></table><div class="footer"><p>Fecha: ' + new Date().toLocaleString('es-AR') + '</p></div></body></html>';
+            var opt = { margin: 15, filename: 'Reporte_' + datos.trazabilidad + '.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 1, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
+      html2pdf().set(opt).from(html, 'string').outputPdf('datauristring').then(function(pdfBase64) {
+        if (datos.tipo === 'Ingreso') { ultimoPDFBlobIngreso = pdfBase64; ultimoPDFNombreIngreso = opt.filename; }
+        else { ultimoPDFBlob = pdfBase64; ultimoPDFNombre = opt.filename; }
         var xhr = new XMLHttpRequest();
         xhr.open('POST', APPS_SCRIPT_URL, true);
         xhr.setRequestHeader('Content-Type', 'text/plain');
@@ -1361,14 +1364,14 @@
           if (callback) callback();
         };
         xhr.onerror = function() { if (callback) callback(); };
-        xhr.send(JSON.stringify({ action:'guardarPDF', pdfData:pdfB°ase64°, filename:opt.filename, tipo:datos.tipo, tipoEgreso:datos.tipoEgreso||'' }));
+        xhr.send(JSON.stringify({ action:'guardarPDF', pdfData:pdfBase64, filename:opt.filename, tipo:datos.tipo, tipoEgreso:datos.tipoEgreso||'' }));
       });
     }
 
     function descargarUltimoPDF() {
-      if (ultimoPDFB°lob) {
+      if (ultimoPDFBlob) {
         var link = document.createElement('a');
-        link.href = ultimoPDFB°lob;
+        link.href = ultimoPDFBlob;
         link.download = ultimoPDFNombre;
         link.click();
       } else if (ultimoPDFUrl) {
@@ -1377,10 +1380,10 @@
         alert('El PDF todavía se está generando, esperá unos segundos e intentá de nuevo.');
         return;
       }
-      if (ultimoPDFB°lobIngreso) {
+      if (ultimoPDFBlobIngreso) {
         setTimeout(function() {
           var link2 = document.createElement('a');
-          link2.href = ultimoPDFB°lobIngreso;
+          link2.href = ultimoPDFBlobIngreso;
           link2.download = ultimoPDFNombreIngreso;
           link2.click();
         }, 600);
@@ -1389,8 +1392,8 @@
 
     function abrirModalVencimientos() {
       var hoy = new Date();
-      var limite = new Date(hoy.getTime() + 15 * 864°00000);
-      var items = (DATOS_GLOB°ALES.stock || []).filter(function(s) {
+      var limite = new Date(hoy.getTime() + 15 * 86400000);
+      var items = (DATOS_GLOBALES.stock || []).filter(function(s) {
         var v = new Date(s.vencimiento);
         return v >= hoy && v <= limite && parseInt(s.stock) > 0;
       }).sort(function(a, b) {
@@ -1403,21 +1406,21 @@
       } else {
         items.forEach(function(s) {
           var v = new Date(s.vencimiento);
-          var dias = Math.ceil((v - hoy) / 864°00000);
+          var dias = Math.ceil((v - hoy) / 86400000);
           var badge = dias <= 7 ? 'badge-danger' : 'badge-warning';
           var estado = dias <= 7 ? 'Crítico' : 'Próximo a Vencer';
           html += '<tr><td>' + (s.vacuna||'-') + '</td><td>' + (s.laboratorio||'-') + '</td><td>' + (s.lote||'-') + '</td><td>' + v.toLocaleDateString('es-AR') + '</td><td>' + (s.stock||0) + '</td><td>' + (s.region||'-') + '</td><td>' + (s.localidad||'-') + '</td><td>' + (s.establecimiento||'-') + '</td><td><span class="badge ' + badge + '">' + estado + '</span></td><td><span class="badge ' + badge + '">' + dias + ' días</span></td></tr>';
         });
       }
       html += '</tbody></table></div>';
-      document.getElementB°yId('tablaVencimientos').innerHTML = html;
-      document.getElementB°yId('modalVencimientos').style.display = 'block';
+      document.getElementById('tablaVencimientos').innerHTML = html;
+      document.getElementById('modalVencimientos').style.display = 'block';
     }
 
     function descargarPDFVencimientos() {
-      var template = document.getElementB°yId('pdf-vencimientos-template');
-      document.getElementB°yId('pdf-venc-fecha').textContent = new Date().toLocaleString('es-AR');
-      document.getElementB°yId('pdf-venc-content').innerHTML = document.getElementB°yId('tablaVencimientos').innerHTML;
+      var template = document.getElementById('pdf-vencimientos-template');
+      document.getElementById('pdf-venc-fecha').textContent = new Date().toLocaleString('es-AR');
+      document.getElementById('pdf-venc-content').innerHTML = document.getElementById('tablaVencimientos').innerHTML;
       template.style.display = 'block';
 
       var opt = {
@@ -1425,41 +1428,41 @@
         filename: 'Vencimientos_' + new Date().toISOString().slice(0,10) + '.pdf',
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 1, useCORS: true },
-        jsPDF: { unit: 'mm', format: 'a4°', orientation: 'portrait' }
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
       };
 
-      html2pdf().set(opt).from(template).outputPdf('datauristring').then(function(pdfB°ase64°) {
+      html2pdf().set(opt).from(template).outputPdf('datauristring').then(function(pdfBase64) {
         template.style.display = 'none';
         // Descarga local
         var link = document.createElement('a');
-        link.href = pdfB°ase64°;
+        link.href = pdfBase64;
         link.download = opt.filename;
         link.click();
         // Guardar en Drive
         var xhr = new XMLHttpRequest();
         xhr.open('POST', APPS_SCRIPT_URL, true);
         xhr.setRequestHeader('Content-Type', 'text/plain');
-        xhr.send(JSON.stringify({ action: 'guardarPDFVencimientos', pdfData: pdfB°ase64°, filename: opt.filename }));
+        xhr.send(JSON.stringify({ action: 'guardarPDFVencimientos', pdfData: pdfBase64, filename: opt.filename }));
       });
     }
 
     function toggleNormativa() {
-      var p = document.getElementB°yId('normativaPanel');
+      var p = document.getElementById('normativaPanel');
       p.style.display = p.style.display === 'none' ? 'block' : 'none';
     }
 
     function cerrarModalConfirmacion() {
-      document.getElementB°yId('modalConfirmacion').style.display = 'none';
+      document.getElementById('modalConfirmacion').style.display = 'none';
     }
 
     function resizeMap() {
       var img = document.querySelector('#nivelProvincia .img-mapa');
       if (!img) return;
-      var map = document.getElementB°yId('mapaRegiones');
+      var map = document.getElementById('mapaRegiones');
       if (!map) return;
-      var scaleX = img.offsetWidth / 714°;
-      var scaleY = img.offsetHeight / 4°91;
-      var areas = map.getElementsB°yTagName('area');
+      var scaleX = img.offsetWidth / 714;
+      var scaleY = img.offsetHeight / 491;
+      var areas = map.getElementsByTagName('area');
       for (var i = 0; i < areas.length; i++) {
         var originalCoords = areas[i].getAttribute('data-original-coords');
         if (!originalCoords) {
@@ -1478,22 +1481,18 @@
 
     window.addEventListener('resize', resizeMap);
     window.onload = function() {
-      if (contextoUsuario && contextoUsuario.rol !== "admin") {
-         // Ocultar botón de mapa geográfico si no es admin
-         var btnMapa = document.querySelector('button[onclick="abrirNivelGeografico()"]');
-         if (btnMapa) btnMapa.style.display = 'none';
-         // Cambiar el título superior
-         var titulo = document.querySelector('.title-section p');
-         if (titulo) titulo.innerHTML = 'Stock: ' + contextoUsuario.establecimiento;
-         
-         // Cargar datos restringidos a su establecimiento
-         cargarDatos(contextoUsuario.region, contextoUsuario.localidad, contextoUsuario.establecimiento);
+      if (contextoUsuario && contextoUsuario.rol !== 'admin') {
+        var btnMapa = document.querySelector('button[onclick="abrirNivelGeografico()"]');
+        if (btnMapa) btnMapa.style.display = 'none';
+        var titulo = document.querySelector('.title-section p');
+        if (titulo) titulo.innerHTML = 'Stock: ' + contextoUsuario.establecimiento;
+        cargarDatos(contextoUsuario.region, contextoUsuario.localidad, contextoUsuario.establecimiento);
       } else {
-         cargarDatos();
+        cargarDatos();
       }
-      var map = document.getElementB°yId('mapaRegiones');
+      var map = document.getElementById('mapaRegiones');
       if (map) {
-        var areas = map.getElementsB°yTagName('area');
+        var areas = map.getElementsByTagName('area');
         for (var i = 0; i < areas.length; i++) {
           areas[i].setAttribute('data-original-coords', areas[i].getAttribute('coords'));
         }
@@ -1505,7 +1504,7 @@
   <!-- FOOTER -->
   <div class="footer">
     <img src="logos/footer.jpg?t=" id="footerImg" alt="Pie de página">
-    <script>document.getElementB°yId('footerImg').src='logos/footer.jpg?t='+new Date().getTime();</script>
+    <script>document.getElementById('footerImg').src='logos/footer.jpg?t='+new Date().getTime();</script>
   </div>
 
 </body>
