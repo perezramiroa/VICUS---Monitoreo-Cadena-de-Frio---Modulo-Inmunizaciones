@@ -550,7 +550,13 @@
     }
 
     function cargarDatos(region, localidad, establecimiento) {
-      region = region || null; localidad = localidad || null; establecimiento = establecimiento || null;
+      if (contextoUsuario && contextoUsuario.rol !== 'admin') {
+         region = contextoUsuario.region;
+         localidad = contextoUsuario.localidad;
+         establecimiento = contextoUsuario.establecimiento;
+      } else {
+         region = region || null; localidad = localidad || null; establecimiento = establecimiento || null;
+      }
       mostrarLoading(true);
       var url = APPS_SCRIPT_URL + '?action=getDatosAgregados';
       if (region) url += '&region=' + encodeURIComponent(region);
@@ -1486,6 +1492,8 @@
         if (btnMapa) btnMapa.style.display = 'none';
         var titulo = document.querySelector('.title-section p');
         if (titulo) titulo.innerHTML = 'Stock: ' + contextoUsuario.establecimiento;
+        var tituloInv = document.querySelector('#vistaInventario h2');
+        if (tituloInv) tituloInv.innerHTML = '📋 Inventario Actual - ' + contextoUsuario.establecimiento;
         cargarDatos(contextoUsuario.region, contextoUsuario.localidad, contextoUsuario.establecimiento);
       } else {
         cargarDatos();
