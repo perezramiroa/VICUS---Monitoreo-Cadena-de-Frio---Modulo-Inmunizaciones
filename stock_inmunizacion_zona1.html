@@ -453,6 +453,7 @@
     // MAPEO DE USUARIOS PARA RESTRICCION DE VISIBILIDAD
     const MAPEO_USUARIOS = {
       "Zona uno": { rol: "admin" },
+      "CAPS - Centenario": { rol: "supervisor", region: "Confluencia", permitidos: ["C.S. Vista Alegre Norte", "C.S. Vista Alegre Sur", "C.S. Costa de Reyes", "C.S. Villa Obrera", "C.S. Sarmiento II", "C.S. Sarmiento I", "C.S. 11 de Octubre", "C.S. Nueva Espa\u00f1a"] },
       "Hospital Centenario": { region: "Confluencia", localidad: "Centenario", establecimiento: "Hosp. Dr. Natalio Burd" },
       "Sarmiento 1": { region: "Confluencia", localidad: "Centenario", establecimiento: "C.S. Sarmiento I" },
       "Sarmiento 2": { region: "Confluencia", localidad: "Centenario", establecimiento: "C.S. Sarmiento II" },
@@ -794,7 +795,7 @@
       }
 
       // Auto-llenar dropdowns de ingreso si usuario restringido
-      if (contextoUsuario && contextoUsuario.rol !== 'admin' && tipo === 'Ingreso') {
+      if (contextoUsuario && contextoUsuario.rol !== 'admin' && contextoUsuario.rol !== 'supervisor' && tipo === 'Ingreso') {
         document.getElementById('regionMovIngreso').innerHTML = '<option value="'+contextoUsuario.region+'">'+contextoUsuario.region+'</option>';
         document.getElementById('localidadMovIngreso').innerHTML = '<option value="'+contextoUsuario.localidad+'">'+contextoUsuario.localidad+'</option>';
         document.getElementById('establecimientoMovIngreso').innerHTML = '<option value="'+contextoUsuario.establecimiento+'">'+contextoUsuario.establecimiento+'</option>';
