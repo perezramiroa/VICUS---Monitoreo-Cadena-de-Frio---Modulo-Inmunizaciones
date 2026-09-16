@@ -140,6 +140,21 @@
       <div class="map-container">
         <img src="Regiones.png" usemap="#mapaRegiones" class="img-mapa" alt="Mapa de Neuquén">
         <map name="mapaRegiones" id="mapaRegiones">
+          <area shape="rect" coords="35,401,311,429" alt="Confluencia" onclick="navegarARegion('Confluencia')" style="cursor:pointer;">
+          <area shape="rect" coords="35,332,311,360" alt="Vaca Muerta" onclick="navegarARegion('Vaca Muerta')" style="cursor:pointer;">
+          <area shape="rect" coords="35,195,310,223" alt="Alto Neuquén" onclick="navegarARegion('Alto Neuquén')" style="cursor:pointer;">
+          <area shape="rect" coords="35,229,310,256" alt="Del Pehuén" onclick="navegarARegion('Del Pehuén')" style="cursor:pointer;">
+          <area shape="rect" coords="35,263,310,293" alt="Lagos del Sur" onclick="navegarARegion('Lagos del Sur')" style="cursor:pointer;">
+          <area shape="rect" coords="35,298,310,327" alt="Del Limay" onclick="navegarARegion('Del Limay')" style="cursor:pointer;">
+          <area shape="rect" coords="35,366,310,397" alt="De la Comarca" onclick="navegarARegion('De la Comarca')" style="cursor:pointer;">
+        </map>
+      </div>
+      
+      <div id="tablasNivel1Geografico" style="margin-top: 30px;"></div>
+    </div>
+
+    <!-- NIVEL REGIÓN -->
+    <div id="nivelRegion" class="container" style="display:none;">
       <h2 id="tituloRegion">Región Seleccionada</h2>
       <button class="btn btn-outline" onclick="volverANivelProvincia()" style="margin-bottom: 20px;">← Volver a Provincia</button>
       <div class="selection-grid" id="localidades-grid"></div>
