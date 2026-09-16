@@ -142,6 +142,7 @@ const CONFIG_INMUNO = {
     // Mapeo de Contraseñas -> Canales autorizados
     accesos: {
         "Zona uno": ["Zona1_1", "Zona1_2", "Hosp_Vacunatorio_1", "Hosp_Vacunatorio_2", "Depo_Vacunatorio_1", "Depo_Vacunatorio_2", "Sarmiento_1", "Sarmiento_2", "Villa_Obrera", "Nueva_Espana", "Once_Octubre", "VAN", "VAS", "Costa_Reyes", "Hosp_Chanar_1", "Hosp_Chanar_2"],
+        "CAPS - Centenario": ["VAN", "VAS", "Costa_Reyes", "Villa_Obrera", "Sarmiento_2", "Sarmiento_1", "Once_Octubre", "Nueva_Espana"],
         "Hospital Chañar": ["Hosp_Chanar_1", "Hosp_Chanar_2"],
         "Hospital Centenario": ["Hosp_Vacunatorio_1", "Hosp_Vacunatorio_2", "Depo_Vacunatorio_1", "Depo_Vacunatorio_2"],
         "VAS": ["VAS"],
