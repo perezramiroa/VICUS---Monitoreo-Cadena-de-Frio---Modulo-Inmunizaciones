@@ -553,9 +553,13 @@
 
     function cargarDatos(region, localidad, establecimiento) {
       if (contextoUsuario && contextoUsuario.rol !== 'admin') {
-         region = contextoUsuario.region;
-         localidad = contextoUsuario.localidad;
-         establecimiento = contextoUsuario.establecimiento;
+         if (contextoUsuario.rol === 'supervisor') {
+             region = contextoUsuario.region;
+         } else {
+             region = contextoUsuario.region;
+             localidad = contextoUsuario.localidad;
+             establecimiento = contextoUsuario.establecimiento;
+         }
       } else {
          region = region || null; localidad = localidad || null; establecimiento = establecimiento || null;
       }
@@ -572,6 +576,11 @@
         if (xhr.status === 200) {
           try {
             DATOS_GLOBALES = JSON.parse(xhr.responseText);
+            if (contextoUsuario && contextoUsuario.rol === 'supervisor' && contextoUsuario.permitidos) {
+                if (DATOS_GLOBALES.stock) DATOS_GLOBALES.stock = DATOS_GLOBALES.stock.filter(function(item) { return contextoUsuario.permitidos.indexOf(item.establecimiento) !== -1; });
+                if (DATOS_GLOBALES.ingresos) DATOS_GLOBALES.ingresos = DATOS_GLOBALES.ingresos.filter(function(item) { return contextoUsuario.permitidos.indexOf(item.establecimiento) !== -1; });
+                if (DATOS_GLOBALES.egresos) DATOS_GLOBALES.egresos = DATOS_GLOBALES.egresos.filter(function(item) { return contextoUsuario.permitidos.indexOf(item.establecimiento) !== -1; });
+            }
             renderizarTablas(DATOS_GLOBALES, region, localidad, establecimiento);
             actualizarEstadisticas(DATOS_GLOBALES.stock);
           } catch(e) { console.error("Error parseando JSON", e); }
@@ -772,7 +781,7 @@
       ultimoPDFBlobIngreso = ''; ultimoPDFNombreIngreso = '';
 
       // Bloquear/desbloquear dropdowns segun usuario
-      if (contextoUsuario && contextoUsuario.rol !== 'admin') {
+      if (contextoUsuario && contextoUsuario.rol !== 'admin' && contextoUsuario.rol !== 'supervisor') {
         if (tipo === 'Egreso') {
           document.getElementById('regionMov').disabled = true;
           document.getElementById('localidadMov').disabled = true;
@@ -805,13 +814,20 @@
         // Refrescar stock antes de abrir para que los lotes estén actualizados
         var url = APPS_SCRIPT_URL + '?action=getDatosAgregados';
         if (contextoUsuario && contextoUsuario.rol !== 'admin') {
-          url += '&region=' + encodeURIComponent(contextoUsuario.region) + '&localidad=' + encodeURIComponent(contextoUsuario.localidad) + '&establecimiento=' + encodeURIComponent(contextoUsuario.establecimiento);
+          if (contextoUsuario.rol === 'supervisor') {
+              url += '&region=' + encodeURIComponent(contextoUsuario.region);
+          } else {
+              url += '&region=' + encodeURIComponent(contextoUsuario.region) + '&localidad=' + encodeURIComponent(contextoUsuario.localidad) + '&establecimiento=' + encodeURIComponent(contextoUsuario.establecimiento);
+          }
         }
         var xhr = new XMLHttpRequest();
         xhr.open('GET', url, true);
         xhr.onload = function() {
           try {
             DATOS_GLOBALES = JSON.parse(xhr.responseText);
+            if (contextoUsuario && contextoUsuario.rol === 'supervisor' && contextoUsuario.permitidos) {
+                if (DATOS_GLOBALES.stock) DATOS_GLOBALES.stock = DATOS_GLOBALES.stock.filter(function(item) { return contextoUsuario.permitidos.indexOf(item.establecimiento) !== -1; });
+            }
           } catch(e) {}
           actualizarVacunas();
           document.getElementById('modalMov').style.display = 'block';
@@ -1106,6 +1122,13 @@
     }
     function registrarMovimiento(event) {
       event.preventDefault();
+      var formEst = modoMovimiento === 'Ingreso' ? document.getElementById('establecimientoMovIngreso').value : document.getElementById('establecimientoMov').value;
+      if (contextoUsuario && contextoUsuario.rol === 'supervisor' && contextoUsuario.permitidos) {
+          if (contextoUsuario.permitidos.indexOf(formEst) === -1) {
+              alert("Acceso denegado. Solo tienes permiso para: " + contextoUsuario.permitidos.join(', '));
+              return;
+          }
+      }
 
       var vacuna = document.getElementById('vacuna').value;
       var lab = document.getElementById('laboratorio').value;
@@ -1494,10 +1517,15 @@
         var btnMapa = document.querySelector('button[onclick="mostrarVistaGeografica()"]');
         if (btnMapa) btnMapa.style.display = 'none';
         var titulo = document.querySelector('.title-section p');
-        if (titulo) titulo.innerHTML = 'Stock: ' + contextoUsuario.establecimiento;
+        if (titulo) titulo.innerHTML = 'Stock: ' + (contextoUsuario.rol === 'supervisor' ? 'Supervisión CAPS' : contextoUsuario.establecimiento);
         var tituloInv = document.querySelector('#vistaInventario h2');
-        if (tituloInv) tituloInv.innerHTML = '📋 Inventario Actual - ' + contextoUsuario.establecimiento;
-        cargarDatos(contextoUsuario.region, contextoUsuario.localidad, contextoUsuario.establecimiento);
+        if (tituloInv) tituloInv.innerHTML = '📋 Inventario Actual - ' + (contextoUsuario.rol === 'supervisor' ? 'Supervisión CAPS' : contextoUsuario.establecimiento);
+        
+        if (contextoUsuario.rol === 'supervisor') {
+            cargarDatos(contextoUsuario.region, null, null);
+        } else {
+            cargarDatos(contextoUsuario.region, contextoUsuario.localidad, contextoUsuario.establecimiento);
+        }
       } else {
         cargarDatos();
       }
