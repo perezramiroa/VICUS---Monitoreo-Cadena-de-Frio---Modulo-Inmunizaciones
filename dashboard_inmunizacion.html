@@ -701,7 +701,7 @@
     function toggleDocumentos() { const p = document.getElementById('documentosPanel'); p.style.display = p.style.display === 'none' ? 'block' : 'none'; }
 
 
-    function abrirStock() { window.open('stock_inmunizacion_zona1.html', '_blank'); }
+    function abrirStock() { window.open('stock_inmunizacion_zona1.html?v=' + new Date().getTime(), '_blank'); }
     function buscarNorma(q) { window.open(`https://www.google.com/search?q=${encodeURIComponent(q)}`, '_blank'); }
     function buscarTodasNormas() {
       const queries = ['Ley 27.491 boletinoficial.gob.ar', 'Ley 26.492 cadena de frío', 'Resolución 1285/2022 Neuquén'];
