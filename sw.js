@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vicus-inmunizacion-v2.1.0';
+const CACHE_NAME = 'vicus-inmunizacion-v2.2.0';
 const urlsToCache = [
   './',
   './index.html',
