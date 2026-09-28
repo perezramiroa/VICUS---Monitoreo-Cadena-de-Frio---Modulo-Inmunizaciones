@@ -609,6 +609,18 @@
           tbodyStockInventario.innerHTML = htmlStock;
         }
       }
+      var esRestringido = (typeof contextoUsuario !== 'undefined' && contextoUsuario && contextoUsuario.rol !== 'admin');
+      
+      if (esRestringido) {
+         document.getElementById('tablasNivel1').style.display = 'block';
+         var colIngresos = contextoUsuario.rol === 'supervisor' ? ['Fecha','Vacuna','Laboratorio','Lote','Cantidad','Responsable','Establecimiento','Vencimiento','Observaciones','Trazabilidad'] : ['Fecha','Vacuna','Laboratorio','Lote','Cantidad','Responsable','Vencimiento','Observaciones','Trazabilidad'];
+         var colEgresos = contextoUsuario.rol === 'supervisor' ? ['Fecha','Vacuna','Laboratorio','Lote','Cantidad','Responsable','Establecimiento','Observacion','Trazabilidad'] : ['Fecha','Vacuna','Laboratorio','Lote','Cantidad','Responsable','Observacion','Trazabilidad'];
+         
+         document.getElementById('tablasNivel1').innerHTML = 
+            buildTablasDetalle(data.ingresos, 'Ingresos Recientes', colIngresos) +
+            buildTablasDetalle(data.egresos, 'Egresos Recientes', colEgresos);
+      }
+      
       if (!currentRegion && !currentLocalidad && !currentEstablecimiento) {
         document.getElementById('tablasNivel1').innerHTML = '';
         document.getElementById('tablasNivel1Geografico').innerHTML =
@@ -804,312 +816,17 @@
       }
 
       // Auto-llenar dropdowns de ingreso si usuario restringido
-      if (contextoUsuario && contextoUsuario.rol !== 'admin' && contextoUsuario.rol !== 'supervisor' && tipo === 'Ingreso') {
-        document.getElementById('regionMovIngreso').innerHTML = '<option value="'+contextoUsuario.region+'">'+contextoUsuario.region+'</option>';
-        document.getElementById('localidadMovIngreso').innerHTML = '<option value="'+contextoUsuario.localidad+'">'+contextoUsuario.localidad+'</option>';
-        document.getElementById('establecimientoMovIngreso').innerHTML = '<option value="'+contextoUsuario.establecimiento+'">'+contextoUsuario.establecimiento+'</option>';
-      }
-
-      if (tipo === 'Egreso') {
-        // Refrescar stock antes de abrir para que los lotes estén actualizados
-        var url = APPS_SCRIPT_URL + '?action=getDatosAgregados';
-        if (contextoUsuario && contextoUsuario.rol !== 'admin') {
-          if (contextoUsuario.rol === 'supervisor') {
-              url += '&region=' + encodeURIComponent(contextoUsuario.region);
-          } else {
-              url += '&region=' + encodeURIComponent(contextoUsuario.region) + '&localidad=' + encodeURIComponent(contextoUsuario.localidad) + '&establecimiento=' + encodeURIComponent(contextoUsuario.establecimiento);
-          }
+      if (contextoUsuario && contextoUsuario.rol !== 'admin' && contextoUsuario.rol !== 'supervisor') {
+        if (tipo === 'Ingreso') {
+            document.getElementById('regionMovIngreso').innerHTML = '<option value="'+contextoUsuario.region+'">'+contextoUsuario.region+'</option>';
+            document.getElementById('localidadMovIngreso').innerHTML = '<option value="'+contextoUsuario.localidad+'">'+contextoUsuario.localidad+'</option>';
+            document.getElementById('establecimientoMovIngreso').innerHTML = '<option value="'+contextoUsuario.establecimiento+'">'+contextoUsuario.establecimiento+'</option>';
+        } else if (tipo === 'Egreso') {
+            document.getElementById('regionMov').innerHTML = '<option value="'+contextoUsuario.region+'">'+contextoUsuario.region+'</option>';
+            document.getElementById('localidadMov').innerHTML = '<option value="'+contextoUsuario.localidad+'">'+contextoUsuario.localidad+'</option>';
+            document.getElementById('establecimientoMov').innerHTML = '<option value="'+contextoUsuario.establecimiento+'">'+contextoUsuario.establecimiento+'</option>';
         }
-        var xhr = new XMLHttpRequest();
-        xhr.open('GET', url, true);
-        xhr.onload = function() {
-          try {
-            DATOS_GLOBALES = JSON.parse(xhr.responseText);
-            if (contextoUsuario && contextoUsuario.rol === 'supervisor' && contextoUsuario.permitidos) {
-                if (DATOS_GLOBALES.stock) DATOS_GLOBALES.stock = DATOS_GLOBALES.stock.filter(function(item) { return contextoUsuario.permitidos.indexOf(item.establecimiento) !== -1; });
-            }
-          } catch(e) {}
-          actualizarVacunas();
-          document.getElementById('modalMov').style.display = 'block';
-        };
-        xhr.onerror = function() {
-          actualizarVacunas();
-          document.getElementById('modalMov').style.display = 'block';
-        };
-        xhr.send();
-      } else {
-        actualizarVacunas();
-        document.getElementById('modalMov').style.display = 'block';
       }
-    }
-
-    function cerrarModalMov() {
-      document.getElementById('modalMov').style.display = 'none';
-    }
-
-    function actualizarVacunas() {
-      var sel = document.getElementById('vacuna');
-      sel.innerHTML = '<option value="">Seleccionar vacuna</option>';
-      if (modoMovimiento === 'Egreso') {
-        // Solo vacunas con stock > 0
-        var vacunas = [];
-        (DATOS_GLOBALES.stock || []).forEach(function(s) {
-          if (parseInt(s.stock) > 0 && vacunas.indexOf(s.vacuna) === -1) vacunas.push(s.vacuna);
-        });
-        vacunas.forEach(function(v) { sel.innerHTML += '<option value="' + v + '">' + v + '</option>'; });
-      } else {
-        Object.keys(VACUNAS_LABORATORIOS).forEach(function(v) {
-          sel.innerHTML += '<option value="' + v + '">' + v + '</option>';
-        });
-      }
-      document.getElementById('laboratorio').innerHTML = '<option value="">Primero selecciona vacuna</option>';
-      document.getElementById('loteSelect').innerHTML = '<option value="">Primero selecciona laboratorio</option>';
-    }
-
-    function actualizarLaboratorios() {
-      var vacuna = document.getElementById('vacuna').value;
-      var sel = document.getElementById('laboratorio');
-      sel.innerHTML = '<option value="">Seleccionar laboratorio</option>';
-      if (modoMovimiento === 'Egreso') {
-        var labs = [];
-        (DATOS_GLOBALES.stock || []).filter(function(s) {
-          return s.vacuna === vacuna && parseInt(s.stock) > 0;
-        }).forEach(function(s) {
-          if (labs.indexOf(s.laboratorio) === -1) labs.push(s.laboratorio);
-        });
-        labs.forEach(function(l) { sel.innerHTML += '<option value="' + l + '">' + l + '</option>'; });
-      } else {
-        (VACUNAS_LABORATORIOS[vacuna] || []).forEach(function(l) {
-          sel.innerHTML += '<option value="' + l + '">' + l + '</option>';
-        });
-      }
-      document.getElementById('loteSelect').innerHTML = '<option value="">Primero selecciona laboratorio</option>';
-    }
-
-    function actualizarLotes() {
-      if (modoMovimiento !== 'Egreso') return;
-      var vacuna = document.getElementById('vacuna').value;
-      var lab = document.getElementById('laboratorio').value;
-      var sel = document.getElementById('loteSelect');
-      sel.innerHTML = '<option value="">Seleccionar lote</option>';
-      (DATOS_GLOBALES.stock || []).filter(function(s) {
-        return s.vacuna === vacuna && s.laboratorio === lab && parseInt(s.stock) > 0;
-      }).forEach(function(s) {
-        sel.innerHTML += '<option value="' + s.lote + '">' + s.lote + ' (Disponible: ' + s.stock + ' - Vence: ' + new Date(s.vencimiento).toLocaleDateString('es-AR') + ')</option>';
-      });
-      actualizarRegionesEgreso();
-    }
-
-    function actualizarRegionesEgreso() {
-      var vacuna = document.getElementById('vacuna').value;
-      var lab = document.getElementById('laboratorio').value;
-      var lote = document.getElementById('loteSelect').value;
-      var sel = document.getElementById('regionMov');
-      sel.innerHTML = '<option value="">Seleccionar región</option>';
-      var regiones = [];
-      (DATOS_GLOBALES.stock || []).filter(function(s) {
-        return s.vacuna === vacuna && s.laboratorio === lab && s.lote === lote && parseInt(s.stock) > 0;
-      }).forEach(function(s) {
-        if (regiones.indexOf(s.region) === -1) regiones.push(s.region);
-      });
-      regiones.forEach(function(r) { sel.innerHTML += '<option value="' + r + '">' + r + '</option>'; });
-      document.getElementById('localidadMov').innerHTML = '<option value="">Seleccionar región primero</option>';
-      document.getElementById('establecimientoMov').innerHTML = '<option value="">Seleccionar localidad primero</option>';
-      document.getElementById('stockDisponibleLabel').textContent = '';
-    }
-
-    function actualizarLocalidadesEgreso() {
-      var vacuna = document.getElementById('vacuna').value;
-      var lab = document.getElementById('laboratorio').value;
-      var lote = document.getElementById('loteSelect').value;
-      var region = document.getElementById('regionMov').value;
-      var sel = document.getElementById('localidadMov');
-      sel.innerHTML = '<option value="">Seleccionar localidad</option>';
-      var localidades = [];
-      (DATOS_GLOBALES.stock || []).filter(function(s) {
-        return s.vacuna === vacuna && s.laboratorio === lab && s.lote === lote && s.region === region && parseInt(s.stock) > 0;
-      }).forEach(function(s) {
-        if (localidades.indexOf(s.localidad) === -1) localidades.push(s.localidad);
-      });
-      localidades.forEach(function(l) { sel.innerHTML += '<option value="' + l + '">' + l + '</option>'; });
-      document.getElementById('establecimientoMov').innerHTML = '<option value="">Seleccionar localidad primero</option>';
-      document.getElementById('stockDisponibleLabel').textContent = '';
-    }
-
-    function actualizarEstablecimientosEgreso() {
-      var vacuna = document.getElementById('vacuna').value;
-      var lab = document.getElementById('laboratorio').value;
-      var lote = document.getElementById('loteSelect').value;
-      var region = document.getElementById('regionMov').value;
-      var localidad = document.getElementById('localidadMov').value;
-      var sel = document.getElementById('establecimientoMov');
-      sel.innerHTML = '<option value="">Seleccionar establecimiento</option>';
-      var ests = [];
-      (DATOS_GLOBALES.stock || []).filter(function(s) {
-        return s.vacuna === vacuna && s.laboratorio === lab && s.lote === lote && s.region === region && s.localidad === localidad && parseInt(s.stock) > 0;
-      }).forEach(function(s) {
-        if (ests.indexOf(s.establecimiento) === -1) ests.push(s.establecimiento);
-      });
-      ests.forEach(function(e) { sel.innerHTML += '<option value="' + e + '">' + e + '</option>'; });
-      document.getElementById('stockDisponibleLabel').textContent = '';
-    }
-
-    function actualizarStockDisponible() {
-      var vacuna = document.getElementById('vacuna').value;
-      var lab = document.getElementById('laboratorio').value;
-      var lote = document.getElementById('loteSelect').value;
-      var region = document.getElementById('regionMov').value;
-      var localidad = document.getElementById('localidadMov').value;
-      var establecimiento = document.getElementById('establecimientoMov').value;
-      var stockItem = (DATOS_GLOBALES.stock || []).find(function(s) {
-        return s.vacuna === vacuna && s.laboratorio === lab && s.lote === lote && s.region === region && s.localidad === localidad && s.establecimiento === establecimiento;
-      });
-      var max = stockItem ? parseInt(stockItem.stock) : 0;
-      var cantInput = document.getElementById('cantidad');
-      cantInput.max = max;
-      cantInput.placeholder = 'Máx: ' + max;
-      document.getElementById('stockDisponibleLabel').textContent = '(Disponible: ' + max + ')';
-    }
-
-    function agregarItemYLimpiar() {
-      var vacuna = document.getElementById('vacuna').value;
-      var lab = document.getElementById('laboratorio').value;
-      var lote = '', cantidad = '', vencimiento = '';
-
-      if (modoMovimiento === 'Egreso') {
-        lote = document.getElementById('loteSelect').value;
-        cantidad = document.getElementById('cantidad').value;
-        var si = (DATOS_GLOBALES.stock || []).find(function(s) {
-          return s.vacuna === vacuna && s.laboratorio === lab && s.lote === lote;
-        });
-        if (si) {
-          var vd = new Date(si.vencimiento);
-          vencimiento = !isNaN(vd) ? vd.getFullYear() + '-' + String(vd.getMonth()+1).padStart(2,'0') + '-' + String(vd.getDate()).padStart(2,'0') : si.vencimiento;
-        }
-      } else {
-        lote = document.getElementById('loteInput').value;
-        cantidad = document.getElementById('cantidadIngreso').value;
-        vencimiento = document.getElementById('vencimiento').value;
-      }
-
-      if (!vacuna || !lab || !lote || !cantidad || parseInt(cantidad) < 1) {
-        alert('Completá vacuna, laboratorio, lote y cantidad antes de agregar.'); return;
-      }
-      console.log('Agregando item:', vacuna, lab, lote, cantidad);
-
-      // Guardar contexto la primera vez (ubicación/responsable)
-      if (Object.keys(contextoMovimiento).length === 0) {
-        var resp = document.getElementById('responsable').value;
-        var obs = document.getElementById('observaciones').value;
-        var te = modoMovimiento === 'Egreso' ? document.getElementById('tipoEgreso').value : '';
-        if (modoMovimiento === 'Ingreso') {
-          contextoMovimiento = {
-            responsable: resp, observaciones: obs, tipoEgreso: '',
-            region: document.getElementById('regionMovIngreso').value,
-            localidad: document.getElementById('localidadMovIngreso').value,
-            establecimiento: document.getElementById('establecimientoMovIngreso').value,
-            regionDest: '', localidadDest: '', establecimientoDest: '', responsableDest: ''
-          };
-        } else {
-          var rD='', lD='', eD='', rspD='';
-          if (te === 'Traslado') {
-            rD = document.getElementById('regionDest').value;
-            lD = document.getElementById('localidadDest').value;
-            eD = document.getElementById('establecimientoDest').value;
-            rspD = document.getElementById('responsableDest').value;
-          }
-          contextoMovimiento = {
-            responsable: resp, observaciones: obs, tipoEgreso: te,
-            region: document.getElementById('regionMov').value,
-            localidad: document.getElementById('localidadMov').value,
-            establecimiento: document.getElementById('establecimientoMov').value,
-            regionDest: rD, localidadDest: lD, establecimientoDest: eD, responsableDest: rspD
-          };
-        }
-        if (!contextoMovimiento.responsable || !contextoMovimiento.region || !contextoMovimiento.localidad || !contextoMovimiento.establecimiento) {
-          alert('Completá responsable y ubicación antes de agregar ítems.');
-          contextoMovimiento = {}; return;
-        }
-        // Ocultar ubicación permanentemente para el resto del movimiento
-        document.getElementById('seccionUbicacion').style.display = 'none';
-        document.getElementById('tipoEgresoRow').style.display = 'none';
-        var regionGrid = document.querySelector('#camposEgreso > div[style*="grid"]');
-        var estDiv = document.querySelector('#camposEgreso > .form-group:nth-child(3)');
-        var trasladoDiv = document.getElementById('camposTraslado');
-        if (regionGrid) regionGrid.style.display = 'none';
-        if (estDiv) estDiv.style.display = 'none';
-        if (trasladoDiv) trasladoDiv.style.display = 'none';
-        var regionGridIng = document.querySelector('#camposIngreso > div[style*="grid"]');
-        var estDivIng = document.querySelector('#camposIngreso > .form-group:last-child');
-        if (regionGridIng) regionGridIng.style.display = 'none';
-        if (estDivIng) estDivIng.style.display = 'none';
-      }
-
-      var tbody = document.getElementById('tablaItemsBody');
-      var idx = itemsMovimiento.length - 1;
-      var tr = document.createElement('tr');
-      tr.id = 'item-row-' + idx;
-      tr.setAttribute('data-vencimiento', vencimiento);
-      tr.innerHTML = '<td>' + vacuna + '</td><td>' + lab + '</td><td>' + lote + '</td><td>' + cantidad + '</td>' +
-        '<td><button type="button" onclick="quitarItem(' + idx + ')" style="background:none;border:none;color:#ef4444;cursor:pointer;">✕</button></td>';
-      tbody.appendChild(tr);
-      document.getElementById('tablaItemsContainer').style.display = 'block';
-
-      // Limpiar solo campos del ítem
-      document.getElementById('vacuna').value = '';
-      document.getElementById('laboratorio').innerHTML = '<option value="">Primero selecciona vacuna</option>';
-      document.getElementById('loteSelect').innerHTML = '<option value="">Primero selecciona laboratorio</option>';
-      document.getElementById('cantidad').value = '';
-      document.getElementById('loteInput').value = '';
-      document.getElementById('cantidadIngreso').value = '';
-      document.getElementById('vencimiento').value = '';
-      document.getElementById('stockDisponibleLabel').textContent = '';
-      actualizarVacunas();
-    }
-
-    function quitarItem(idx) {
-      itemsMovimiento[idx] = null;
-      var tr = document.getElementById('item-row-' + idx);
-      if (tr) tr.remove();
-      if (itemsMovimiento.filter(function(i){ return i !== null; }).length === 0) {
-        document.getElementById('tablaItemsContainer').style.display = 'none';
-      }
-    }
-
-    function toggleCamposTraslado() {
-      var tipo = document.getElementById('tipoEgreso').value;
-      document.getElementById('camposTraslado').style.display = tipo === 'Traslado' ? 'block' : 'none';
-    }
-
-    function actualizarLocalidadesDest() {
-      var region = document.getElementById('regionDest').value;
-      var sel = document.getElementById('localidadDest');
-      sel.innerHTML = '<option value="">Seleccionar localidad</option>';
-      Object.keys(ESTRUCTURA_GEOGRAFICA[region] || {}).forEach(function(l) {
-        sel.innerHTML += '<option value="' + l + '">' + l + '</option>';
-      });
-      document.getElementById('establecimientoDest').innerHTML = '<option value="">Seleccionar localidad primero</option>';
-    }
-
-    function actualizarEstablecimientosDest() {
-      var region = document.getElementById('regionDest').value;
-      var localidad = document.getElementById('localidadDest').value;
-      var sel = document.getElementById('establecimientoDest');
-      sel.innerHTML = '<option value="">Seleccionar establecimiento</option>';
-      ((ESTRUCTURA_GEOGRAFICA[region] || {})[localidad] || []).forEach(function(e) {
-        sel.innerHTML += '<option value="' + e + '">' + e + '</option>';
-      });
-    }
-
-    function actualizarLocalidadesMov() {
-      var region = document.getElementById('regionMovIngreso').value;
-      var sel = document.getElementById('localidadMovIngreso');
-      sel.innerHTML = '<option value="">Seleccionar localidad</option>';
-      Object.keys(ESTRUCTURA_GEOGRAFICA[region] || {}).forEach(function(l) {
-        sel.innerHTML += '<option value="' + l + '">' + l + '</option>';
-      });
-      document.getElementById('establecimientoMovIngreso').innerHTML = '<option value="">Primero selecciona localidad</option>';
-    }
 
     function actualizarEstablecimientosMov() {
       var region = document.getElementById('regionMovIngreso').value;
