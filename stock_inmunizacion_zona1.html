@@ -443,6 +443,9 @@
       "VSR": ["Pfizer (Abrysvo) x 1 dosis"]
     };
 
+    // Anti doble-envío
+    var guardandoMovimiento = false;
+
     // MAPEO DE USUARIOS PARA RESTRICCION DE VISIBILIDAD
     const MAPEO_USUARIOS = {
       "Zona uno": { rol: "admin" },
@@ -785,6 +788,9 @@
       var td = document.getElementById('camposTraslado'); if (td) td.style.display = 'none';
       ultimoPDFBlob = ''; ultimoPDFNombre = ''; ultimoPDFUrl = '';
       ultimoPDFBlobIngreso = ''; ultimoPDFNombreIngreso = '';
+      guardandoMovimiento = false;
+      var btnSubmit = document.getElementById('btnSubmit');
+      if (btnSubmit) { btnSubmit.disabled = false; btnSubmit.textContent = 'Confirmar Registro'; }
 
       // Bloquear o desbloquear según permisos de usuario
       if (contextoUsuario && contextoUsuario.rol !== 'admin' && contextoUsuario.rol !== 'supervisor') {
@@ -851,6 +857,9 @@
 
     function cerrarModalMov() {
       document.getElementById('modalMov').style.display = 'none';
+      guardandoMovimiento = false;
+      var btnSubmit = document.getElementById('btnSubmit');
+      if (btnSubmit) { btnSubmit.disabled = false; btnSubmit.textContent = 'Confirmar Registro'; }
     }
 
     function actualizarVacunas() {
@@ -907,6 +916,18 @@
     }
 
     function actualizarRegionesEgreso() {
+      if (contextoUsuario && contextoUsuario.rol !== 'admin' && contextoUsuario.rol !== 'supervisor') {
+        document.getElementById('regionMov').innerHTML = '<option value="'+contextoUsuario.region+'">'+contextoUsuario.region+'</option>';
+        document.getElementById('localidadMov').innerHTML = '<option value="'+contextoUsuario.localidad+'">'+contextoUsuario.localidad+'</option>';
+        document.getElementById('establecimientoMov').innerHTML = '<option value="'+contextoUsuario.establecimiento+'">'+contextoUsuario.establecimiento+'</option>';
+        actualizarStockDisponible();
+        return;
+      }
+      if (contextoUsuario && contextoUsuario.rol === 'supervisor') {
+        document.getElementById('regionMov').innerHTML = '<option value="'+contextoUsuario.region+'">'+contextoUsuario.region+'</option>';
+        actualizarLocalidadesEgreso();
+        return;
+      }
       var vacuna = document.getElementById('vacuna').value;
       var lab = document.getElementById('laboratorio').value;
       var lote = document.getElementById('loteSelect').value;
@@ -925,6 +946,10 @@
     }
 
     function actualizarLocalidadesEgreso() {
+      if (contextoUsuario && contextoUsuario.rol !== 'admin' && contextoUsuario.rol !== 'supervisor') {
+        actualizarStockDisponible();
+        return;
+      }
       var vacuna = document.getElementById('vacuna').value;
       var lab = document.getElementById('laboratorio').value;
       var lote = document.getElementById('loteSelect').value;
@@ -943,6 +968,10 @@
     }
 
     function actualizarEstablecimientosEgreso() {
+      if (contextoUsuario && contextoUsuario.rol !== 'admin' && contextoUsuario.rol !== 'supervisor') {
+        actualizarStockDisponible();
+        return;
+      }
       var vacuna = document.getElementById('vacuna').value;
       var lab = document.getElementById('laboratorio').value;
       var lote = document.getElementById('loteSelect').value;
@@ -952,7 +981,11 @@
       sel.innerHTML = '<option value="">Seleccionar establecimiento</option>';
       var ests = [];
       (DATOS_GLOBALES.stock || []).filter(function(s) {
-        return s.vacuna === vacuna && s.laboratorio === lab && s.lote === lote && s.region === region && s.localidad === localidad && parseInt(s.stock) > 0;
+        var match = s.vacuna === vacuna && s.laboratorio === lab && s.lote === lote && s.region === region && s.localidad === localidad && parseInt(s.stock) > 0;
+        if (contextoUsuario && contextoUsuario.rol === 'supervisor' && contextoUsuario.permitidos) {
+          match = match && contextoUsuario.permitidos.indexOf(s.establecimiento) !== -1;
+        }
+        return match;
       }).forEach(function(s) {
         if (ests.indexOf(s.establecimiento) === -1) ests.push(s.establecimiento);
       });
@@ -1031,6 +1064,11 @@
             establecimiento: document.getElementById('establecimientoMov').value,
             regionDest: rD, localidadDest: lD, establecimientoDest: eD, responsableDest: rspD
           };
+        }
+        if (contextoUsuario && contextoUsuario.rol !== 'admin' && contextoUsuario.rol !== 'supervisor') {
+          contextoMovimiento.region = contextoMovimiento.region || contextoUsuario.region;
+          contextoMovimiento.localidad = contextoMovimiento.localidad || contextoUsuario.localidad;
+          contextoMovimiento.establecimiento = contextoMovimiento.establecimiento || contextoUsuario.establecimiento;
         }
         if (!contextoMovimiento.responsable || !contextoMovimiento.region || !contextoMovimiento.localidad || !contextoMovimiento.establecimiento) {
           alert('Completá responsable y ubicación antes de agregar ítems.');
@@ -1128,10 +1166,22 @@
     }
     function registrarMovimiento(event) {
       event.preventDefault();
+      if (guardandoMovimiento) return;
+      var btnSubmit = document.getElementById('btnSubmit');
+      if (btnSubmit) { btnSubmit.disabled = true; btnSubmit.textContent = 'Registrando...'; }
+      guardandoMovimiento = true;
+
+      function resetSubmit() {
+        guardandoMovimiento = false;
+        if (btnSubmit) { btnSubmit.disabled = false; btnSubmit.textContent = 'Confirmar Registro'; }
+        mostrarLoading(false);
+      }
+
       var formEst = modoMovimiento === 'Ingreso' ? document.getElementById('establecimientoMovIngreso').value : document.getElementById('establecimientoMov').value;
       if (contextoUsuario && contextoUsuario.rol === 'supervisor' && contextoUsuario.permitidos) {
         if (contextoUsuario.permitidos.indexOf(formEst) === -1) {
           alert("Acceso denegado. Solo tienes permiso para: " + contextoUsuario.permitidos.join(', '));
+          resetSubmit();
           return;
         }
       }
@@ -1184,7 +1234,7 @@
             establecimientoDest = document.getElementById('establecimientoDest').value;
             responsableDest = document.getElementById('responsableDest').value;
             if (!regionDest || !localidadDest || !establecimientoDest || !responsableDest) {
-              alert('Por favor completa todos los campos de destino del traslado'); return;
+              alert('Por favor completa todos los campos de destino del traslado'); resetSubmit(); return;
             }
           }
         }
@@ -1207,8 +1257,16 @@
         }
       }
 
+      if (contextoUsuario && contextoUsuario.rol !== 'admin' && contextoUsuario.rol !== 'supervisor') {
+        region = region || contextoUsuario.region;
+        localidad = localidad || contextoUsuario.localidad;
+        establecimiento = establecimiento || contextoUsuario.establecimiento;
+      }
+
       if (!responsable || !region || !localidad || !establecimiento) {
-        alert('Por favor completa todos los campos requeridos'); return;
+        alert('Por favor completa todos los campos requeridos');
+        resetSubmit();
+        return;
       }
 
       // Agregar ítem actual a la lista solo si tiene datos
@@ -1234,7 +1292,7 @@
           }
         });
       }
-      if (todosItems.length === 0) { alert('Agregá al menos un ítem.'); return; }
+      if (todosItems.length === 0) { alert('Agregá al menos un ítem.'); resetSubmit(); return; }
 
       var btnSubmit = document.getElementById('btnSubmit');
       btnSubmit.disabled = true;
@@ -1260,8 +1318,7 @@
         if (index >= todosItems.length) {
           // Todos procesados
           mostrarLoading(false);
-          btnSubmit.disabled = false;
-          btnSubmit.textContent = 'Confirmar Registro';
+          resetSubmit();
           ultimoPDFBlob = ''; ultimoPDFNombre = ''; ultimoPDFBlobIngreso = ''; ultimoPDFNombreIngreso = '';
           if (errores.length > 0) alert('Errores:\n' + errores.join('\n'));
           if (trazabilidades.length > 0) {
