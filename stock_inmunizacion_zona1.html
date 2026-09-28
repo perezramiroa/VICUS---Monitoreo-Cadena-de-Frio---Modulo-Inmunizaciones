@@ -178,7 +178,7 @@
         <button class="modal-close" onclick="cerrarModalMov()">&times;</button>
       </div>
       <div class="modal-body">
-        <form id="formMov" onsubmit="registrarMovimiento(event)">
+        <form id="formMov" onsubmit="return false;">
           <div class="form-group" id="tipoEgresoRow" style="display:none;">
             <label class="form-label">Tipo de Egreso *</label>
             <select id="tipoEgreso" class="form-control" onchange="toggleCamposTraslado()">
@@ -325,9 +325,12 @@
               <textarea id="observaciones" class="form-control" rows="2"></textarea>
             </div>
           </div>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+          <div id="loadingMovimiento" style="display:none; text-align:center; padding:12px; margin-bottom:10px; background:#e0f2fe; border:1px solid #7dd3fc; border-radius:8px; font-weight:bold; color:#0369a1;">
+            ⏳ Registrando movimiento, por favor espere...
+          </div>
+          <div id="botonesMovimiento" style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
             <button type="button" class="btn btn-outline" onclick="agregarItemYLimpiar()" style="border-color:#3b82f6; color:#3b82f6;">+ Agregar otro ítem</button>
-            <button type="submit" id="btnSubmit" class="btn btn-success" style="padding:15px;">Confirmar Registro</button>
+            <button type="button" id="btnSubmit" class="btn btn-success" style="padding:15px;" onclick="registrarMovimiento(event)">Confirmar Registro</button>
           </div>
         </form>
       </div>
@@ -444,7 +447,7 @@
     };
 
     // Anti doble-envío
-    var guardandoMovimiento = false;
+    window.guardandoMovimiento = false;
 
     // MAPEO DE USUARIOS PARA RESTRICCION DE VISIBILIDAD
     const MAPEO_USUARIOS = {
@@ -788,7 +791,9 @@
       var td = document.getElementById('camposTraslado'); if (td) td.style.display = 'none';
       ultimoPDFBlob = ''; ultimoPDFNombre = ''; ultimoPDFUrl = '';
       ultimoPDFBlobIngreso = ''; ultimoPDFNombreIngreso = '';
-      guardandoMovimiento = false;
+      window.guardandoMovimiento = false;
+      var lm = document.getElementById('loadingMovimiento'); if (lm) lm.style.display = 'none';
+      var bm = document.getElementById('botonesMovimiento'); if (bm) bm.style.display = 'grid';
       var btnSubmit = document.getElementById('btnSubmit');
       if (btnSubmit) { btnSubmit.disabled = false; btnSubmit.textContent = 'Confirmar Registro'; }
 
@@ -857,7 +862,9 @@
 
     function cerrarModalMov() {
       document.getElementById('modalMov').style.display = 'none';
-      guardandoMovimiento = false;
+      window.guardandoMovimiento = false;
+      var lm = document.getElementById('loadingMovimiento'); if (lm) lm.style.display = 'none';
+      var bm = document.getElementById('botonesMovimiento'); if (bm) bm.style.display = 'grid';
       var btnSubmit = document.getElementById('btnSubmit');
       if (btnSubmit) { btnSubmit.disabled = false; btnSubmit.textContent = 'Confirmar Registro'; }
     }
@@ -1165,14 +1172,22 @@
       });
     }
     function registrarMovimiento(event) {
-      event.preventDefault();
-      if (guardandoMovimiento) return;
+      if (event && event.preventDefault) event.preventDefault();
+      if (window.guardandoMovimiento) {
+        console.warn('Bloqueado: ya se está registrando un movimiento');
+        return false;
+      }
+      window.guardandoMovimiento = true;
+
+      var lm = document.getElementById('loadingMovimiento'); if (lm) lm.style.display = 'block';
+      var bm = document.getElementById('botonesMovimiento'); if (bm) bm.style.display = 'none';
       var btnSubmit = document.getElementById('btnSubmit');
       if (btnSubmit) { btnSubmit.disabled = true; btnSubmit.textContent = 'Registrando...'; }
-      guardandoMovimiento = true;
 
       function resetSubmit() {
-        guardandoMovimiento = false;
+        window.guardandoMovimiento = false;
+        var lm = document.getElementById('loadingMovimiento'); if (lm) lm.style.display = 'none';
+        var bm = document.getElementById('botonesMovimiento'); if (bm) bm.style.display = 'grid';
         if (btnSubmit) { btnSubmit.disabled = false; btnSubmit.textContent = 'Confirmar Registro'; }
         mostrarLoading(false);
       }
