@@ -116,6 +116,13 @@ const CONFIG_INMUNO = {
             folderId_Semanal: "1BEcVkfeGZeKFTvdrKv17tmeo7baGu11r",
             folderId_Calculo: "19DEi2CH2d1_PZ5VZQ1HNJEoBXnUWY3_4",
             folderId_Desvio: "1_DgTnjYqLgDfQorIinGimNYgmrS4_Peo"
+        },
+        "Vista_Hermosa": { 
+            id: 3342928, key: "MN3OQWRP1FQVVGOP", 
+            folderId_Tecnico: "1RHQAzjX3O6TdBd8SA1kynhuGIAe06mAW",
+            folderId_Semanal: "1RHQAzjX3O6TdBd8SA1kynhuGIAe06mAW",
+            folderId_Calculo: "1RHQAzjX3O6TdBd8SA1kynhuGIAe06mAW",
+            folderId_Desvio: "133oqy6LEZ9_meHBpJEztnZQO6H7T9Vrp"
         }
     },
 
@@ -136,13 +143,14 @@ const CONFIG_INMUNO = {
         "Hosp_Chanar_1": "Hospital Chañar 1",
         "Hosp_Chanar_2": "Hospital Chañar 2",
         "Zona1_1": "Zona Uno - Sensor 1",
-        "Zona1_2": "Zona Uno - Sensor 2"
+        "Zona1_2": "Zona Uno - Sensor 2",
+        "Vista_Hermosa": "Centro de Salud Vista Hermosa"
     },
 
     // Mapeo de Contraseñas -> Canales autorizados
     accesos: {
-        "Zona uno": ["Zona1_1", "Zona1_2", "Hosp_Vacunatorio_1", "Hosp_Vacunatorio_2", "Depo_Vacunatorio_1", "Depo_Vacunatorio_2", "Sarmiento_1", "Sarmiento_2", "Villa_Obrera", "Nueva_Espana", "Once_Octubre", "VAN", "VAS", "Costa_Reyes", "Hosp_Chanar_1", "Hosp_Chanar_2"],
-        "CAPS - Centenario": ["VAN", "VAS", "Costa_Reyes", "Villa_Obrera", "Sarmiento_2", "Sarmiento_1", "Once_Octubre", "Nueva_Espana"],
+        "Zona uno": ["Zona1_1", "Zona1_2", "Hosp_Vacunatorio_1", "Hosp_Vacunatorio_2", "Depo_Vacunatorio_1", "Depo_Vacunatorio_2", "Sarmiento_1", "Sarmiento_2", "Villa_Obrera", "Nueva_Espana", "Once_Octubre", "VAN", "VAS", "Costa_Reyes", "Hosp_Chanar_1", "Hosp_Chanar_2", "Vista_Hermosa"],
+        "CAPS - Centenario": ["VAN", "VAS", "Costa_Reyes", "Villa_Obrera", "Sarmiento_2", "Sarmiento_1", "Once_Octubre", "Nueva_Espana", "Vista_Hermosa"],
         "Hospital Chañar": ["Hosp_Chanar_1", "Hosp_Chanar_2"],
         "Hospital Centenario": ["Hosp_Vacunatorio_1", "Hosp_Vacunatorio_2", "Depo_Vacunatorio_1", "Depo_Vacunatorio_2"],
         "VAS": ["VAS"],
@@ -152,6 +160,7 @@ const CONFIG_INMUNO = {
         "Sarmiento 2": ["Sarmiento_2"],
         "Villa Obrera": ["Villa_Obrera"],
         "11 de Octubre": ["Once_Octubre"],
-        "Nueva España": ["Nueva_Espana"]
+        "Nueva España": ["Nueva_Espana"],
+        "Vista Hermosa": ["Vista_Hermosa"]
     }
 };
